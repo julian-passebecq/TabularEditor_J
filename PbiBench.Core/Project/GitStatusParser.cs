@@ -23,16 +23,18 @@ namespace PbiBench.Core.Project
         {
             var value = headOutput?.Trim();
             if (string.IsNullOrEmpty(value)) return null;
-            if (value.Length < 7 || value.Length > 64) return null;
 
-            for (var i = 0; i < value.Length; i++)
+            var normalized = value!;
+            if (normalized.Length < 7 || normalized.Length > 64) return null;
+
+            for (var i = 0; i < normalized.Length; i++)
             {
-                var c = value[i];
+                var c = normalized[i];
                 if (!((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')))
                     return null;
             }
 
-            return value.ToLowerInvariant();
+            return normalized.ToLowerInvariant();
         }
     }
 }
