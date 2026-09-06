@@ -20,6 +20,7 @@ internal static class Program
             RunDaxPrivacyPolicyChecks();
             RunDaxQueryContractChecks();
             RunQuickOpenChecks();
+            SemanticDependencySmoke.Run();
             Console.WriteLine("PbiBench.Core smoke: PASS");
             return 0;
         }
