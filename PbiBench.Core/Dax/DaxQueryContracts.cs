@@ -17,7 +17,7 @@ namespace PbiBench.Core.Dax
 
     /// <summary>
     /// Provider-neutral, bounded DAX query request. Execution is intentionally abstracted so
-    /// the TE2 host can later target a Desktop/XMLA connection without coupling Core to ADOMD.
+    /// the TE2 host can target Desktop/XMLA without coupling Core to a specific client library.
     /// </summary>
     public sealed class DaxQueryRequest
     {
@@ -61,6 +61,8 @@ namespace PbiBench.Core.Dax
         public DaxQueryExecutionState State { get; set; } = DaxQueryExecutionState.Completed;
         public long DurationMilliseconds { get; set; }
         public string ErrorMessage { get; set; } = string.Empty;
+        public bool IsTruncated { get; set; }
+        public int ReturnedRowCount => _rows.Length;
 
         public string[] Columns
         {
@@ -76,8 +78,8 @@ namespace PbiBench.Core.Dax
     }
 
     /// <summary>
-    /// Host boundary for future query execution. Cancellation is part of the contract from day
-    /// one so a concrete Desktop/XMLA adapter cannot accidentally expose an uncancellable API.
+    /// Host boundary for query execution. Cancellation is part of the contract from day one so
+    /// a concrete Desktop/XMLA adapter cannot accidentally expose an uncancellable API.
     /// </summary>
     public interface IDaxQueryExecutor
     {

@@ -1,4 +1,5 @@
 using System.Windows.Forms;
+using TabularEditor.PbiBench.Dax;
 using TabularEditor.PbiBench.Navigation;
 using TabularEditor.PbiBench.Semantic;
 
@@ -72,6 +73,28 @@ namespace TabularEditor.UI
 
                 Goto(selected);
                 UI.StatusLabel.Text = "Semantic View: " + selected.Name;
+            }
+        }
+
+        /// <summary>
+        /// Opens the DAX Workbench. The editor/history UI is available for any loaded model, but
+        /// Execute is enabled only when the current TE2 model exposes a live Analysis Services
+        /// connection that can be cloned into an isolated query session.
+        /// </summary>
+        public void PbiBench_ShowDaxWorkbench()
+        {
+            if (Handler?.Model == null) return;
+
+            PbiBenchAmoDaxQueryExecutor executor;
+            string unavailableReason;
+            PbiBenchAmoDaxQueryExecutor.TryCreate(Handler, out executor, out unavailableReason);
+
+            using (var dialog = new PbiBenchDaxWorkbenchForm(
+                executor,
+                executor?.ConnectionLabel ?? string.Empty,
+                unavailableReason))
+            {
+                dialog.ShowDialog(UI.FormMain);
             }
         }
     }

@@ -104,14 +104,24 @@ namespace TabularEditor.PbiBench.Navigation
             };
             semanticView.Click += (s, args) => RunCommand(c => c.PbiBench_ShowSemanticView());
 
+            var daxWorkbench = new ToolStripMenuItem
+            {
+                Name = "pbiBenchDaxWorkbenchToolStripMenuItem",
+                Text = "DAX Workbench"
+            };
+            daxWorkbench.Click += (s, args) => RunCommand(c => c.PbiBench_ShowDaxWorkbench());
+
             pbiBench.DropDownItems.Add(quickOpen);
             pbiBench.DropDownItems.Add(semanticView);
+            pbiBench.DropDownItems.Add(new ToolStripSeparator());
+            pbiBench.DropDownItems.Add(daxWorkbench);
             pbiBench.DropDownOpening += (s, args) =>
             {
                 var controller = FormMain.Singleton?.UI;
                 var modelAvailable = controller?.Handler?.Model != null;
                 quickOpen.Enabled = modelAvailable;
                 semanticView.Enabled = modelAvailable;
+                daxWorkbench.Enabled = modelAvailable;
             };
 
             toolsMenu.DropDownItems.Add(new ToolStripSeparator());
