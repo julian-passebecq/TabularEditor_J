@@ -27,4 +27,4 @@ jobs:
       - name: Build neutral core
         run: dotnet build PbiBench.Core/PbiBench.Core.csproj -c Release --nologo
       - name: Run dependency-free smoke checks
-        run: dotnet run --project PbiBench.Core.Smoke/PbiBench.Core.Smoke.csproj -c Release --no-restore
+        run: dotnet run --project PbiBench.Core.Smoke/PbiBench.Core.Smoke.csproj -c Release
