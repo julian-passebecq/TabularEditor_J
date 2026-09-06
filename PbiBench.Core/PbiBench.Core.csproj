@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <LangVersion>10.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
+    <AssemblyName>PbiBench.Core</AssemblyName>
+    <RootNamespace>PbiBench.Core</RootNamespace>
+    <Description>Pure contracts and project logic for the focused PbiBench / PBI Workflow Pro application.</Description>
+  </PropertyGroup>
+</Project>

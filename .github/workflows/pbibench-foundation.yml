@@ -1,0 +1,30 @@
+name: PbiBench foundation
+
+on:
+  push:
+    branches:
+      - pbi-workflow-pro-v0.1
+  pull_request:
+    paths:
+      - 'PbiBench.Core/**'
+      - 'PbiBench.Core.Smoke/**'
+      - 'docs/pbibench/**'
+      - 'README_PBIBENCH.md'
+      - '.github/workflows/pbibench-foundation.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: Core contracts and PBIP discovery
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - name: Build neutral core
+        run: dotnet build PbiBench.Core/PbiBench.Core.csproj -c Release --nologo
+      - name: Run dependency-free smoke checks
+        run: dotnet run --project PbiBench.Core.Smoke/PbiBench.Core.Smoke.csproj -c Release
