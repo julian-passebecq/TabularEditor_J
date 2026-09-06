@@ -17,6 +17,8 @@ internal static class Program
             RunProjectDiscoveryChecks(root);
             RunGitChecks();
             RunDaxFormatterChecks();
+            RunDaxPrivacyPolicyChecks();
+            RunDaxQueryContractChecks();
             RunQuickOpenChecks();
             Console.WriteLine("PbiBench.Core smoke: PASS");
             return 0;
@@ -93,6 +95,48 @@ internal static class Program
         Assert(capabilities.SupportsBatch, "Existing TE2 batch formatting capability should be preserved.");
     }
 
+    private static void RunDaxPrivacyPolicyChecks()
+    {
+        var policy = new DaxFormatterRequestPolicy();
+        Assert(!policy.CanSendDaxOffDevice, "Remote formatter policy must default to off.");
+        Assert(!policy.CanSendModelTelemetry, "Telemetry must default to off.");
+
+        policy.RemoteFormattingEnabled = true;
+        Assert(policy.CanSendDaxOffDevice, "Explicit remote formatting consent should permit DAX transmission.");
+        Assert(!policy.CanSendModelTelemetry, "Formatting consent must not imply telemetry consent.");
+
+        policy.IncludeModelTelemetry = true;
+        Assert(policy.CanSendModelTelemetry, "Telemetry should require both remote formatting and telemetry opt-in.");
+    }
+
+    private static void RunDaxQueryContractChecks()
+    {
+        var request = new DaxQueryRequest { QueryText = "EVALUATE ROW(\"Value\", 1)" };
+        Assert(request.MaxRows == DaxQueryRequest.DefaultMaxRows, "DAX query default row bound changed unexpectedly.");
+        Assert(request.TimeoutSeconds == DaxQueryRequest.DefaultTimeoutSeconds, "DAX query default timeout changed unexpectedly.");
+        AssertThrows<ArgumentOutOfRangeException>(() => request.MaxRows = 0, "Zero row bound must be rejected.");
+        AssertThrows<ArgumentOutOfRangeException>(() => request.MaxRows = DaxQueryRequest.MaxAllowedRows + 1, "Excessive row bound must be rejected.");
+        AssertThrows<ArgumentOutOfRangeException>(() => request.TimeoutSeconds = 3601, "Excessive timeout must be rejected.");
+
+        var history = new DaxQueryHistory(2);
+        var t0 = new DateTime(2026, 9, 6, 18, 0, 0, DateTimeKind.Utc);
+        history.Add("EVALUATE ROW(\"A\", 1)", true, 10, executedUtc: t0);
+        history.Add("EVALUATE ROW(\"B\", 2)", true, 20, executedUtc: t0.AddMinutes(1));
+        history.Add("EVALUATE ROW(\"C\", 3)", false, 30, "sample failure", t0.AddMinutes(2));
+
+        Assert(history.Count == 2, "DAX query history must enforce its capacity.");
+        Assert(history.Items[0].QueryText.Contains("\"C\"", StringComparison.Ordinal), "Newest DAX query must be first.");
+        Assert(!history.Items[0].Succeeded && history.Items[0].ErrorMessage == "sample failure", "Failure metadata was lost from query history.");
+        Assert(history.Items.All(i => !i.QueryText.Contains("\"A\"", StringComparison.Ordinal)), "Oldest history entry was not evicted.");
+
+        history.Add("EVALUATE ROW(\"C\", 3)", true, 12, executedUtc: t0.AddMinutes(3));
+        Assert(history.Count == 2, "Consecutive duplicate query should replace the newest entry, not grow history.");
+        Assert(history.Items[0].Succeeded && history.Items[0].DurationMilliseconds == 12, "Collapsed duplicate did not keep newest execution metadata.");
+
+        var result = new DaxQueryResult();
+        Assert(result.Columns.Length == 0 && result.Rows.Length == 0, "Default query result collections must be empty, not null.");
+    }
+
     private static void RunQuickOpenChecks()
     {
         var objects = new[]
@@ -162,6 +206,20 @@ internal static class Program
 
         Assert(QuickOpenMatcher.Search(objects, "", 2).Count == 2, "Empty query should provide a bounded navigation list.");
         Assert(QuickOpenMatcher.Search(objects, "sales", 0).Count == 0, "Non-positive result limit should be empty.");
+    }
+
+    private static void AssertThrows<TException>(Action action, string message) where TException : Exception
+    {
+        try
+        {
+            action();
+        }
+        catch (TException)
+        {
+            return;
+        }
+
+        throw new InvalidOperationException(message);
     }
 
     private static void Assert(bool condition, string message)

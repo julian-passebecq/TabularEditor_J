@@ -1,0 +1,36 @@
+name: PbiBench TE2 integration
+
+on:
+  push:
+    branches:
+      - pbi-workflow-pro-v0.2
+    paths:
+      - 'TabularEditor/PbiBench/**'
+      - 'PbiBench.Core/**'
+      - 'Directory.Build.targets'
+      - '.github/workflows/pbibench-te2-integration.yml'
+  pull_request:
+    paths:
+      - 'TabularEditor/PbiBench/**'
+      - 'PbiBench.Core/**'
+      - 'Directory.Build.targets'
+      - '.github/workflows/pbibench-te2-integration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build TE2 with PbiBench host integration
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: microsoft/setup-msbuild@v2
+      - uses: NuGet/setup-nuget@v2
+      - name: Restore legacy TE2 solution packages
+        run: nuget restore TabularEditor.sln -NonInteractive
+      - name: Build Tabular Editor with PbiBench additions
+        run: msbuild TabularEditor\TabularEditor.csproj /m /p:Configuration=Release /p:Platform=AnyCPU /verbosity:minimal

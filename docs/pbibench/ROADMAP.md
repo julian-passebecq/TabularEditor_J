@@ -1,6 +1,6 @@
 # PbiBench roadmap — focused TE2++++++
 
-## v0.1 — clean foundation (current)
+## v0.1 — clean foundation checkpoint
 
 - preserve exact upstream TE2 tree;
 - add neutral PbiBench.Core;
@@ -12,18 +12,27 @@
 
 No Fabric/MCP code.
 
-## v0.2 — Model + DAX host
+Stable checkpoint branch: `pbi-workflow-pro-v0.1`.
+
+## v0.2 — Model + DAX host (current)
 
 Port/adapt the proven model/DAX ideas from `powerbi_enhanced_dev` without importing its platform scope:
 
-- PbiBench top-level navigation/shell hooks kept minimal in upstream files;
-- Semantic View based on TE2 model/dependency data;
-- Quick Open / object navigator;
-- stronger model-aware DAX editor/workbench;
-- DAX query documents/results/history/cancellation where safe;
-- expose existing SQLBI DAX Formatter with explicit remote/privacy status;
-- investigate an offline formatter only if a compatible tested implementation exists;
-- keep `Analyze in DAX Studio` as the deep-performance bridge.
+- [x] keep PbiBench shell hooks isolated from large upstream files;
+- [x] provider-neutral semantic Quick Open search/ranking;
+- [x] loaded-model Quick Open adapter + `Ctrl+P` host integration;
+- [x] reuse TE2 `Goto(...)` for final navigation;
+- [x] privacy-default remote DAX formatter policy contract;
+- [x] bounded DAX query request/result/executor contracts;
+- [x] bounded in-memory query history with no implicit persistence;
+- [ ] Semantic View based on TE2 model/dependency data;
+- [ ] stronger model-aware DAX editor/workbench shell;
+- [ ] real Desktop/XMLA DAX query execution/results with cancellation;
+- [ ] enforce formatter consent in the PbiBench host and add a telemetry-free request path;
+- [ ] investigate an offline formatter only if a compatible tested implementation exists;
+- [ ] keep `Analyze in DAX Studio` as the deep-performance bridge.
+
+Integration branch: `pbi-workflow-pro-v0.2`.
 
 ## v0.3 — C# automation
 

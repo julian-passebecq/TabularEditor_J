@@ -33,20 +33,32 @@ Upstream: `TabularEditor/TabularEditor`
 
 Pinned clean baseline for this work: `7029129aa3f45d35f987d8f6ac7e5a971f28771c` (2026-05-15).
 
-The fork's `master` matched that upstream commit when this branch was created.
+The fork's `master` matched that upstream commit when this work started.
 
-## Current foundation branch
+## Branches
 
-`pbi-workflow-pro-v0.1`
+Stable foundation checkpoint: `pbi-workflow-pro-v0.1`
 
-This first pass establishes:
+Current integration branch: `pbi-workflow-pro-v0.2`
 
-1. the scope/update contract;
-2. a neutral `PbiBench.Core` library;
+### v0.1 foundation
+
+1. scope/update contract;
+2. neutral `PbiBench.Core` library;
 3. bounded PBIP project discovery;
 4. provider-neutral project-context serialization;
-5. Git status parsing primitives without turning PbiBench into a Git client;
+5. Git status parsing primitives without becoming a Git client;
 6. explicit DAX formatter capability/privacy metadata;
-7. a dependency-free smoke harness and CI.
+7. dependency-free smoke harness and CI.
 
-See `docs/pbibench/ARCHITECTURE.md` and `docs/pbibench/ROADMAP.md`.
+### v0.2 current work
+
+- semantic Quick Open ranking/search in neutral Core;
+- `Ctrl+P` loaded-model navigation wired to TE2 through isolated partial classes;
+- read-only TOMWrapper semantic indexing;
+- remote formatter consent/telemetry policy contract;
+- bounded DAX query request/result/executor contracts with cancellation;
+- bounded memory-only query history;
+- dedicated TE2 integration build lane.
+
+See `docs/pbibench/ARCHITECTURE.md`, `docs/pbibench/ROADMAP.md`, and `docs/pbibench/V0_2_MODEL_DAX.md`.

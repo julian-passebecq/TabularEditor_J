@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    PbiBench integration stays outside the upstream TabularEditor.csproj so TE2 syncs do not
+    accumulate project-file conflicts. Modern MSBuild imports Directory.Build.targets for all
+    projects; the condition below limits these additions to the TabularEditor application only.
+  -->
+  <ItemGroup Condition="'$(MSBuildProjectName)' == 'TabularEditor'">
+    <Compile Include="$(MSBuildProjectDirectory)\PbiBench\**\*.cs" />
+    <ProjectReference Include="$(MSBuildThisFileDirectory)PbiBench.Core\PbiBench.Core.csproj">
+      <Name>PbiBench.Core</Name>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+</Project>
