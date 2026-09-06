@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using PbiBench.Core.Navigation;
 using TabularEditor.TOMWrapper;
 
@@ -14,13 +15,16 @@ namespace TabularEditor.PbiBench.Navigation
     internal sealed class PbiBenchQuickOpenIndex
     {
         private readonly Dictionary<string, ITabularNamedObject> _objectsById;
+        private readonly Dictionary<ITabularNamedObject, string> _idsByObject;
 
         private PbiBenchQuickOpenIndex(
             IReadOnlyList<SemanticObjectDescriptor> descriptors,
-            Dictionary<string, ITabularNamedObject> objectsById)
+            Dictionary<string, ITabularNamedObject> objectsById,
+            Dictionary<ITabularNamedObject, string> idsByObject)
         {
             Descriptors = descriptors;
             _objectsById = objectsById;
+            _idsByObject = idsByObject;
         }
 
         public IReadOnlyList<SemanticObjectDescriptor> Descriptors { get; }
@@ -32,18 +36,30 @@ namespace TabularEditor.PbiBench.Navigation
             return _objectsById.TryGetValue(id, out result) ? result : null;
         }
 
+        public bool TryGetId(ITabularNamedObject obj, out string id)
+        {
+            if (obj == null)
+            {
+                id = null;
+                return false;
+            }
+
+            return _idsByObject.TryGetValue(obj, out id);
+        }
+
         public static PbiBenchQuickOpenIndex Build(Model model)
         {
             if (model == null) throw new ArgumentNullException(nameof(model));
 
             var descriptors = new List<SemanticObjectDescriptor>();
             var objectsById = new Dictionary<string, ITabularNamedObject>(StringComparer.Ordinal);
-            var seen = new HashSet<ITabularNamedObject>();
+            var idsByObject = new Dictionary<ITabularNamedObject, string>(ReferenceIdentityComparer.Instance);
+            var seen = new HashSet<ITabularNamedObject>(ReferenceIdentityComparer.Instance);
             var sequence = 0;
 
-            Visit(model, null, string.Empty, descriptors, objectsById, seen, ref sequence);
+            Visit(model, null, string.Empty, descriptors, objectsById, idsByObject, seen, ref sequence);
 
-            return new PbiBenchQuickOpenIndex(descriptors, objectsById);
+            return new PbiBenchQuickOpenIndex(descriptors, objectsById, idsByObject);
         }
 
         private static void Visit(
@@ -52,6 +68,7 @@ namespace TabularEditor.PbiBench.Navigation
             string parentPath,
             List<SemanticObjectDescriptor> descriptors,
             Dictionary<string, ITabularNamedObject> objectsById,
+            Dictionary<ITabularNamedObject, string> idsByObject,
             HashSet<ITabularNamedObject> seen,
             ref int sequence)
         {
@@ -79,6 +96,7 @@ namespace TabularEditor.PbiBench.Navigation
 
                 descriptors.Add(descriptor);
                 objectsById[id] = current;
+                idsByObject[current] = id;
             }
 
             var container = current as ITabularObjectContainer;
@@ -88,7 +106,7 @@ namespace TabularEditor.PbiBench.Navigation
             if (children == null) return;
 
             foreach (var child in children)
-                Visit(child, current, traversalPath, descriptors, objectsById, seen, ref sequence);
+                Visit(child, current, traversalPath, descriptors, objectsById, idsByObject, seen, ref sequence);
         }
 
         private static string GetSemanticParentName(ITabularNamedObject current, ITabularNamedObject parent)
@@ -178,6 +196,25 @@ namespace TabularEditor.PbiBench.Navigation
                 case ObjectType.Partition: return SemanticObjectKind.Partition;
                 case ObjectType.DataSource: return SemanticObjectKind.DataSource;
                 default: return SemanticObjectKind.Other;
+            }
+        }
+
+        private sealed class ReferenceIdentityComparer : IEqualityComparer<ITabularNamedObject>
+        {
+            public static readonly ReferenceIdentityComparer Instance = new ReferenceIdentityComparer();
+
+            private ReferenceIdentityComparer()
+            {
+            }
+
+            public bool Equals(ITabularNamedObject x, ITabularNamedObject y)
+            {
+                return ReferenceEquals(x, y);
+            }
+
+            public int GetHashCode(ITabularNamedObject obj)
+            {
+                return obj == null ? 0 : RuntimeHelpers.GetHashCode(obj);
             }
         }
     }
