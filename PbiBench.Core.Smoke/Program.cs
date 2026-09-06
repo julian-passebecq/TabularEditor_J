@@ -1,0 +1,98 @@
+using System;
+using System.IO;
+using System.Linq;
+using PbiBench.Core.Dax;
+using PbiBench.Core.Project;
+using PbiBench.Core.Serialization;
+
+internal static class Program
+{
+    private static int Main()
+    {
+        var root = Path.Combine(Path.GetTempPath(), "pbibench-core-smoke-" + Guid.NewGuid().ToString("N"));
+        try
+        {
+            BuildFixture(root);
+            RunProjectDiscoveryChecks(root);
+            RunGitChecks();
+            RunDaxFormatterChecks();
+            Console.WriteLine("PbiBench.Core smoke: PASS");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine("PbiBench.Core smoke: FAIL");
+            Console.Error.WriteLine(ex);
+            return 1;
+        }
+        finally
+        {
+            try { if (Directory.Exists(root)) Directory.Delete(root, true); }
+            catch { }
+        }
+    }
+
+    private static void BuildFixture(string root)
+    {
+        Directory.CreateDirectory(root);
+        Directory.CreateDirectory(Path.Combine(root, ".git"));
+        File.WriteAllText(Path.Combine(root, "Contoso.pbip"), "{}");
+
+        var semantic = Path.Combine(root, "Contoso.SemanticModel", "definition", "tables");
+        Directory.CreateDirectory(semantic);
+        File.WriteAllText(Path.Combine(semantic, "Sales.tmdl"), "table Sales");
+
+        var report = Path.Combine(root, "Executive.Report", "definition", "pages");
+        Directory.CreateDirectory(report);
+        File.WriteAllText(Path.Combine(root, "Executive.Report", "definition.pbir"), "{}");
+
+        // Ignored build folders must never be mistaken for project artifacts.
+        Directory.CreateDirectory(Path.Combine(root, "obj", "Fake.Report", "definition"));
+    }
+
+    private static void RunProjectDiscoveryChecks(string root)
+    {
+        var source = Path.Combine(root, "Contoso.SemanticModel", "definition");
+        var context = PbipProjectDiscovery.Discover(source);
+
+        Assert(context.ProjectRoot == Path.GetFullPath(root).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar), "Project root was not discovered.");
+        Assert(context.PbipFile != null && context.PbipFile.EndsWith("Contoso.pbip", StringComparison.OrdinalIgnoreCase), "PBIP was not discovered.");
+        Assert(context.SemanticModelFolders.Length == 1, "Expected exactly one semantic-model folder.");
+        Assert(context.ReportFolders.Length == 1, "Expected exactly one report folder.");
+        Assert(context.Capabilities.Pbip, "PBIP capability missing.");
+        Assert(context.Capabilities.Tmdl, "TMDL capability missing.");
+        Assert(context.Capabilities.Pbir, "PBIR capability missing.");
+        Assert(context.Capabilities.Git, "Git capability missing.");
+
+        var json = ProjectContextSerializer.Serialize(context);
+        Assert(json.Contains("Contoso.pbip", StringComparison.Ordinal), "Serialized context lost PBIP identity.");
+        Assert(!json.Contains("connectionString", StringComparison.OrdinalIgnoreCase), "Context contract must not contain connection strings.");
+
+        var roundTrip = ProjectContextSerializer.Deserialize(json);
+        Assert(roundTrip.SemanticModelFolders.SequenceEqual(context.SemanticModelFolders), "Context round trip changed semantic-model folders.");
+    }
+
+    private static void RunGitChecks()
+    {
+        Assert(GitStatusParser.ParseState(string.Empty) == GitState.Clean, "Empty porcelain output should be clean.");
+        Assert(GitStatusParser.ParseState(" M file.txt") == GitState.Modified, "Dirty porcelain output should be modified.");
+        Assert(GitStatusParser.ParseBranch("main\n") == "main", "Branch parser failed.");
+        Assert(GitStatusParser.ParseBranch("HEAD") == null, "Detached HEAD should not be presented as a branch.");
+        Assert(GitStatusParser.ParseHead("ABCDEF1234") == "abcdef1234", "Commit parser failed.");
+        Assert(GitStatusParser.ParseHead("not-a-sha") == null, "Invalid commit value was accepted.");
+    }
+
+    private static void RunDaxFormatterChecks()
+    {
+        var capabilities = new DaxFormatterCapabilities();
+        Assert(capabilities.RequiresNetwork, "TE2 SQLBI formatter must be identified as remote.");
+        Assert(capabilities.SendsDaxOffDevice, "Formatter privacy boundary must be explicit.");
+        Assert(!capabilities.IsOfflineFormatter, "Existing TE2 formatter must never be labelled offline.");
+        Assert(capabilities.SupportsBatch, "Existing TE2 batch formatting capability should be preserved.");
+    }
+
+    private static void Assert(bool condition, string message)
+    {
+        if (!condition) throw new InvalidOperationException(message);
+    }
+}
