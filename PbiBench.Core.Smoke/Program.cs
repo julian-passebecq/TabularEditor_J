@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using PbiBench.Core.Dax;
+using PbiBench.Core.Navigation;
 using PbiBench.Core.Project;
 using PbiBench.Core.Serialization;
 
@@ -16,6 +17,7 @@ internal static class Program
             RunProjectDiscoveryChecks(root);
             RunGitChecks();
             RunDaxFormatterChecks();
+            RunQuickOpenChecks();
             Console.WriteLine("PbiBench.Core smoke: PASS");
             return 0;
         }
@@ -89,6 +91,77 @@ internal static class Program
         Assert(capabilities.SendsDaxOffDevice, "Formatter privacy boundary must be explicit.");
         Assert(!capabilities.IsOfflineFormatter, "Existing TE2 formatter must never be labelled offline.");
         Assert(capabilities.SupportsBatch, "Existing TE2 batch formatting capability should be preserved.");
+    }
+
+    private static void RunQuickOpenChecks()
+    {
+        var objects = new[]
+        {
+            new SemanticObjectDescriptor
+            {
+                Id = "measure:Sales.Revenue",
+                Kind = SemanticObjectKind.Measure,
+                Name = "Revenue",
+                ParentName = "Sales",
+                DisplayPath = "Sales[Revenue]",
+                SearchTerms = new[] { "net sales", "turnover" }
+            },
+            new SemanticObjectDescriptor
+            {
+                Id = "column:Sales.RevenueCode",
+                Kind = SemanticObjectKind.Column,
+                Name = "Revenue Code",
+                ParentName = "Sales",
+                DisplayPath = "Sales[Revenue Code]"
+            },
+            new SemanticObjectDescriptor
+            {
+                Id = "table:Sales",
+                Kind = SemanticObjectKind.Table,
+                Name = "Sales",
+                DisplayPath = "Sales"
+            },
+            new SemanticObjectDescriptor
+            {
+                Id = "function:Currency.Convert",
+                Kind = SemanticObjectKind.Function,
+                Name = "Currency Convert",
+                DisplayPath = "Functions / Currency Convert",
+                SearchTerms = new[] { "fx conversion" }
+            },
+            new SemanticObjectDescriptor
+            {
+                Id = "measure:Sales.HiddenRevenue",
+                Kind = SemanticObjectKind.Measure,
+                Name = "Revenue",
+                ParentName = "Sales",
+                DisplayPath = "Sales[Revenue hidden]",
+                IsHidden = true
+            }
+        };
+
+        var revenue = QuickOpenMatcher.Search(objects, "revenue", 10);
+        Assert(revenue.Count >= 2, "Quick Open failed to find revenue objects.");
+        Assert(revenue[0].Object.Id == "measure:Sales.Revenue", "Visible exact measure should rank first.");
+        Assert(revenue[0].MatchKind == QuickOpenMatchKind.Exact, "Exact match was not classified correctly.");
+
+        var tables = QuickOpenMatcher.Search(objects, "kind:table sal", 10);
+        Assert(tables.Count == 1 && tables[0].Object.Kind == SemanticObjectKind.Table, "kind:table filter failed.");
+
+        var measures = QuickOpenMatcher.Search(objects, "kind:measure revenue", 10);
+        Assert(measures.Count == 2 && measures.All(r => r.Object.Kind == SemanticObjectKind.Measure), "kind:measure filter failed.");
+
+        var alias = QuickOpenMatcher.Search(objects, "net sales", 10);
+        Assert(alias.Count > 0 && alias[0].Object.Id == "measure:Sales.Revenue", "Search terms should participate in multi-token matching.");
+
+        var fuzzy = QuickOpenMatcher.Search(objects, "rvn", 10);
+        Assert(fuzzy.Any(r => r.Object.Id == "measure:Sales.Revenue"), "Subsequence matching failed.");
+
+        var fn = QuickOpenMatcher.Search(objects, "kind:fn fx", 10);
+        Assert(fn.Count == 1 && fn[0].Object.Kind == SemanticObjectKind.Function, "Function alias filter/search failed.");
+
+        Assert(QuickOpenMatcher.Search(objects, "", 2).Count == 2, "Empty query should provide a bounded navigation list.");
+        Assert(QuickOpenMatcher.Search(objects, "sales", 0).Count == 0, "Non-positive result limit should be empty.");
     }
 
     private static void Assert(bool condition, string message)

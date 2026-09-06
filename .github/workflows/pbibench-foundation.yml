@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - pbi-workflow-pro-v0.1
+      - pbi-workflow-pro-v0.2
   pull_request:
     paths:
       - 'PbiBench.Core/**'
@@ -17,7 +18,7 @@ permissions:
 
 jobs:
   core:
-    name: Core contracts and PBIP discovery
+    name: Core contracts, PBIP discovery and navigation
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
