@@ -32,5 +32,9 @@ jobs:
       - uses: NuGet/setup-nuget@v2
       - name: Restore legacy TE2 solution packages
         run: nuget restore TabularEditor.sln -NonInteractive
+      - name: Restore PbiBench SDK project
+        run: dotnet restore PbiBench.Core/PbiBench.Core.csproj --nologo
+      - name: Generate TE2 ANTLR lexer sources
+        run: msbuild AntlrGrammars\AntlrGrammars.csproj /m /t:Rebuild /p:Configuration=Debug /p:Platform=AnyCPU /verbosity:minimal
       - name: Build Tabular Editor with PbiBench additions
         run: msbuild TabularEditor\TabularEditor.csproj /m /p:Configuration=Release /p:Platform=AnyCPU /verbosity:minimal
