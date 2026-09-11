@@ -1,0 +1,270 @@
+[
+  {
+    "sha256": "932388BDD0A5D4642EDF9F4EFDEC01748F0DAD1E8A26FF929EB20639BC157ACF",
+    "path": "built-artifacts.json"
+  },
+  {
+    "sha256": "674CF80B1388499D36135D80FFFA1A47D9D97F2707A20EBCE4239A0B7F488272",
+    "path": "final-git-status.txt"
+  },
+  {
+    "sha256": "E87B7D641B6828825BA427A0BBF53173B9F9B438F68C74A20E921CAF946E467C",
+    "path": "final-source.json"
+  },
+  {
+    "sha256": "544EE06DAC7815F2D5DBD6D46A1F53308411F79EC8C52F092DD17F5C4B19D8AD",
+    "path": "focused-run-2.log"
+  },
+  {
+    "sha256": "C7D05C86C48923E77B00C653BFFF8FF378E4C1C5C1E5C3E565E24E11575FD5AC",
+    "path": "focused-run-3.log"
+  },
+  {
+    "sha256": "31D32F7E998C7CB53EB63D76B2BDB98054B42A80603385FD4F6D5C383D57A97F",
+    "path": "focused-run.log"
+  },
+  {
+    "sha256": "2B73D866C246F9345BA77E96E44DBBF674AF0E751C660BEF30DBCEBDC1892ACE",
+    "path": "harness-build-2.log"
+  },
+  {
+    "sha256": "720F3A09B5CE5C4AECAB72171F571813D38C5940117940923D5A39E14D6F648F",
+    "path": "harness-build-3.log"
+  },
+  {
+    "sha256": "BF10252CE57C98E7D0FCEB84DA1B44D124CE5F03F11FDAD3FBD849B0D7A63FDC",
+    "path": "harness-build.log"
+  },
+  {
+    "sha256": "66C7DDA7ACBEC97C8E8160B02B8232CBED963D3341B346B3389BC0B6561DE4DF",
+    "path": "prior-built-artifacts.json"
+  },
+  {
+    "sha256": "472877A06C6681CDCE415517DF7126CB0271462D01B31DD0DCC6A14B64ADA941",
+    "path": "prior-final-source.json"
+  },
+  {
+    "sha256": "B9721A4A07253C293B17CBDDDBA7A6BB113AAFEFD9BC80CDD84CBA19150EF637",
+    "path": "start-source.json"
+  },
+  {
+    "sha256": "3D7A7B887389F67219EE283CE35DFBCAF7E3ABFC2B7041EE56DF49A1416CEB2F",
+    "path": "build/antlr-debug.log"
+  },
+  {
+    "sha256": "AD205042B50782A8972C2309272C3FA3192959975B316EDA5B0494134B2B4ACD",
+    "path": "build/host-release.log"
+  },
+  {
+    "sha256": "F6C714D40108DBF8483AD2983C428445C713B0EE88F3BA23984B295D7E672512",
+    "path": "build/host-smoke-build.log"
+  },
+  {
+    "sha256": "DDF68DB3D8D2F9572A71C51F3F3FDB8D71553978FEA549CDE378875132E4B7B4",
+    "path": "build/restore-core.log"
+  },
+  {
+    "sha256": "C36E614B030F4CB2D3D71EC73226BA155444A678F563D2A6F5826494CD223F54",
+    "path": "build/restore-legacy.log"
+  },
+  {
+    "sha256": "21F3BEB70B3A3BAFA6ADD70838E0C312C0D57BA192673700552301DF0BC3E9C7",
+    "path": "build/sdks.txt"
+  },
+  {
+    "sha256": "52CA168752E4B4EF81D5E50075A8A4269EE0EE6C16F16D5AA8C4F8C2EB2C8C0B",
+    "path": "build/summary.json"
+  },
+  {
+    "sha256": "2DAE833F879135455FBCCB6AB16EF977C410DD68F651356CE09F9CA779F2F679",
+    "path": "start/AGENTS.md"
+  },
+  {
+    "sha256": "0BBC365FA261D2D01009F80CEAE7FED72C2AA40B5013386DD5CAD820E4119ACA",
+    "path": "start/README_PBIBENCH.md"
+  },
+  {
+    "sha256": "C5B6EA038F25879C86D6BD6EA0D690DC4BC19007604415C68D5421E2A3C16091",
+    "path": "start/.github/workflows/pbibench-foundation.yml"
+  },
+  {
+    "sha256": "24D7B1EF4C3A4C53C902A1E44A1FADA31EE633E3C04ADDFE7D5A661F341A6938",
+    "path": "start/.github/workflows/pbibench-te2-integration.yml"
+  },
+  {
+    "sha256": "DE28C37227AC5C545A044DEEFD763071F0A9224B35603A5A92A00529497F96D8",
+    "path": "start/docs/PBIBENCH_AUDIT_2026-09-08.md"
+  },
+  {
+    "sha256": "521FBE53B90062FC371A2529B6B2AB70776AA96437F6A7CB3B9BD804141C2DD4",
+    "path": "start/docs/pbibench/ROADMAP.md"
+  },
+  {
+    "sha256": "71CAF1218499B602174A0F088FB0B5935BA4214211AAACA24AC42C444FE97E84",
+    "path": "start/docs/pbibench/STABILIZATION_2026-09-08.md"
+  },
+  {
+    "sha256": "FE6694E9A25F1C0F1C2181628E66952F5131A3C6B9E3073F3E41D300AFA13C16",
+    "path": "start/docs/pbibench/UPSTREAM_TE2_SYNC.md"
+  },
+  {
+    "sha256": "0447B8C463387F01504DC1DED4B5965F66FA45E6B96F63F85D14C0D81DE520BB",
+    "path": "start/docs/pbibench/V0_2_MODEL_DAX.md"
+  },
+  {
+    "sha256": "2DEE71BDD1EF61A79C1E89B257AA13576045550FF1ED441529B353658382047D",
+    "path": "start/PbiBench.Core/Dax/DaxCsvExport.cs"
+  },
+  {
+    "sha256": "98B5651CAA82C229939FDA226206A6E2F01946B82BDA15184B8ACB18710FF272",
+    "path": "start/PbiBench.Core/Dax/DaxDocument.cs"
+  },
+  {
+    "sha256": "F56DE0C687E759104CAAB5E5DED7A17F137C4093EC42B3D3F5D6B94A3EE9CBFA",
+    "path": "start/PbiBench.Core/Dax/DaxFormatterRequestPolicy.cs"
+  },
+  {
+    "sha256": "9258A5F2D7119DB7743C742A96B46C9B58245D5F2E06AAB7C1FCAC1ADA3D28AE",
+    "path": "start/PbiBench.Core/Dax/DaxQueryContracts.cs"
+  },
+  {
+    "sha256": "533FA054AD2AC6E7A81D600BA526C8A680E1DAF7B635C039A29B1DFEA0144232",
+    "path": "start/PbiBench.Core/Dax/DaxResultRetention.cs"
+  },
+  {
+    "sha256": "D57D247AF89B761AAC8D6A9C2C5292650448B450F50EB05086056A9C17125784",
+    "path": "start/PbiBench.Core.Smoke/DaxRetentionSmoke.cs"
+  },
+  {
+    "sha256": "B0466EC232A19DFB9D5218EF1C4ADB617694AC9FBB7210180AF5E97768D4A491",
+    "path": "start/PbiBench.Core.Smoke/Program.cs"
+  },
+  {
+    "sha256": "E71336427C49EE8B9EB673847328C5B183B88A232E8E6242F533E5EA22E12851",
+    "path": "start/PbiBench.Host.Smoke/DaxDocumentSmoke.cs"
+  },
+  {
+    "sha256": "0EB455EEBBD5F977F8CF38B280EF75999AC34E147BB344F614AB6A5425B9AEB1",
+    "path": "start/PbiBench.Host.Smoke/DaxWorkbenchSmoke.cs"
+  },
+  {
+    "sha256": "B85B2A4C5BE8B5FA896FBA0739AE3B193B2C059A45BA2671F456B9BC1A151C29",
+    "path": "start/PbiBench.Host.Smoke/FormatterExportSmoke.cs"
+  },
+  {
+    "sha256": "EA999E30F8ED856D91D36EF047FD415733D8127E3AB514CC972601CAD7761F61",
+    "path": "start/PbiBench.Host.Smoke/PbiBench.Host.Smoke.csproj"
+  },
+  {
+    "sha256": "A217815CEC79B4D7EC5D794845F1D2A82F9A27FF10520633DB382FE72133888D",
+    "path": "start/PbiBench.Host.Smoke/Program.cs"
+  },
+  {
+    "sha256": "223F6C945F4F396459619BAD2870D5B9D197E7AEE0BB54528EA7A8CF6BDCD53F",
+    "path": "start/PbiBench.Host.Smoke/QueryLifecycleSmoke.cs"
+  },
+  {
+    "sha256": "F004DF2AF08B21B135EFF10BC393C9B10F83EC1BE1957888EE16012299FE99E6",
+    "path": "start/projectmanagement/ARCHITECTURE.md"
+  },
+  {
+    "sha256": "C34842B13B90383D6A5AC970D2A4B8586FFBBAEF178C7545F024CFAB20FFC1D5",
+    "path": "start/projectmanagement/BACKLOG.md"
+  },
+  {
+    "sha256": "9C34DBB51AB06094814E2E73B6225EA0B620B3F2D6C6300F4A0D0E42A26867CA",
+    "path": "start/projectmanagement/README.md"
+  },
+  {
+    "sha256": "BCE48F7DB0EB2F75D3477110900212E4F24E17A244D069014C27E790F08D3949",
+    "path": "start/projectmanagement/REGISTERS.md"
+  },
+  {
+    "sha256": "9895A5BD659699AE6CAE3ADA0FA86ABE4F5EB2C0B5184468AA14BFA25ECFB7AE",
+    "path": "start/projectmanagement/STATUS.md"
+  },
+  {
+    "sha256": "16137BC75BA2878F1B0D08BDD710078C475BFCEC29D8D7F9D6E5B66762D03242",
+    "path": "start/projectmanagement/TEST-PLAN.md"
+  },
+  {
+    "sha256": "954BE32B7DA968B573800E1556164BABC57FDF068AB7275841F6F3AD31D4B06D",
+    "path": "start/projectmanagement/WORKFLOW.md"
+  },
+  {
+    "sha256": "AB4EC854AAC0E675650A220163B13C07275EC8094D5FD8DD48A6428491733182",
+    "path": "start/projectmanagement/handoffs/S001-DEVELOPER.md"
+  },
+  {
+    "sha256": "D55AB85AC46E2BD5838D4D37283667A7B080D7D9D12CEFB25C22EFF92C1F015D",
+    "path": "start/projectmanagement/handoffs/S001-LEAD-QUESTIONS.md"
+  },
+  {
+    "sha256": "F81C5FF2538A9DAF5FCE6BB05740FA4CEFD3F94DABF6D5317DB21CD02B9799F5",
+    "path": "start/projectmanagement/handoffs/S001-QA.md"
+  },
+  {
+    "sha256": "16F6DC0F8467AC8F0231287B17950AA9FF0556D3D6A34C9DE5C97DA5752C01F3",
+    "path": "start/projectmanagement/reviews/2026-09-08-baseline.md"
+  },
+  {
+    "sha256": "D0AAF0CF4A02D83D8FF6F0AFD35EE5AC2E1D4CDCC3553B0699CB6499F0CB908A",
+    "path": "start/projectmanagement/reviews/baseline-source.json"
+  },
+  {
+    "sha256": "99BB79514BC64D474F2079463FDF49B3B990D02900A065DB6AB7931A3209ED43",
+    "path": "start/projectmanagement/reviews/S001-DECISION.md"
+  },
+  {
+    "sha256": "051050480EB8F44103BF76A3E35F98A9E4ED13360E22B44390A8BE28731958C7",
+    "path": "start/projectmanagement/sprints/S001-REWORK-01.md"
+  },
+  {
+    "sha256": "615B22DD49B4CB2DF0ADE4AE3F69B1842F5273789FFF3DD80BBD9E2D36A84CAE",
+    "path": "start/projectmanagement/sprints/SPRINT-001.md"
+  },
+  {
+    "sha256": "98F0ECDE03D2CCB3194A984EB243183A1ED1352CC22EB8FAE07B276114551361",
+    "path": "start/Scripts/Verify-PbiBench.ps1"
+  },
+  {
+    "sha256": "229B1660A3CEBD649327E8CEDE7D1B986030EC9EDA4FABB329F0D5E298DCD408",
+    "path": "start/TabularEditor/FormMain.cs"
+  },
+  {
+    "sha256": "CBBDEED98E510B787ED29B035E7D3441F6B348D05C4BCA1FF3CE1916382C8AE9",
+    "path": "start/TabularEditor/PbiBench/AssemblyInfo.cs"
+  },
+  {
+    "sha256": "0C816E8F810E19E424BE4221368F01C98833592EE38E974A1481EF3972281D67",
+    "path": "start/TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs"
+  },
+  {
+    "sha256": "DC70CE1425D3C88353AFBBE1BC33366E438AE9B2BC1837223F9126F5C28FB08C",
+    "path": "start/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs"
+  },
+  {
+    "sha256": "E79D9F4B5079EA5CD6630A8F3234C6C608927FF47B1B07D5EBBF3FA5D508062E",
+    "path": "start/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.Documents.cs"
+  },
+  {
+    "sha256": "2736D68BF2BAEF4C4F4C2D4BABF4FF543885F8BB29F69B81DAEA21915FC4E1BF",
+    "path": "start/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.Formatting.cs"
+  },
+  {
+    "sha256": "301F416646AA0C6679B711F5A03B3516345E2BD147525EF2C12C5F8D055C66E5",
+    "path": "start/TabularEditor/PbiBench/Dax/RemoteFormatterConsent.cs"
+  },
+  {
+    "sha256": "44CBE7510C55FD4B37E7239097DFAAA5C16AB7DBA06DAD9C5CB79993F7027B33",
+    "path": "start/TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs"
+  },
+  {
+    "sha256": "ACE20765564CF0A2E33F306D7E0EAF27F1BD4546724AF8C0A07CA1290863C75A",
+    "path": "start/TabularEditor/Scripting/ScriptHelper.cs"
+  },
+  {
+    "sha256": "C1E5C2989E619C0F600C12CAEFFB9B338CF3D38C276727113EB09E5D14A098B2",
+    "path": "start/TabularEditor/UIServices/DaxFormatter.cs"
+  }
+]

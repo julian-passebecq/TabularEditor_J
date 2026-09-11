@@ -1,0 +1,128 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TestRun id="25bf6933-2653-4753-9917-c2c1990d7851" name="julia@JULP 2026-09-08 21:16:54" runUser="JULP\julia" xmlns="http://microsoft.com/schemas/VisualStudio/TeamTest/2010">
+  <Times creation="2026-09-08T21:16:54.9070258+02:00" queuing="2026-09-08T21:16:54.9070258+02:00" start="2026-09-08T21:16:49.5468071+02:00" finish="2026-09-08T21:16:58.9239281+02:00" />
+  <TestSettings name="default" id="3a52bd40-ed2b-4057-b92a-1977bbae17b6">
+    <Deployment runDeploymentRoot="julia_JULP_2026-09-08_21_16_54" />
+  </TestSettings>
+  <Results>
+    <UnitTestResult executionId="4454b266-f768-4631-9d45-87a134c40e28" testId="d74ec14c-e432-4c0f-cf44-f144ba8e4c68" testName="TestUndoStackDepth" computerName="JULP" duration="00:00:00.0183487" startTime="2026-09-08T21:16:58.7653381+02:00" endTime="2026-09-08T21:16:58.7843514+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4454b266-f768-4631-9d45-87a134c40e28" />
+    <UnitTestResult executionId="7051eee8-f2e9-4341-96d7-7ad9fc351ec3" testId="801cf249-ab2e-9b48-692f-774275512ff9" testName="UndoDeleteSortByColumnTest" computerName="JULP" duration="00:00:00.0035739" startTime="2026-09-08T21:16:55.5723892+02:00" endTime="2026-09-08T21:16:55.5763892+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="7051eee8-f2e9-4341-96d7-7ad9fc351ec3" />
+    <UnitTestResult executionId="b199485a-0e74-4fa4-9cc8-eb5e00356cde" testId="50bd3786-bc94-3c30-dec6-9eb139cdb928" testName="BatchActionTest" computerName="JULP" duration="00:00:00.0021600" startTime="2026-09-08T21:16:55.5123856+02:00" endTime="2026-09-08T21:16:55.5143858+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b199485a-0e74-4fa4-9cc8-eb5e00356cde">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method TabularEditor.TOMWrapper.Tests.UndoManagerTests.BatchActionTest threw exception: &#xD;
+System.TypeInitializationException: The type initializer for 'TOMWrapperTest.Constants' threw an exception. ---&gt; Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test Server not specified. Please set environment variable TE_TestServer with the connection string of the AS engine server to use for testing</Message>
+          <StackTrace>   at TOMWrapperTest.Constants.GetServerName() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 16&#xD;
+   at TOMWrapperTest.Constants..cctor() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 12&#xD;
+--- End of inner exception stack trace ---&#xD;
+    at TabularEditor.TOMWrapper.Tests.UndoManagerTests.BatchActionTest() in D:\PROJ\TabularEditor_J\TOMWrapperTest\UndoManagerTests.cs:line 20&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="0659c77c-2c4e-472c-9cb9-202c7b9643a1" testId="f4d6b955-b83a-1d8a-6e1c-507f23e60456" testName="UndoRedoCopyPerspectiveTest" computerName="JULP" duration="00:00:00.0442979" startTime="2026-09-08T21:16:55.5143858+02:00" endTime="2026-09-08T21:16:55.5593857+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0659c77c-2c4e-472c-9cb9-202c7b9643a1" />
+    <UnitTestResult executionId="8f9f24b4-78e8-4bf0-925e-912155119441" testId="17dd06c7-7f21-e091-869a-b72df98f9893" testName="HierarchyTest2" computerName="JULP" duration="00:00:00.0174987" startTime="2026-09-08T21:16:54.9038680+02:00" endTime="2026-09-08T21:16:54.9217590+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="8f9f24b4-78e8-4bf0-925e-912155119441" />
+    <UnitTestResult executionId="2955cedf-cf8d-40fe-bf00-497699694b52" testId="e6a4590a-c387-7de1-322b-9eb65d230e4b" testName="UndoDeleteColumnUsedAsLevelTest" computerName="JULP" duration="00:00:00.0074826" startTime="2026-09-08T21:16:55.5643850+02:00" endTime="2026-09-08T21:16:55.5723892+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="2955cedf-cf8d-40fe-bf00-497699694b52" />
+    <UnitTestResult executionId="b4972fa4-6fa8-4ee6-a128-ad65afa8e64b" testId="498b9a28-5681-4323-57ae-882e59aba79b" testName="DeleteTableTest" computerName="JULP" duration="00:00:00.0204363" startTime="2026-09-08T21:16:55.4913846+02:00" endTime="2026-09-08T21:16:55.5123856+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="b4972fa4-6fa8-4ee6-a128-ad65afa8e64b">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method TabularEditor.TOMWrapper.ObjectHandlingTests.DeleteTableTest threw exception: &#xD;
+System.TypeInitializationException: The type initializer for 'TOMWrapperTest.Constants' threw an exception. ---&gt; Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test Server not specified. Please set environment variable TE_TestServer with the connection string of the AS engine server to use for testing</Message>
+          <StackTrace>   at TOMWrapperTest.Constants.GetServerName() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 16&#xD;
+   at TOMWrapperTest.Constants..cctor() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 12&#xD;
+--- End of inner exception stack trace ---&#xD;
+    at TabularEditor.TOMWrapper.ObjectHandlingTests.ResetAndConnect() in D:\PROJ\TabularEditor_J\TOMWrapperTest\ObjectHandlingTests.cs:line 154&#xD;
+   at TabularEditor.TOMWrapper.ObjectHandlingTests.DeleteTableTest() in D:\PROJ\TabularEditor_J\TOMWrapperTest\ObjectHandlingTests.cs:line 170&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="6bcd65a8-d5bd-44be-b1b0-f7f0ec537325" testId="72eed88b-9542-ecee-5406-a5c5d6613340" testName="UndoRedoCopyCultureTest" computerName="JULP" duration="00:00:00.0054572" startTime="2026-09-08T21:16:55.5593857+02:00" endTime="2026-09-08T21:16:55.5643850+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="6bcd65a8-d5bd-44be-b1b0-f7f0ec537325" />
+    <UnitTestResult executionId="0f12626b-c0f0-4eaa-aa0b-9eef985f0e4a" testId="7c90f13f-3d62-ca20-3992-4dce788f394d" testName="RecreateFromMetadataPerformanceTest" computerName="JULP" duration="00:00:03.1885026" startTime="2026-09-08T21:16:55.5763892+02:00" endTime="2026-09-08T21:16:58.7653381+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="0f12626b-c0f0-4eaa-aa0b-9eef985f0e4a">
+      <Output>
+        <StdOut>3184</StdOut>
+      </Output>
+    </UnitTestResult>
+    <UnitTestResult executionId="4e4f245b-2da4-4d0b-9786-cd5ba91d2e56" testId="6ae515eb-67c7-6283-cf01-d5cb5e919b06" testName="HierarchyTest" computerName="JULP" duration="00:00:02.4465899" startTime="2026-09-08T21:16:51.9396838+02:00" endTime="2026-09-08T21:16:54.8834996+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Passed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="4e4f245b-2da4-4d0b-9786-cd5ba91d2e56" />
+    <UnitTestResult executionId="5d3af704-0878-423a-8052-0465ead677cd" testId="6ec0d0a7-2ab2-1354-70dd-b30bae331203" testName="ResetTest" computerName="JULP" duration="00:00:00.5682697" startTime="2026-09-08T21:16:54.9217590+02:00" endTime="2026-09-08T21:16:55.4903854+02:00" testType="13cdc9d9-ddb5-4fa4-a97d-d965ccfc6d4b" outcome="Failed" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" relativeResultsDirectory="5d3af704-0878-423a-8052-0465ead677cd">
+      <Output>
+        <ErrorInfo>
+          <Message>Test method TabularEditor.TOMWrapper.ObjectHandlingTests.ResetTest threw exception: &#xD;
+System.TypeInitializationException: The type initializer for 'TOMWrapperTest.Constants' threw an exception. ---&gt; Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test Server not specified. Please set environment variable TE_TestServer with the connection string of the AS engine server to use for testing</Message>
+          <StackTrace>   at TOMWrapperTest.Constants.GetServerName() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 16&#xD;
+   at TOMWrapperTest.Constants..cctor() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 12&#xD;
+--- End of inner exception stack trace ---&#xD;
+    at TabularEditor.TOMWrapper.ObjectHandlingTests.ResetAndConnect() in D:\PROJ\TabularEditor_J\TOMWrapperTest\ObjectHandlingTests.cs:line 154&#xD;
+   at TabularEditor.TOMWrapper.ObjectHandlingTests.ResetTest() in D:\PROJ\TabularEditor_J\TOMWrapperTest\ObjectHandlingTests.cs:line 163&#xD;
+</StackTrace>
+        </ErrorInfo>
+      </Output>
+    </UnitTestResult>
+  </Results>
+  <TestDefinitions>
+    <UnitTest name="HierarchyTest2" storage="d:\proj\tabulareditor_j\tomwrappertest\bin\release\tomwrappertest.dll" id="17dd06c7-7f21-e091-869a-b72df98f9893">
+      <Execution id="8f9f24b4-78e8-4bf0-925e-912155119441" />
+      <TestMethod codeBase="D:\PROJ\TabularEditor_J\TOMWrapperTest\bin\Release\TOMWrapperTest.dll" adapterTypeName="executor://mstestadapter/v2" className="TabularEditor.TOMWrapper.ObjectHandlingTests" name="HierarchyTest2" />
+    </UnitTest>
+    <UnitTest name="RecreateFromMetadataPerformanceTest" storage="d:\proj\tabulareditor_j\tomwrappertest\bin\release\tomwrappertest.dll" id="7c90f13f-3d62-ca20-3992-4dce788f394d">
+      <Execution id="0f12626b-c0f0-4eaa-aa0b-9eef985f0e4a" />
+      <TestMethod codeBase="D:\PROJ\TabularEditor_J\TOMWrapperTest\bin\Release\TOMWrapperTest.dll" adapterTypeName="executor://mstestadapter/v2" className="TabularEditor.TOMWrapper.Tests.UndoManagerTests" name="RecreateFromMetadataPerformanceTest" />
+    </UnitTest>
+    <UnitTest name="BatchActionTest" storage="d:\proj\tabulareditor_j\tomwrappertest\bin\release\tomwrappertest.dll" id="50bd3786-bc94-3c30-dec6-9eb139cdb928">
+      <Execution id="b199485a-0e74-4fa4-9cc8-eb5e00356cde" />
+      <TestMethod codeBase="D:\PROJ\TabularEditor_J\TOMWrapperTest\bin\Release\TOMWrapperTest.dll" adapterTypeName="executor://mstestadapter/v2" className="TabularEditor.TOMWrapper.Tests.UndoManagerTests" name="BatchActionTest" />
+    </UnitTest>
+    <UnitTest name="UndoDeleteColumnUsedAsLevelTest" storage="d:\proj\tabulareditor_j\tomwrappertest\bin\release\tomwrappertest.dll" id="e6a4590a-c387-7de1-322b-9eb65d230e4b">
+      <Execution id="2955cedf-cf8d-40fe-bf00-497699694b52" />
+      <TestMethod codeBase="D:\PROJ\TabularEditor_J\TOMWrapperTest\bin\Release\TOMWrapperTest.dll" adapterTypeName="executor://mstestadapter/v2" className="TabularEditor.TOMWrapper.Tests.UndoManagerTests" name="UndoDeleteColumnUsedAsLevelTest" />
+    </UnitTest>
+    <UnitTest name="ResetTest" storage="d:\proj\tabulareditor_j\tomwrappertest\bin\release\tomwrappertest.dll" id="6ec0d0a7-2ab2-1354-70dd-b30bae331203">
+      <Execution id="5d3af704-0878-423a-8052-0465ead677cd" />
+      <TestMethod codeBase="D:\PROJ\TabularEditor_J\TOMWrapperTest\bin\Release\TOMWrapperTest.dll" adapterTypeName="executor://mstestadapter/v2" className="TabularEditor.TOMWrapper.ObjectHandlingTests" name="ResetTest" />
+    </UnitTest>
+    <UnitTest name="UndoDeleteSortByColumnTest" storage="d:\proj\tabulareditor_j\tomwrappertest\bin\release\tomwrappertest.dll" id="801cf249-ab2e-9b48-692f-774275512ff9">
+      <Execution id="7051eee8-f2e9-4341-96d7-7ad9fc351ec3" />
+      <TestMethod codeBase="D:\PROJ\TabularEditor_J\TOMWrapperTest\bin\Release\TOMWrapperTest.dll" adapterTypeName="executor://mstestadapter/v2" className="TabularEditor.TOMWrapper.Tests.UndoManagerTests" name="UndoDeleteSortByColumnTest" />
+    </UnitTest>
+    <UnitTest name="DeleteTableTest" storage="d:\proj\tabulareditor_j\tomwrappertest\bin\release\tomwrappertest.dll" id="498b9a28-5681-4323-57ae-882e59aba79b">
+      <Execution id="b4972fa4-6fa8-4ee6-a128-ad65afa8e64b" />
+      <TestMethod codeBase="D:\PROJ\TabularEditor_J\TOMWrapperTest\bin\Release\TOMWrapperTest.dll" adapterTypeName="executor://mstestadapter/v2" className="TabularEditor.TOMWrapper.ObjectHandlingTests" name="DeleteTableTest" />
+    </UnitTest>
+    <UnitTest name="TestUndoStackDepth" storage="d:\proj\tabulareditor_j\tomwrappertest\bin\release\tomwrappertest.dll" id="d74ec14c-e432-4c0f-cf44-f144ba8e4c68">
+      <Execution id="4454b266-f768-4631-9d45-87a134c40e28" />
+      <TestMethod codeBase="D:\PROJ\TabularEditor_J\TOMWrapperTest\bin\Release\TOMWrapperTest.dll" adapterTypeName="executor://mstestadapter/v2" className="TabularEditor.TOMWrapper.Tests.UndoManagerTests" name="TestUndoStackDepth" />
+    </UnitTest>
+    <UnitTest name="UndoRedoCopyCultureTest" storage="d:\proj\tabulareditor_j\tomwrappertest\bin\release\tomwrappertest.dll" id="72eed88b-9542-ecee-5406-a5c5d6613340">
+      <Execution id="6bcd65a8-d5bd-44be-b1b0-f7f0ec537325" />
+      <TestMethod codeBase="D:\PROJ\TabularEditor_J\TOMWrapperTest\bin\Release\TOMWrapperTest.dll" adapterTypeName="executor://mstestadapter/v2" className="TabularEditor.TOMWrapper.Tests.UndoManagerTests" name="UndoRedoCopyCultureTest" />
+    </UnitTest>
+    <UnitTest name="UndoRedoCopyPerspectiveTest" storage="d:\proj\tabulareditor_j\tomwrappertest\bin\release\tomwrappertest.dll" id="f4d6b955-b83a-1d8a-6e1c-507f23e60456">
+      <Execution id="0659c77c-2c4e-472c-9cb9-202c7b9643a1" />
+      <TestMethod codeBase="D:\PROJ\TabularEditor_J\TOMWrapperTest\bin\Release\TOMWrapperTest.dll" adapterTypeName="executor://mstestadapter/v2" className="TabularEditor.TOMWrapper.Tests.UndoManagerTests" name="UndoRedoCopyPerspectiveTest" />
+    </UnitTest>
+    <UnitTest name="HierarchyTest" storage="d:\proj\tabulareditor_j\tomwrappertest\bin\release\tomwrappertest.dll" id="6ae515eb-67c7-6283-cf01-d5cb5e919b06">
+      <Execution id="4e4f245b-2da4-4d0b-9786-cd5ba91d2e56" />
+      <TestMethod codeBase="D:\PROJ\TabularEditor_J\TOMWrapperTest\bin\Release\TOMWrapperTest.dll" adapterTypeName="executor://mstestadapter/v2" className="TabularEditor.TOMWrapper.ObjectHandlingTests" name="HierarchyTest" />
+    </UnitTest>
+  </TestDefinitions>
+  <TestEntries>
+    <TestEntry testId="d74ec14c-e432-4c0f-cf44-f144ba8e4c68" executionId="4454b266-f768-4631-9d45-87a134c40e28" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="801cf249-ab2e-9b48-692f-774275512ff9" executionId="7051eee8-f2e9-4341-96d7-7ad9fc351ec3" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="50bd3786-bc94-3c30-dec6-9eb139cdb928" executionId="b199485a-0e74-4fa4-9cc8-eb5e00356cde" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="f4d6b955-b83a-1d8a-6e1c-507f23e60456" executionId="0659c77c-2c4e-472c-9cb9-202c7b9643a1" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="17dd06c7-7f21-e091-869a-b72df98f9893" executionId="8f9f24b4-78e8-4bf0-925e-912155119441" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="e6a4590a-c387-7de1-322b-9eb65d230e4b" executionId="2955cedf-cf8d-40fe-bf00-497699694b52" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="498b9a28-5681-4323-57ae-882e59aba79b" executionId="b4972fa4-6fa8-4ee6-a128-ad65afa8e64b" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="72eed88b-9542-ecee-5406-a5c5d6613340" executionId="6bcd65a8-d5bd-44be-b1b0-f7f0ec537325" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="7c90f13f-3d62-ca20-3992-4dce788f394d" executionId="0f12626b-c0f0-4eaa-aa0b-9eef985f0e4a" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6ae515eb-67c7-6283-cf01-d5cb5e919b06" executionId="4e4f245b-2da4-4d0b-9786-cd5ba91d2e56" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestEntry testId="6ec0d0a7-2ab2-1354-70dd-b30bae331203" executionId="5d3af704-0878-423a-8052-0465ead677cd" testListId="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+  </TestEntries>
+  <TestLists>
+    <TestList name="Results Not in a List" id="8c84fa94-04c1-424b-9868-57a2d4851a1d" />
+    <TestList name="All Loaded Results" id="19431567-8539-422a-85d7-44ee4e166bda" />
+  </TestLists>
+  <ResultSummary outcome="Failed">
+    <Counters total="11" executed="11" passed="8" failed="3" error="0" timeout="0" aborted="0" inconclusive="0" passedButRunAborted="0" notRunnable="0" notExecuted="0" disconnected="0" warning="0" completed="0" inProgress="0" pending="0" />
+  </ResultSummary>
+</TestRun>

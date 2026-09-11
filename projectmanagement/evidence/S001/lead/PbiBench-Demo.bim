@@ -1,0 +1,43 @@
+{
+  "name": "PbiBench Demo",
+  "compatibilityLevel": 1600,
+  "model": {
+    "tables": [
+      {
+        "name": "Sales",
+        "measures": [
+          {
+            "expression": "1000",
+            "name": "Total Sales",
+            "formatString": "#,0"
+          },
+          {
+            "expression": "600",
+            "name": "Total Cost",
+            "formatString": "#,0"
+          },
+          {
+            "expression": "[Total Sales] - [Total Cost]",
+            "name": "Margin",
+            "formatString": "#,0"
+          },
+          {
+            "expression": "DIVIDE([Margin], [Total Sales])",
+            "name": "Margin %",
+            "formatString": "0.0%"
+          }
+        ]
+      },
+      {
+        "name": "Calendar",
+        "measures": [
+          {
+            "name": "Demo Year",
+            "expression": "2026"
+          }
+        ]
+      }
+    ],
+    "culture": "en-US"
+  }
+}

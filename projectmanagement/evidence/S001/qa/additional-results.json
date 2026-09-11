@@ -1,0 +1,22 @@
+[
+  {
+    "exitCode": 1,
+    "stage": "core-canonical"
+  },
+  {
+    "exitCode": 0,
+    "stage": "core-net9-diagnostic"
+  },
+  {
+    "exitCode": 1,
+    "stage": "upstream-te2-build"
+  },
+  {
+    "exitCode": 0,
+    "stage": "upstream-tom-build"
+  },
+  {
+    "exitCode": 1,
+    "stage": "upstream-tom-tests"
+  }
+]

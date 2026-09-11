@@ -422,34 +422,55 @@ Selected.Hierarchies.ForEach(item => item.TranslatedDisplayFolders.SetAll(item.D
             }
         }
 
-        private void actExpressionFormatDAX_Execute(object sender, EventArgs e)
+        private bool _pbiBenchExpressionFormatting;
+        private async void actExpressionFormatDAX_Execute(object sender, EventArgs e)
         {
-            if (Policies.Instance.DisableWebDaxFormatter || string.IsNullOrEmpty(txtExpression.Text)) return;
-
-            using (var hg = new Hourglass())
+            if (_pbiBenchExpressionFormatting || string.IsNullOrEmpty(txtExpression.Text)) return;
+            var changed = false;
+            EventHandler<FastColoredTextBoxNS.TextChangedEventArgs> revisionChanged = (s, args) => changed = true;
+            txtExpression.TextChanged += revisionChanged;
+            _pbiBenchExpressionFormatting = true;
+            try
             {
-                var textToFormat = ScriptHelper.PrepareForDaxFormatter(txtExpression.Text, UI.ExpressionEditor_Current is Function, out var firstComments);
+                TabularEditor.PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
+                var originalObject = UI.ExpressionEditor_Current;
+                var originalController = UI;
+                var contextGeneration = UI.ExpressionEditorContextGeneration;
+                var isFunction = originalObject is Function;
+                var textToFormat = ScriptHelper.PrepareForDaxFormatter(txtExpression.Text, isFunction, out var firstComments);
                 var newline = txtExpression.Text.StartsWith("\n") || txtExpression.Text.StartsWith("\r\n");
-                try
+                var consentRevision = TabularEditor.PbiBench.Dax.RemoteFormatterConsent.Revision;
+                var separators = Preferences.Current.UseSemicolonsAsSeparators;
+                var shortFormat = sender == actExpressionFormatDAXShort;
+                var skipSpace = Preferences.Current.DaxFormatterSkipSpaceAfterFunctionName;
+                var response = await System.Threading.Tasks.Task.Run(() => TabularEditor.Dax.DaxFormatterProxy.Instance
+                    .FormatDax(textToFormat, separators, shortFormat, skipSpace));
+                if (IsDisposed || Disposing || changed || originalController != UI ||
+                    contextGeneration != UI.ExpressionEditorContextGeneration || originalObject != UI.ExpressionEditor_Current ||
+                    consentRevision != TabularEditor.PbiBench.Dax.RemoteFormatterConsent.Revision) return;
+                if (response == null || string.IsNullOrWhiteSpace(response.FormattedDax) || response.errors?.Count > 0)
                 {
-                    var result = TabularEditor.Dax.DaxFormatterProxy.Instance.FormatDax(textToFormat, Preferences.Current.UseSemicolonsAsSeparators, sender == actExpressionFormatDAXShort, Preferences.Current.DaxFormatterSkipSpaceAfterFunctionName).FormattedDax;
-                    if (string.IsNullOrWhiteSpace(result))
-                    {
-                        lblStatus.Text = "Could not format DAX (invalid syntax).";
-                        return;
-                    }
-                    lblStatus.Text = "DAX formatted successfully";
-                    txtExpression.Text = (newline ? "\n" : "") +
-                        ScriptHelper.ExtractFromDaxFormatter(result, UI.ExpressionEditor_Current is Function, firstComments);
-                    result.Substring(6).Trim();
+                    lblStatus.Text = "Remote formatter returned no valid result; text is unchanged.";
+                    return;
                 }
-                catch (Exception ex)
-                {
-                    lblStatus.Text = "Could not format DAX (" + ex.Message + ").";
-                }
+                // Compute extraction fully before modifying the editor.
+                var formatted = (newline ? "\n" : "") + ScriptHelper.ExtractFromDaxFormatter(response.FormattedDax, isFunction, firstComments);
+                txtExpression.Text = formatted;
+                lblStatus.Text = "DAX formatted via SQLBI";
+            }
+            catch (Exception)
+            {
+                if (!IsDisposed && !Disposing)
+                    lblStatus.Text = TabularEditor.PbiBench.Dax.RemoteFormatterConsent.Enabled
+                        ? "Remote DAX formatting failed; text is unchanged."
+                        : "Remote formatting disabled. Enable session consent in PbiBench DAX Workbench > Remote formatting.";
+            }
+            finally
+            {
+                txtExpression.TextChanged -= revisionChanged;
+                _pbiBenchExpressionFormatting = false;
             }
         }
-
         private void actToggleInfoColumns_Execute(object sender, EventArgs e)
         {
             UI.SetInfoColumns(actToggleInfoColumns.Checked);

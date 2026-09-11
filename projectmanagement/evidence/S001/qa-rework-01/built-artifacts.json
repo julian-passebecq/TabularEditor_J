@@ -1,0 +1,32 @@
+[
+  {
+    "sha256": "FDF20C694F4E79FCEA5033C18072FA131939F249BA79F1F5DFC4DA6E3FD46A46",
+    "writeUtc": "2026-09-08T21:47:59.9100677Z",
+    "path": "TabularEditor/bin/Release/TabularEditor.exe"
+  },
+  {
+    "sha256": "FDF20C694F4E79FCEA5033C18072FA131939F249BA79F1F5DFC4DA6E3FD46A46",
+    "writeUtc": "2026-09-08T21:47:59.9100677Z",
+    "path": "PbiBench.Host.Smoke/bin/Release/net48/TabularEditor.exe"
+  },
+  {
+    "sha256": "1DA320B0079632474DD6F6364E2A844B7E08205410F920970834DFF83A6CD48C",
+    "writeUtc": "2026-09-08T21:48:02.1958655Z",
+    "path": "PbiBench.Host.Smoke/bin/Release/net48/PbiBench.Host.Smoke.exe"
+  },
+  {
+    "sha256": "DE2391C57D19960957B2823657D3063440575293C3125C09CC2A2599F7A086F3",
+    "writeUtc": "2026-09-08T21:47:57.7647063Z",
+    "path": "PbiBench.Core/bin/Release/netstandard2.0/PbiBench.Core.dll"
+  },
+  {
+    "sha256": "FDF20C694F4E79FCEA5033C18072FA131939F249BA79F1F5DFC4DA6E3FD46A46",
+    "writeUtc": "2026-09-08T21:47:59.9100677Z",
+    "path": "projectmanagement/evidence/S001/qa-rework-01/bin/Release/net48/TabularEditor.exe"
+  },
+  {
+    "sha256": "203D35C89EFFEA8E00BFB4819BC85EEEE28F122C85B99FBA28A9E189CE6030BC",
+    "writeUtc": "2026-09-08T21:49:46.0633131Z",
+    "path": "projectmanagement/evidence/S001/qa-rework-01/bin/Release/net48/PbiBench.Host.Smoke.exe"
+  }
+]

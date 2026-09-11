@@ -1,0 +1,2 @@
+9.0.100-preview.2.24157.14 [C:\Program Files\dotnet\sdk]
+9.0.101 [C:\Program Files\dotnet\sdk]

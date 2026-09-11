@@ -1,0 +1,5 @@
+QA T14: 8260 seeded bit-pattern/adjacent CSV numerical round-trips PASS across en-US/fr-CH
+System.Exception: Generation changed incorrectly: cancelsave
+   at Rework01Smoke.Documents(String folder) in D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa-rework-01\ExtendedRework.cs:line 73
+   at Rework01Smoke.Run() in D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa-rework-01\ExtendedRework.cs:line 30
+   at QaRework.Main() in D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa-rework-01\QaRework.cs:line 34

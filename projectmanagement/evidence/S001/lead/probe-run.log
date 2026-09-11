@@ -1,0 +1,9 @@
+NUMERIC en-US Double expected=1.0000000000000002 actual=1 exact=False
+NUMERIC en-US Single expected=1.00000012 actual=1 exact=False
+ACTUAL_CSV "double","single"\r\n"1","1"\r\n
+NUMERIC fr-CH Double expected=1.0000000000000002 actual=1 exact=False
+NUMERIC fr-CH Single expected=1.00000012 actual=1 exact=False
+ACTUAL_CSV "double","single"\r\n"1","1"\r\n
+IDENTITY_SWITCH file=same-b.dax revisionBefore=0 revisionAfter=0
+STALE_FORMAT identical-text different-file preserved=False dirty=True
+LEAD_PROBE detected violations=5

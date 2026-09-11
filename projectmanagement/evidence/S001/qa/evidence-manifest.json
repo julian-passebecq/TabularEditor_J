@@ -1,0 +1,158 @@
+[
+  {
+    "sha256": "5CB670453003040A0AEBC75066E4CCAF7A5AF5BDCA9E3B04E7E347C2122528B3",
+    "path": "projectmanagement/evidence/S001/qa/additional-results.json"
+  },
+  {
+    "sha256": "B7E379C37BADD894D623FCAD53DD3E651FE98E25057B490F59C7CE3D3FCCEEBD",
+    "path": "projectmanagement/evidence/S001/qa/adversarial-build.log"
+  },
+  {
+    "sha256": "1DD0F520F545091A931BBE76329B2973202C58225480CB92A115A13286596843",
+    "path": "projectmanagement/evidence/S001/qa/adversarial-results.json"
+  },
+  {
+    "sha256": "14BED477C11736DE2CF079EB6C2B310C2234D6E69AF3C44C905B528E968920FE",
+    "path": "projectmanagement/evidence/S001/qa/adversarial-run.log"
+  },
+  {
+    "sha256": "F2128330987BDDDCED11AA5E0485A9892DA919FCA2344B42802764801E2F165E",
+    "path": "projectmanagement/evidence/S001/qa/built-artifacts.json"
+  },
+  {
+    "sha256": "0299FFA1696DBE884AFE3A839F805AD1F65C41D9CD6459D617672FE390C3DFFA",
+    "path": "projectmanagement/evidence/S001/qa/core-canonical.log"
+  },
+  {
+    "sha256": "93A28665C958B8768DEAB19FE024D878EA1A361D0683E91A809DA1F0A7275863",
+    "path": "projectmanagement/evidence/S001/qa/core-net9.log"
+  },
+  {
+    "sha256": "413FEE2F4324D1C467F8DCBBEE08E74D6233A8ED2599D47493583DF8E5AB04E3",
+    "path": "projectmanagement/evidence/S001/qa/diff-check.log"
+  },
+  {
+    "sha256": "327B125E4AF9418A8BC883ADC5000BEC02276A2596288495625403E067A3B407",
+    "path": "projectmanagement/evidence/S001/qa/environment-observations.json"
+  },
+  {
+    "sha256": "B6A50ABED3DCE197FD7D6CD493AAABC244BC56ABD6979BCE74ED1B27ECB694A2",
+    "path": "projectmanagement/evidence/S001/qa/final-preservation.json"
+  },
+  {
+    "sha256": "B2CE60AF0671D1ACC9AC0B9EF77F2A63DC411CBCE4C40DCB60B2B9BADBBD3E97",
+    "path": "projectmanagement/evidence/S001/qa/identity-summary.json"
+  },
+  {
+    "sha256": "58C0F2191DCC3C30D1BC4F05304502C0FDD951519BE549E59197FE3406460BA1",
+    "path": "projectmanagement/evidence/S001/qa/QaAdversarial.cs"
+  },
+  {
+    "sha256": "ECC6729D3FCAD62A7960BCF47F8F82FF6D300DB8BEA12236CA19DD32CB90FBBD",
+    "path": "projectmanagement/evidence/S001/qa/QaAdversarial.csproj"
+  },
+  {
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "path": "projectmanagement/evidence/S001/qa/runner-exit-confirmation.err"
+  },
+  {
+    "sha256": "5964B3F8D40F8D85F6A1696F14E73C471BDD0C235A3C00335548F26355379FAB",
+    "path": "projectmanagement/evidence/S001/qa/runner-exit-confirmation.log"
+  },
+  {
+    "sha256": "2AB66EB8F5CD3A882F09F15CC923082C3BA3B697D27F63C143A176C4958DDACE",
+    "path": "projectmanagement/evidence/S001/qa/runner-exit.json"
+  },
+  {
+    "sha256": "6181CB4209CC03111CECC34551F7EB81CA18DBC22C8F41B0472E531742154D2C",
+    "path": "projectmanagement/evidence/S001/qa/source-verification.json"
+  },
+  {
+    "sha256": "8A4582DE637C4EF56A77E7796A00D53FE173F7B69EA2267E9743B2DE46825775",
+    "path": "projectmanagement/evidence/S001/qa/start-git-status.txt"
+  },
+  {
+    "sha256": "A9FAA676355B3E997553B74D6C8D6D1EF18127B7E2F2767557F665AB8B2C6059",
+    "path": "projectmanagement/evidence/S001/qa/start.patch"
+  },
+  {
+    "sha256": "4DBC652C2BE2F306CDBB5662853B18E3A084795AB07E5B716315C6F754FB6A59",
+    "path": "projectmanagement/evidence/S001/qa/upstream-te2-build.log"
+  },
+  {
+    "sha256": "0CD54C03566B8B1D6B20EAB9E0C24D82B670098077EDE9AC3EF8F133D88BFE35",
+    "path": "projectmanagement/evidence/S001/qa/upstream-tom-build.log"
+  },
+  {
+    "sha256": "499DFD2482630B4DCB6C330E2E9299590DD324CAFBA905297F6B173B1FAEF05E",
+    "path": "projectmanagement/evidence/S001/qa/upstream-tom-tests.log"
+  },
+  {
+    "sha256": "3D7A7B887389F67219EE283CE35DFBCAF7E3ABFC2B7041EE56DF49A1416CEB2F",
+    "path": "projectmanagement/evidence/S001/qa/build/antlr-debug.log"
+  },
+  {
+    "sha256": "14EEB237BBA84D31C63336D888897B9CFEBF6E9F5647E7A569683B0BE599D4A4",
+    "path": "projectmanagement/evidence/S001/qa/build/host-release.log"
+  },
+  {
+    "sha256": "4568866A2F49002EA9EC8E6F4155F715DB4067212C862F04747D8A3CCDF9308A",
+    "path": "projectmanagement/evidence/S001/qa/build/host-smoke-build.log"
+  },
+  {
+    "sha256": "3497B32FA036FCCF5F7855C0E4B4DAB95DC5F61920C880688E2040B9945041D3",
+    "path": "projectmanagement/evidence/S001/qa/build/host-smoke-run.log"
+  },
+  {
+    "sha256": "DDF68DB3D8D2F9572A71C51F3F3FDB8D71553978FEA549CDE378875132E4B7B4",
+    "path": "projectmanagement/evidence/S001/qa/build/restore-core.log"
+  },
+  {
+    "sha256": "33C4C897FBA93AD1B55406D2DF0621B1962D4E8638FD9352822F8383D4BC74B5",
+    "path": "projectmanagement/evidence/S001/qa/build/restore-legacy.log"
+  },
+  {
+    "sha256": "21F3BEB70B3A3BAFA6ADD70838E0C312C0D57BA192673700552301DF0BC3E9C7",
+    "path": "projectmanagement/evidence/S001/qa/build/sdks.txt"
+  },
+  {
+    "sha256": "0FC465DABEB283E7F81E53CBE5465DB3014BE690446F1E0135188CE34FBDBA6B",
+    "path": "projectmanagement/evidence/S001/qa/build/summary.json"
+  },
+  {
+    "sha256": "3D7A7B887389F67219EE283CE35DFBCAF7E3ABFC2B7041EE56DF49A1416CEB2F",
+    "path": "projectmanagement/evidence/S001/qa/build-exit-confirmation/antlr-debug.log"
+  },
+  {
+    "sha256": "7E2964A04506AFA5D4C4F61F83A955A81181DB8201FEAA6A7549DB71B48B692C",
+    "path": "projectmanagement/evidence/S001/qa/build-exit-confirmation/host-release.log"
+  },
+  {
+    "sha256": "0F78AFE68AF4692F55AAF65AAAB9CC4E7ED3EF58FD5C585910F30DC93901DAE0",
+    "path": "projectmanagement/evidence/S001/qa/build-exit-confirmation/host-smoke-build.log"
+  },
+  {
+    "sha256": "3497B32FA036FCCF5F7855C0E4B4DAB95DC5F61920C880688E2040B9945041D3",
+    "path": "projectmanagement/evidence/S001/qa/build-exit-confirmation/host-smoke-run.log"
+  },
+  {
+    "sha256": "DDF68DB3D8D2F9572A71C51F3F3FDB8D71553978FEA549CDE378875132E4B7B4",
+    "path": "projectmanagement/evidence/S001/qa/build-exit-confirmation/restore-core.log"
+  },
+  {
+    "sha256": "FE6A494006C06BB88AD448C92AB2BB29640D76A12A4530221EDDB1980E9D608D",
+    "path": "projectmanagement/evidence/S001/qa/build-exit-confirmation/restore-legacy.log"
+  },
+  {
+    "sha256": "21F3BEB70B3A3BAFA6ADD70838E0C312C0D57BA192673700552301DF0BC3E9C7",
+    "path": "projectmanagement/evidence/S001/qa/build-exit-confirmation/sdks.txt"
+  },
+  {
+    "sha256": "6FE20E193CB25F468473911DB06EF8E770272A8260CE75C458569A5AF3ADACDC",
+    "path": "projectmanagement/evidence/S001/qa/build-exit-confirmation/summary.json"
+  },
+  {
+    "sha256": "46BBEF8134051D014A197E5EA491C839C53E339FEDDBB62E02C7FBDD78290FED",
+    "path": "projectmanagement/evidence/S001/qa/tom-results/S001-qa-tom.trx"
+  }
+]

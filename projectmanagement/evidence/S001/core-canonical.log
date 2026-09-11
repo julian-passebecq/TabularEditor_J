@@ -1,0 +1,3 @@
+C:\Program Files\dotnet\sdk\9.0.101\Sdks\Microsoft.NET.Sdk\targets\Microsoft.NET.TargetFrameworkInference.targets(166,5): error NETSDK1045: The current .NET SDK does not support targeting .NET 10.0.  Either target .NET 9.0 or lower, or use a version of the .NET SDK that supports .NET 10.0. Download the .NET SDK from https://aka.ms/dotnet/download [D:\PROJ\TabularEditor_J\PbiBench.Core.Smoke\PbiBench.Core.Smoke.csproj]
+
+The build failed. Fix the build errors and run again.

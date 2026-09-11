@@ -1,0 +1,13 @@
+warning: in the working copy of '.github/workflows/pbibench-te2-integration.yml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'PbiBench.Core.Smoke/Program.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'PbiBench.Core/Dax/DaxQueryContracts.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'README_PBIBENCH.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'TabularEditor/FormMain.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'TabularEditor/UI/UIController.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'TabularEditor/UI/UIController_ExpressionEditor.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'TabularEditor/UIServices/DaxFormatter.cs', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/pbibench/UPSTREAM_TE2_SYNC.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'docs/pbibench/V0_2_MODEL_DAX.md', LF will be replaced by CRLF the next time Git touches it

@@ -1,0 +1,37 @@
+[
+  {
+    "sha256": "579A112850D254163831F82841F6E7536B38D413C25508F82C55C6D8B48473FD",
+    "lastWriteUtc": "2026-09-08T19:27:38.0235553Z",
+    "path": "TabularEditor/bin/Release/TabularEditor.exe"
+  },
+  {
+    "sha256": "579A112850D254163831F82841F6E7536B38D413C25508F82C55C6D8B48473FD",
+    "lastWriteUtc": "2026-09-08T19:27:38.0235553Z",
+    "path": "PbiBench.Host.Smoke/bin/Release/net48/TabularEditor.exe"
+  },
+  {
+    "sha256": "639E59B9C41025971339F2821F273413118054821198511874EE67F7E7E6250B",
+    "lastWriteUtc": "2026-09-08T19:27:40.0082741Z",
+    "path": "PbiBench.Host.Smoke/bin/Release/net48/PbiBench.Host.Smoke.exe"
+  },
+  {
+    "sha256": "BA51AE7D42BDE796DAE2D3D7AD31EC8EBC1E0F1EF0CDF68AF665E03E1259E2D1",
+    "lastWriteUtc": "2026-09-08T19:27:34.8389624Z",
+    "path": "PbiBench.Core/bin/Release/netstandard2.0/PbiBench.Core.dll"
+  },
+  {
+    "sha256": "BA51AE7D42BDE796DAE2D3D7AD31EC8EBC1E0F1EF0CDF68AF665E03E1259E2D1",
+    "lastWriteUtc": "2026-09-08T19:27:34.8389624Z",
+    "path": "PbiBench.Host.Smoke/bin/Release/net48/PbiBench.Core.dll"
+  },
+  {
+    "sha256": "E5127B4274CF3FC47A4F188B3481B53D220A92D70751E135C04CA44C730A095B",
+    "lastWriteUtc": "2026-09-08T19:27:35.7778579Z",
+    "path": "TOMWrapper/bin/Release/TOMWrapper.dll"
+  },
+  {
+    "sha256": "CF568FEAE3F98A0B21DF6DF2989F8442843601CF134A4E210D848DE3F6C694E7",
+    "lastWriteUtc": "2026-09-08T19:16:13.7870074Z",
+    "path": "TOMWrapperTest/bin/Release/TOMWrapperTest.dll"
+  }
+]

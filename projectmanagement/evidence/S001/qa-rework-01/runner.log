@@ -1,0 +1,18 @@
+restore-legacy : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa-rework-01\build\restore-legacy.log)
+restore-core : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa-rework-01\build\restore-core.log)
+antlr-debug : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa-rework-01\build\antlr-debug.log)
+host-release : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa-rework-01\build\host-release.log)
+host-smoke-build : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa-rework-01\build\host-smoke-build.log)
+host-smoke-run : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa-rework-01\build\host-smoke-run.log)
+
+stage            result             exitCode
+-----            ------             --------
+restore-legacy   PASS                      0
+restore-core     PASS                      0
+antlr-debug      PASS                      0
+host-release     PASS                      0
+core-smoke       NOT_RUN_DIAGNOSTIC         
+host-smoke-build PASS                      0
+host-smoke-run   PASS                      0
+
+

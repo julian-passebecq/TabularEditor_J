@@ -1,0 +1,44 @@
+[
+    {
+        "stage":  "restore-legacy",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\focused-build\\restore-legacy.log"
+    },
+    {
+        "stage":  "restore-core",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\focused-build\\restore-core.log"
+    },
+    {
+        "stage":  "antlr-debug",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\focused-build\\antlr-debug.log"
+    },
+    {
+        "stage":  "host-release",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\focused-build\\host-release.log"
+    },
+    {
+        "stage":  "core-smoke",
+        "result":  "NOT_RUN_DIAGNOSTIC",
+        "exitCode":  null,
+        "log":  "Requires .NET 10 SDK; target unchanged"
+    },
+    {
+        "stage":  "host-smoke-build",
+        "exitCode":  1,
+        "result":  "FAIL",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\focused-build\\host-smoke-build.log"
+    },
+    {
+        "stage":  "verification",
+        "result":  "INCOMPLETE",
+        "exitCode":  1,
+        "log":  "Stage host-smoke-build failed; dependent stages not run."
+    }
+]

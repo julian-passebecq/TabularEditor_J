@@ -1,0 +1,343 @@
+diff --git a/.github/workflows/pbibench-te2-integration.yml b/.github/workflows/pbibench-te2-integration.yml
+index a9422a0..cebdb57 100644
+--- a/.github/workflows/pbibench-te2-integration.yml
++++ b/.github/workflows/pbibench-te2-integration.yml
+@@ -4,14 +4,25 @@ on:
+   push:
+     branches:
+       - pbi-workflow-pro-v0.2
++      - 'codex/stabilize-pbibench-*'
+     paths:
+-      - 'TabularEditor/PbiBench/**'
++      - 'TabularEditor/**'
++      - 'TOMWrapper/**'
++      - 'AntlrGrammars/**'
++      - 'SharedAssemblyInfo.cs'
++      - 'TabularEditor.sln'
++      - 'PbiBench.Host.Smoke/**'
+       - 'PbiBench.Core/**'
+       - 'Directory.Build.targets'
+       - '.github/workflows/pbibench-te2-integration.yml'
+   pull_request:
+     paths:
+-      - 'TabularEditor/PbiBench/**'
++      - 'TabularEditor/**'
++      - 'TOMWrapper/**'
++      - 'AntlrGrammars/**'
++      - 'SharedAssemblyInfo.cs'
++      - 'TabularEditor.sln'
++      - 'PbiBench.Host.Smoke/**'
+       - 'PbiBench.Core/**'
+       - 'Directory.Build.targets'
+       - '.github/workflows/pbibench-te2-integration.yml'
+@@ -38,3 +49,7 @@ jobs:
+         run: msbuild AntlrGrammars\AntlrGrammars.csproj /m /t:Rebuild /p:Configuration=Debug /p:Platform=AnyCPU /verbosity:minimal
+       - name: Build Tabular Editor with PbiBench additions
+         run: msbuild TabularEditor\TabularEditor.csproj /m /p:Configuration=Release /p:Platform=AnyCPU /verbosity:minimal
++      - name: Build host smoke checks
++        run: dotnet build PbiBench.Host.Smoke/PbiBench.Host.Smoke.csproj -c Release --nologo
++      - name: Check PbiBench dialogs on .NET Framework
++        run: .\PbiBench.Host.Smoke\bin\Release\net48\PbiBench.Host.Smoke.exe
+diff --git a/PbiBench.Core.Smoke/Program.cs b/PbiBench.Core.Smoke/Program.cs
+index 567a6d0..690abf0 100644
+--- a/PbiBench.Core.Smoke/Program.cs
++++ b/PbiBench.Core.Smoke/Program.cs
+@@ -136,6 +136,17 @@ internal static class Program
+ 
+         var result = new DaxQueryResult();
+         Assert(result.Columns.Length == 0 && result.Rows.Length == 0, "Default query result collections must be empty, not null.");
++        result.Rows = new[] { new object[] { 1 }, new object[] { 2 } };
++        result.IsTruncated = true;
++        var completed = history.Add("EVALUATE ROW(\"Value\", 1)", result);
++        result.Rows = Array.Empty<object[]>();
++        result.IsTruncated = false;
++        Assert(completed.ReturnedRowCount == 2 && completed.IsTruncated, "History must snapshot result metadata without retaining rows.");
++        history.Add(completed.QueryText, new DaxQueryResult { State = DaxQueryExecutionState.Cancelled });
++        Assert(history.Items[0].State == DaxQueryExecutionState.Cancelled && !history.Items[0].Succeeded,
++            "Duplicate collapse must preserve cancellation state.");
++        AssertThrows<ArgumentException>(() => history.Add("query", new DaxQueryResult { State = DaxQueryExecutionState.Running }),
++            "Unfinished execution must not enter history.");
+     }
+ 
+     private static void RunQuickOpenChecks()
+diff --git a/PbiBench.Core/Dax/DaxQueryContracts.cs b/PbiBench.Core/Dax/DaxQueryContracts.cs
+index 5d09844..625d7a5 100644
+--- a/PbiBench.Core/Dax/DaxQueryContracts.cs
++++ b/PbiBench.Core/Dax/DaxQueryContracts.cs
+@@ -90,7 +90,15 @@ namespace PbiBench.Core.Dax
+     {
+         public string QueryText { get; set; } = string.Empty;
+         public DateTime ExecutedUtc { get; set; }
+-        public bool Succeeded { get; set; }
++        public DaxQueryExecutionState State { get; set; } = DaxQueryExecutionState.Failed;
++        // Retain compatibility for existing callers that only distinguish success/failure.
++        public bool Succeeded
++        {
++            get => State == DaxQueryExecutionState.Completed;
++            set => State = value ? DaxQueryExecutionState.Completed : DaxQueryExecutionState.Failed;
++        }
++        public int ReturnedRowCount { get; set; }
++        public bool IsTruncated { get; set; }
+         public long DurationMilliseconds { get; set; }
+         public string ErrorMessage { get; set; } = string.Empty;
+     }
+@@ -120,11 +128,23 @@ namespace PbiBench.Core.Dax
+             long durationMilliseconds,
+             string errorMessage = "",
+             DateTime? executedUtc = null)
++            => Add(queryText, new DaxQueryResult
++            {
++                State = succeeded ? DaxQueryExecutionState.Completed : DaxQueryExecutionState.Failed,
++                DurationMilliseconds = durationMilliseconds,
++                ErrorMessage = errorMessage
++            }, executedUtc);
++
++        public DaxQueryHistoryEntry Add(string queryText, DaxQueryResult result, DateTime? executedUtc = null)
+         {
++            if (result == null) throw new ArgumentNullException(nameof(result));
++            if (result.State != DaxQueryExecutionState.Completed && result.State != DaxQueryExecutionState.Failed
++                && result.State != DaxQueryExecutionState.Cancelled)
++                throw new ArgumentException("History requires a completed, failed or cancelled execution.", nameof(result));
+             if (string.IsNullOrWhiteSpace(queryText))
+                 throw new ArgumentException("Query text is required.", nameof(queryText));
+-            if (durationMilliseconds < 0)
+-                throw new ArgumentOutOfRangeException(nameof(durationMilliseconds));
++            if (result.DurationMilliseconds < 0)
++                throw new ArgumentOutOfRangeException(nameof(result.DurationMilliseconds));
+ 
+             var normalized = queryText.Trim();
+             if (_items.First != null
+@@ -137,9 +157,11 @@ namespace PbiBench.Core.Dax
+             {
+                 QueryText = normalized,
+                 ExecutedUtc = executedUtc ?? DateTime.UtcNow,
+-                Succeeded = succeeded,
+-                DurationMilliseconds = durationMilliseconds,
+-                ErrorMessage = errorMessage ?? string.Empty
++                State = result.State,
++                DurationMilliseconds = result.DurationMilliseconds,
++                ErrorMessage = result.ErrorMessage ?? string.Empty,
++                ReturnedRowCount = result.ReturnedRowCount,
++                IsTruncated = result.IsTruncated
+             };
+ 
+             _items.AddFirst(entry);
+diff --git a/README_PBIBENCH.md b/README_PBIBENCH.md
+index a7c0030..7dba22b 100644
+--- a/README_PBIBENCH.md
++++ b/README_PBIBENCH.md
+@@ -2,6 +2,8 @@
+ 
+ A focused Power BI model-and-report engineering workbench built on the open-source Tabular Editor 2 codebase.
+ 
++Current delivery plan, architecture decisions, developer/tester handoffs and sprint status: [projectmanagement](projectmanagement/README.md).
++
+ This repository intentionally keeps the upstream Tabular Editor 2 tree recognizable so that upstream fixes can be synchronized with low conflict. PbiBench additions live in their own projects/folders and upstream shell edits must stay small and documented.
+ 
+ ## Product scope
+diff --git a/TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs b/TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs
+index ad6e4a9..fb1df76 100644
+--- a/TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs
++++ b/TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs
+@@ -6,7 +6,7 @@ using System.Security;
+ using System.Threading;
+ using System.Threading.Tasks;
+ using Microsoft.AnalysisServices;
+-using Microsoft.AnalysisServices.Tabular;
++using Server = Microsoft.AnalysisServices.Tabular.Server;
+ using PbiBench.Core.Dax;
+ using TabularEditor.TOMWrapper;
+ 
+diff --git a/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs b/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs
+index 9dc5910..4c137ff 100644
+--- a/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs
++++ b/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs
+@@ -1,4 +1,5 @@
+ using System;
++using System.Diagnostics;
+ using System.Drawing;
+ using System.IO;
+ using System.Linq;
+@@ -14,7 +15,7 @@ namespace TabularEditor.PbiBench.Dax
+     /// occurs only after an explicit Save dialog. The form remains useful in draft mode when the
+     /// loaded model does not expose a live Analysis Services connection.
+     /// </summary>
+-    internal sealed class PbiBenchDaxWorkbenchForm : Form
++    internal sealed partial class PbiBenchDaxWorkbenchForm : Form
+     {
+         private readonly IDaxQueryExecutor _executor;
+         private readonly string _connectionLabel;
+@@ -39,6 +40,10 @@ namespace TabularEditor.PbiBench.Dax
+             IDaxQueryExecutor executor,
+             string connectionLabel,
+             string unavailableReason)
++            : this(executor, connectionLabel, unavailableReason, null) { }
++
++        public PbiBenchDaxWorkbenchForm(IDaxQueryExecutor executor, string connectionLabel,
++            string unavailableReason, IDaxDocumentDialogs documentDialogs)
+         {
+             _executor = executor;
+             _connectionLabel = connectionLabel ?? string.Empty;
+@@ -103,6 +108,8 @@ namespace TabularEditor.PbiBench.Dax
+ 
+             var vertical = new SplitContainer
+             {
++                // Set a usable size before assigning panel minima; docking happens after parenting.
++                Size = new Size(ClientSize.Width, ClientSize.Height - commandBar.Height - 34),
+                 Dock = DockStyle.Fill,
+                 Orientation = Orientation.Horizontal,
+                 SplitterDistance = 270,
+@@ -120,9 +127,12 @@ namespace TabularEditor.PbiBench.Dax
+                 Text = "EVALUATE\nROW(\"Value\", 1)"
+             };
+             vertical.Panel1.Controls.Add(_queryEditor);
++            _queryEditor.SelectionChanged += (s, e) =>
++                _executeButton.Text = _queryEditor.SelectionLength > 0 ? "Execute selection" : "Execute";
+ 
+             var bottom = new SplitContainer
+             {
++                Size = vertical.Panel2.ClientSize,
+                 Dock = DockStyle.Fill,
+                 Orientation = Orientation.Vertical,
+                 SplitterDistance = 830,
+@@ -158,8 +168,9 @@ namespace TabularEditor.PbiBench.Dax
+                 ShowItemToolTips = true
+             };
+             _historyList.Columns.Add("Time", 72);
+-            _historyList.Columns.Add("State", 68);
++            _historyList.Columns.Add("State", 90);
+             _historyList.Columns.Add("ms", 62);
++            _historyList.Columns.Add("Rows", 65);
+             _historyList.Columns.Add("Query", 330);
+             _historyList.DoubleClick += (s, e) => LoadSelectedHistory();
+             bottom.Panel2.Controls.Add(_historyList);
+@@ -179,6 +190,8 @@ namespace TabularEditor.PbiBench.Dax
+             Controls.Add(footer);
+             Controls.Add(commandBar);
+ 
++            InitializeDocuments(documentDialogs);
++
+             FormClosing += OnWorkbenchClosing;
+             ApplyExecutionAvailability();
+         }
+@@ -243,7 +256,8 @@ namespace TabularEditor.PbiBench.Dax
+         {
+             if (_executor == null || _runCts != null || _closing) return;
+ 
+-            var queryText = _queryEditor.Text;
++            // A whitespace-only selection must not accidentally execute the whole document.
++            var queryText = _queryEditor.SelectionLength > 0 ? _queryEditor.SelectedText : _queryEditor.Text;
+             if (string.IsNullOrWhiteSpace(queryText))
+             {
+                 SetStatus("Enter a DAX query before executing.");
+@@ -259,6 +273,7 @@ namespace TabularEditor.PbiBench.Dax
+             };
+ 
+             _runCts = new CancellationTokenSource();
++            var stopwatch = Stopwatch.StartNew();
+             SetRunning(true);
+             SetStatus("Running · " + _connectionLabel);
+ 
+@@ -274,11 +289,7 @@ namespace TabularEditor.PbiBench.Dax
+                 };
+ 
+                 BindResult(_currentResult);
+-                _history.Add(
+-                    queryText,
+-                    _currentResult.State == DaxQueryExecutionState.Completed,
+-                    Math.Max(0, _currentResult.DurationMilliseconds),
+-                    _currentResult.ErrorMessage);
++                _history.Add(queryText, _currentResult);
+                 RefreshHistory();
+                 UpdateResultStatus(_currentResult);
+             }
+@@ -288,11 +299,15 @@ namespace TabularEditor.PbiBench.Dax
+ 
+                 _currentResult = new DaxQueryResult
+                 {
+-                    State = DaxQueryExecutionState.Failed,
+-                    ErrorMessage = string.IsNullOrWhiteSpace(ex.Message) ? "DAX query execution failed." : ex.Message
++                    State = ex is OperationCanceledException && _runCts.IsCancellationRequested
++                        ? DaxQueryExecutionState.Cancelled : DaxQueryExecutionState.Failed,
++                    DurationMilliseconds = stopwatch.ElapsedMilliseconds,
++                    ErrorMessage = ex is OperationCanceledException && _runCts.IsCancellationRequested
++                        ? "Query cancelled."
++                        : "The query provider failed unexpectedly."
+                 };
+                 BindResult(_currentResult);
+-                _history.Add(queryText, false, 0, _currentResult.ErrorMessage);
++                _history.Add(queryText, _currentResult);
+                 RefreshHistory();
+                 UpdateResultStatus(_currentResult);
+             }
+@@ -322,6 +337,10 @@ namespace TabularEditor.PbiBench.Dax
+             _maxRows.Enabled = !running;
+             _timeoutSeconds.Enabled = !running;
+             _queryEditor.ReadOnly = running;
++            _historyList.Enabled = !running;
++            _newDocument.Enabled = _openDocument.Enabled = _saveDocument.Enabled = _saveDocumentAs.Enabled = !running;
++            _exportButton.Enabled = !running && _currentResult.State == DaxQueryExecutionState.Completed
++                && _currentResult.Columns.Length > 0;
+         }
+ 
+         private void BindResult(DaxQueryResult result)
+@@ -369,8 +388,10 @@ namespace TabularEditor.PbiBench.Dax
+                         Tag = entry,
+                         ToolTipText = entry.QueryText
+                     };
+-                    item.SubItems.Add(entry.Succeeded ? "OK" : "Failed");
++                    item.SubItems.Add(entry.State.ToString());
+                     item.SubItems.Add(entry.DurationMilliseconds.ToString());
++                    item.SubItems.Add(entry.State == DaxQueryExecutionState.Completed
++                        ? entry.ReturnedRowCount + (entry.IsTruncated ? "+" : string.Empty) : "—");
+                     item.SubItems.Add(preview);
+                     _historyList.Items.Add(item);
+                 }
+@@ -383,11 +404,15 @@ namespace TabularEditor.PbiBench.Dax
+ 
+         private void LoadSelectedHistory()
+         {
++            if (_runCts != null) return;
+             if (_historyList.SelectedItems.Count != 1) return;
+             var entry = _historyList.SelectedItems[0].Tag as DaxQueryHistoryEntry;
+             if (entry == null) return;
+ 
+-            _queryEditor.Text = entry.QueryText;
++            if (!ConfirmDocumentReplacement()) return;
++            _document.New(entry.QueryText, unsaved: true);
++            DisplayDocument();
++
+             _queryEditor.Focus();
+             _queryEditor.SelectionStart = _queryEditor.TextLength;
+             SetStatus("Loaded query from in-memory history · not executed.");
+@@ -460,6 +485,17 @@ namespace TabularEditor.PbiBench.Dax
+ 
+         private void OnWorkbenchClosing(object sender, FormClosingEventArgs e)
+         {
++            if (_runCts != null)
++            {
++                CancelQuery();
++                e.Cancel = true;
++                return;
++            }
++            if (!ConfirmDocumentReplacement())
++            {
++                e.Cancel = true;
++                return;
++            }
+             _closing = true;
+             if (_runCts != null && !_runCts.IsCancellationRequested)
+                 _runCts.Cancel();
+diff --git a/TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs b/TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs
+index 75d71b3..a7de031 100644
+--- a/TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs
++++ b/TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs
+@@ -48,6 +48,8 @@ namespace TabularEditor.PbiBench.Semantic
+ 
+             var split = new SplitContainer
+             {
++                // Docking cannot size an unparented control before its panel minima are applied.
++                Size = new Size(ClientSize.Width, ClientSize.Height - top.Height),
+                 Dock = DockStyle.Fill,
+                 Orientation = Orientation.Vertical,
+                 SplitterDistance = 390,

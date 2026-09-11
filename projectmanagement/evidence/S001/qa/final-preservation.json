@@ -1,0 +1,11 @@
+{
+  "branch": "codex/stabilize-pbibench-v02",
+  "changedDeliveredFiles": [
+    "projectmanagement/BACKLOG.md",
+    "projectmanagement/handoffs/S001-QA.md",
+    "projectmanagement/REGISTERS.md",
+    "projectmanagement/STATUS.md"
+  ],
+  "allowedManagementOnly": true,
+  "head": "a7317e7ff1bbdb8949b7e6d82b6277b6e22300de"
+}

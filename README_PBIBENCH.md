@@ -2,6 +2,8 @@
 
 A focused Power BI model-and-report engineering workbench built on the open-source Tabular Editor 2 codebase.
 
+Current delivery plan, architecture decisions, developer/tester handoffs and sprint status: [projectmanagement](projectmanagement/README.md).
+
 This repository intentionally keeps the upstream Tabular Editor 2 tree recognizable so that upstream fixes can be synchronized with low conflict. PbiBench additions live in their own projects/folders and upstream shell edits must stay small and documented.
 
 ## Product scope
@@ -39,13 +41,13 @@ The fork's `master` matched that upstream commit when this work started.
 
 Stable foundation checkpoint: `pbi-workflow-pro-v0.1`
 
-Current integration branch: `pbi-workflow-pro-v0.2`
+Current S001 delivery branch: `codex/stabilize-pbibench-v02` (uncommitted delivery; see STATUS).
 
 ### v0.1 foundation
 
 1. scope/update contract;
 2. neutral `PbiBench.Core` library;
-3. bounded PBIP project discovery;
+3. PBIP discovery primitives (root, ambiguity and traversal fixes remain required before Project UI wiring);
 4. provider-neutral project-context serialization;
 5. Git status parsing primitives without becoming a Git client;
 6. explicit DAX formatter capability/privacy metadata;
@@ -56,9 +58,61 @@ Current integration branch: `pbi-workflow-pro-v0.2`
 - semantic Quick Open ranking/search in neutral Core;
 - `Ctrl+P` loaded-model navigation wired to TE2 through isolated partial classes;
 - read-only TOMWrapper semantic indexing;
-- remote formatter consent/telemetry policy contract;
-- bounded DAX query request/result/executor contracts with cancellation;
+- shared SQLBI formatter gate with explicit process-session consent, administrative override and no model telemetry;
+- dedicated AMO query session with asynchronous cancellation and retained-result limits;
 - bounded memory-only query history;
 - dedicated TE2 integration build lane.
 
 See `docs/pbibench/ARCHITECTURE.md`, `docs/pbibench/ROADMAP.md`, and `docs/pbibench/V0_2_MODEL_DAX.md`.
+
+## S001 implementation and verification limits
+
+The DAX Workbench supports local UTF-8 drafts, selection execution (F5/Ctrl+Enter),
+one result set, transient history and explicit CSV export. Query defaults: 5,000
+rows, 120 seconds requested timeout, 32 MiB retained estimate, 256 columns, 1 MiB
+per retained string/binary cell. The result grid, history and export status identify
+incomplete results. Limits preserve accepted values; they do not bound server
+work, AMO buffering or the time to receive one provider value.
+
+Cancellation signals a dedicated session on a worker. The draft stays open and
+new execution/document replacement/export remain blocked until provider cleanup
+finishes. Native connection/command timeout settings are applied, but a stuck
+provider/authentication/cleanup call is not a proven hard wall-clock deadline.
+Force exit or OS shutdown can still lose an unsaved draft; there is no autosave.
+
+Use **Remote formatting** in the Workbench to enable or revoke session consent.
+This also governs inherited expression F6/Ctrl+F6 and script/CLI formatting.
+Restart disables consent. SQLBI requests contain DAX, formatting options and
+app/version fields; no model telemetry is collected, even when the inherited
+telemetry preference is enabled. Workbench F6 formats the entire draft as one
+undoable edit; edits/cancellation/close/revocation discard pending responses.
+Revocation cannot retract a request already sent.
+
+CSV uses comma-separated, quoted fields, doubled quotes, preserved embedded
+newlines, UTF-8 BOM, invariant numbers, and round-trip ISO date/time values.
+Null is empty; binary is Base64. Formula-like text is preserved as data (no
+spreadsheet formula sanitization). A sibling temporary file is replaced/moved
+only after successful writing. This preserves an existing destination on ordinary
+write failure; it is not power-loss durability or concurrent-editor exclusion.
+
+Run `./Scripts/Verify-PbiBench.ps1` with VS MSBuild, NuGet, .NET Framework 4.8
+reference assemblies and .NET 10 SDK. `-NuGetPath` supports an explicit tool path.
+`-HostOnlyDiagnostic` runs the host lane and explicitly excludes canonical Core
+smoke; it cannot certify the full sprint. See the
+[developer handoff](projectmanagement/handoffs/S001-DEVELOPER.md) for evidence.
+Independent QA, real Desktop/XMLA/authentication, native DPI interaction and lead
+acceptance remain separate gates. The Project/report features above are product
+direction, not a claim of delivered end-to-end workflows.
+### S001 rework 01: numeric and async-context fidelity
+
+Grid/CSV floating-point conversion uses invariant G17 for Double and G9 for Single.
+Finite values preserve numeric round-trip precision on net48; retained values stay
+typed. Special values use NaN, Infinity and -Infinity. Both signs of zero export
+as 0. CSV preserves numeric values, not IEEE sign/payload bits.
+
+Delayed formatting is scoped to a logical document generation as well as text
+revision. New, successful Open/reopen and history recall invalidate earlier
+requests even when text is identical. Failed/cancelled replacement does not.
+Save/Save As keeps the same buffer identity; a subsequent valid format makes that
+buffer dirty. Inherited expression formatting also tracks controller/handler,
+object and selected DAX-property transitions, including away-and-back changes.

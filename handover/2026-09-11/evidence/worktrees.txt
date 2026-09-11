@@ -1,0 +1,8 @@
+worktree D:/PROJ/TabularEditor_J
+HEAD a7317e7ff1bbdb8949b7e6d82b6277b6e22300de
+branch refs/heads/codex/stabilize-pbibench-v02
+
+worktree D:/PROJ/TabularEditor_J-audit-v02
+HEAD a7317e7ff1bbdb8949b7e6d82b6277b6e22300de
+detached
+

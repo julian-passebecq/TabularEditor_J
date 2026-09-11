@@ -1,0 +1,17 @@
+Navigation.PbiBenchQuickOpenForm: construction, resize and scaled layout PASS
+Semantic.PbiBenchSemanticViewForm: construction, resize and scaled layout PASS
+Dax.PbiBenchDaxWorkbenchForm: construction, resize and scaled layout PASS
+DAX Workbench: selection, results, history, cancellation and failure recovery PASS
+DAX documents: files, conflicts, dirty state, cancelled dialogs and replacement guards PASS
+T05/T06/T07: production orchestration, cancellation/UI message, ownership, diagnostics and retained bounds PASS
+T08/T09: formatter denial/payload/script/UDF/stale/undo and atomic CSV/UI failures PASS (recording transport, no network)
+PbiBench host smoke: FAIL
+System.Reflection.TargetInvocationException: Exception has been thrown by the target of an invocation. ---> System.NullReferenceException: Object reference not set to an instance of an object.
+   at TabularEditor.UI.UIController.ExpressionEditor_Preview(IExpressionObject obj)
+   --- End of inner exception stack trace ---
+   at System.RuntimeMethodHandle.InvokeMethod(Object target, Object[] arguments, Signature sig, Boolean constructor)
+   at System.Reflection.RuntimeMethodInfo.UnsafeInvokeInternal(Object obj, Object[] parameters, Object[] arguments)
+   at System.Reflection.RuntimeMethodInfo.Invoke(Object obj, BindingFlags invokeAttr, Binder binder, Object[] parameters, CultureInfo culture)
+   at Rework01Smoke.Expressions() in D:\PROJ\TabularEditor_J\PbiBench.Host.Smoke\Rework01Smoke.cs:line 140
+   at Rework01Smoke.Run() in D:\PROJ\TabularEditor_J\PbiBench.Host.Smoke\Rework01Smoke.cs:line 30
+   at Program.Main() in D:\PROJ\TabularEditor_J\PbiBench.Host.Smoke\Program.cs:line 38

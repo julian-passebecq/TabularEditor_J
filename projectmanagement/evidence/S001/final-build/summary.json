@@ -1,0 +1,44 @@
+[
+    {
+        "stage":  "restore-legacy",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\final-build\\restore-legacy.log"
+    },
+    {
+        "stage":  "restore-core",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\final-build\\restore-core.log"
+    },
+    {
+        "stage":  "antlr-debug",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\final-build\\antlr-debug.log"
+    },
+    {
+        "stage":  "host-release",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\final-build\\host-release.log"
+    },
+    {
+        "stage":  "core-smoke",
+        "result":  "BLOCKED_ENV",
+        "exitCode":  null,
+        "log":  "Requires .NET 10 SDK; target unchanged"
+    },
+    {
+        "stage":  "host-smoke-build",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\final-build\\host-smoke-build.log"
+    },
+    {
+        "stage":  "host-smoke-run",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\final-build\\host-smoke-run.log"
+    }
+]

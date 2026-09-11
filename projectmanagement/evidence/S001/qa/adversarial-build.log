@@ -1,0 +1,9 @@
+  Determining projects to restore...
+  Restored D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa\QaAdversarial.csproj (in 72 ms).
+  QaAdversarial -> D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa\bin\Release\net48\PbiBench.Host.Smoke.exe
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:05.28

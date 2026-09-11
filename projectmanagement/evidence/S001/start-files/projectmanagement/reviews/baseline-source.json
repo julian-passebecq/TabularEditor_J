@@ -1,0 +1,112 @@
+{
+  "observedDate": "2026-09-08",
+  "scope": "Pre-existing dirty source and docs at management setup; hashes identify content but are not a patch archive.",
+  "branch": "codex/stabilize-pbibench-v02",
+  "head": "a7317e7ff1bbdb8949b7e6d82b6277b6e22300de",
+  "refs": [
+    "codex/stabilize-pbibench-v02 a7317e7ff1bbdb8949b7e6d82b6277b6e22300de",
+    "master 7029129aa3f45d35f987d8f6ac7e5a971f28771c",
+    "origin 7029129aa3f45d35f987d8f6ac7e5a971f28771c",
+    "origin/master 7029129aa3f45d35f987d8f6ac7e5a971f28771c",
+    "origin/pbi-workflow-pro-v0.1 b717ba89b291dcfc675307a1f9d4db8174f7cf48",
+    "origin/pbi-workflow-pro-v0.2 a7317e7ff1bbdb8949b7e6d82b6277b6e22300de",
+    "upstream/DLB/SeverityInBPA ca14f73db88be5ce47cd103808129f56b07ffffd",
+    "upstream 7029129aa3f45d35f987d8f6ac7e5a971f28771c",
+    "upstream/feature/2.13.0 e83f8296918ac273919c8c1d841db730f530334e",
+    "upstream/feature/docsMigration 2614cb12e5dccad6edef57eb96717dc493990beb",
+    "upstream/feature/impr 96ef669d4e62fbf1a1764b5351c1cd23b4ec94d5",
+    "upstream/feature/refreshPolicies 65a4b419a1a93a5bfdc3abe6ab2050209fd7c6f0",
+    "upstream/master 7029129aa3f45d35f987d8f6ac7e5a971f28771c",
+    "upstream/udf-support 3a17cc9b8d3408082db1e902dd6608dfb1321bc6",
+    "upstream/user-mol/hyphenfixpowerbidesktop 7936293dcfd57441b3eb991ce7e390675dd59895",
+    "upstream/user-mol/issue1319 299ca1c8d03e9f44d013634a43e23d264fe288a3",
+    "upstream/user-mol/selectedapi 005a717c0f035574ea596d1f0ff2af9561dee45b",
+    "upstream/user-mol/udfserialization f296018ab668db0b9b35a63f0bea3a769f51d136"
+  ],
+  "worktrees": [
+    "D:/PROJ/TabularEditor_J            a7317e7 [codex/stabilize-pbibench-v02]",
+    "D:/PROJ/TabularEditor_J-audit-v02  a7317e7 (detached HEAD)"
+  ],
+  "files": [
+    {
+      "path": ".github/workflows/pbibench-te2-integration.yml",
+      "sha256": "54FDDFD5427B64DE28518B2D6F33841E050F51F3E8A12B694E8C3CE4B0737BA1",
+      "gitStatus": " M .github/workflows/pbibench-te2-integration.yml"
+    },
+    {
+      "path": "PbiBench.Core.Smoke/Program.cs",
+      "sha256": "E36A62D44E14D21828E6909631D4CEE3B2A9E2CDA15429704CCE900C9F0B1815",
+      "gitStatus": " M PbiBench.Core.Smoke/Program.cs"
+    },
+    {
+      "path": "PbiBench.Core/Dax/DaxQueryContracts.cs",
+      "sha256": "7973FC1394D50D55346FCCB4B49E1B035C3DB6ECB9FB0D1285620E8D3A06A6B3",
+      "gitStatus": " M PbiBench.Core/Dax/DaxQueryContracts.cs"
+    },
+    {
+      "path": "TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs",
+      "sha256": "56CB2A6BC38167150549951BD9B2312C66E42D8E6F3BBEC0C1E8064684AB242E",
+      "gitStatus": " M TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs"
+    },
+    {
+      "path": "TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs",
+      "sha256": "92560BA1479EB633EDC71D032F4FA5F2093B8E977BE8F314280122DCC880FAFB",
+      "gitStatus": " M TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs"
+    },
+    {
+      "path": "TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs",
+      "sha256": "44CBE7510C55FD4B37E7239097DFAAA5C16AB7DBA06DAD9C5CB79993F7027B33",
+      "gitStatus": " M TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs"
+    },
+    {
+      "path": "PbiBench.Core/Dax/DaxDocument.cs",
+      "sha256": "6264DF1CA4B507F1EA45F2B0F14A4AA89C6DC9743440D07D1FAB11E259A763FA",
+      "gitStatus": "?? PbiBench.Core/Dax/DaxDocument.cs"
+    },
+    {
+      "path": "PbiBench.Host.Smoke/DaxDocumentSmoke.cs",
+      "sha256": "E752218C91D1B92AFE9847645779303A399D5A4D322018A43FF2FF3214DC1952",
+      "gitStatus": "?? PbiBench.Host.Smoke/DaxDocumentSmoke.cs"
+    },
+    {
+      "path": "PbiBench.Host.Smoke/DaxWorkbenchSmoke.cs",
+      "sha256": "0EB455EEBBD5F977F8CF38B280EF75999AC34E147BB344F614AB6A5425B9AEB1",
+      "gitStatus": "?? PbiBench.Host.Smoke/DaxWorkbenchSmoke.cs"
+    },
+    {
+      "path": "PbiBench.Host.Smoke/PbiBench.Host.Smoke.csproj",
+      "sha256": "BA482997568444B4FDB4656B9B39D54420860820D10FC8EEEF25FA8D06C0EC23",
+      "gitStatus": "?? PbiBench.Host.Smoke/PbiBench.Host.Smoke.csproj"
+    },
+    {
+      "path": "PbiBench.Host.Smoke/Program.cs",
+      "sha256": "A8FB3F9E0181F9F7A2D33AB2B8D16269C92BFAAB78FE7983484FBB5B79E3C85B",
+      "gitStatus": "?? PbiBench.Host.Smoke/Program.cs"
+    },
+    {
+      "path": "TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.Documents.cs",
+      "sha256": "E79D9F4B5079EA5CD6630A8F3234C6C608927FF47B1B07D5EBBF3FA5D508062E",
+      "gitStatus": "?? TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.Documents.cs"
+    },
+    {
+      "path": "docs/PBIBENCH_AUDIT_2026-09-08.md",
+      "sha256": "DE28C37227AC5C545A044DEEFD763071F0A9224B35603A5A92A00529497F96D8",
+      "gitStatus": "?? docs/PBIBENCH_AUDIT_2026-09-08.md"
+    },
+    {
+      "path": "docs/pbibench/STABILIZATION_2026-09-08.md",
+      "sha256": "71CAF1218499B602174A0F088FB0B5935BA4214211AAACA24AC42C444FE97E84",
+      "gitStatus": "?? docs/pbibench/STABILIZATION_2026-09-08.md"
+    }
+  ],
+  "artifactHashes": [
+    {
+      "path": "TabularEditor/bin/Release/TabularEditor.exe",
+      "sha256": "F7960F3EB49A3FDA7D9297F9070070645687EBF019A52729C22F857A37C39E51"
+    },
+    {
+      "path": "PbiBench.Host.Smoke/bin/Release/net48/PbiBench.Host.Smoke.exe",
+      "sha256": "B00B79FDE80180CD6B5F323E8533B22FE2B1CE876D82CEC89952AF07497A2017"
+    }
+  ]
+}

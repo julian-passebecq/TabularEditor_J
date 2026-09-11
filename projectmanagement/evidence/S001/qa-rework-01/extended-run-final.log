@@ -1,0 +1,3 @@
+QA T14: 8260 seeded bit-pattern/adjacent CSV numerical round-trips PASS across en-US/fr-CH
+T14/T15 developer: numeric CSV/grid fidelity, document identity and expression context PASS
+QA T15 extended: dirty Cancel-New/Cancel-Open/cancelled or failed save-before-New and one-way object/property/handler transitions PASS

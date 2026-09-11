@@ -1,0 +1,1450 @@
+diff --git a/.github/workflows/pbibench-foundation.yml b/.github/workflows/pbibench-foundation.yml
+index a106df9..0b04fcb 100644
+--- a/.github/workflows/pbibench-foundation.yml
++++ b/.github/workflows/pbibench-foundation.yml
+@@ -5,9 +5,14 @@ on:
+     branches:
+       - pbi-workflow-pro-v0.1
+       - pbi-workflow-pro-v0.2
++      - 'codex/stabilize-pbibench-*'
+   pull_request:
+     paths:
+       - 'PbiBench.Core/**'
++      - 'Directory.Build.*'
++      - 'Scripts/Verify-PbiBench.ps1'
++      - 'NuGet.Config'
++      - 'global.json'
+       - 'PbiBench.Core.Smoke/**'
+       - 'docs/pbibench/**'
+       - 'README_PBIBENCH.md'
+diff --git a/.github/workflows/pbibench-te2-integration.yml b/.github/workflows/pbibench-te2-integration.yml
+index a9422a0..f05be51 100644
+--- a/.github/workflows/pbibench-te2-integration.yml
++++ b/.github/workflows/pbibench-te2-integration.yml
+@@ -4,15 +4,38 @@ on:
+   push:
+     branches:
+       - pbi-workflow-pro-v0.2
++      - 'codex/stabilize-pbibench-*'
+     paths:
+-      - 'TabularEditor/PbiBench/**'
++      - 'TabularEditor/**'
++      - 'TOMWrapper/**'
++      - 'AntlrGrammars/**'
++      - 'SharedAssemblyInfo.cs'
++      - 'TabularEditor.sln'
++      - 'PbiBench.Host.Smoke/**'
+       - 'PbiBench.Core/**'
++      - 'PbiBench.Core.Smoke/**'
++      - 'Scripts/Verify-PbiBench.ps1'
++      - 'Directory.Build.*'
++      - '**/packages.config'
++      - 'NuGet.Config'
++      - 'global.json'
+       - 'Directory.Build.targets'
+       - '.github/workflows/pbibench-te2-integration.yml'
+   pull_request:
+     paths:
+-      - 'TabularEditor/PbiBench/**'
++      - 'TabularEditor/**'
++      - 'TOMWrapper/**'
++      - 'AntlrGrammars/**'
++      - 'SharedAssemblyInfo.cs'
++      - 'TabularEditor.sln'
++      - 'PbiBench.Host.Smoke/**'
+       - 'PbiBench.Core/**'
++      - 'PbiBench.Core.Smoke/**'
++      - 'Scripts/Verify-PbiBench.ps1'
++      - 'Directory.Build.*'
++      - '**/packages.config'
++      - 'NuGet.Config'
++      - 'global.json'
+       - 'Directory.Build.targets'
+       - '.github/workflows/pbibench-te2-integration.yml'
+ 
+@@ -30,11 +53,6 @@ jobs:
+           dotnet-version: '10.0.x'
+       - uses: microsoft/setup-msbuild@v2
+       - uses: NuGet/setup-nuget@v2
+-      - name: Restore legacy TE2 solution packages
+-        run: nuget restore TabularEditor.sln -NonInteractive
+-      - name: Restore PbiBench SDK project
+-        run: dotnet restore PbiBench.Core/PbiBench.Core.csproj --nologo
+-      - name: Generate TE2 ANTLR lexer sources
+-        run: msbuild AntlrGrammars\AntlrGrammars.csproj /m /t:Rebuild /p:Configuration=Debug /p:Platform=AnyCPU /verbosity:minimal
+-      - name: Build Tabular Editor with PbiBench additions
+-        run: msbuild TabularEditor\TabularEditor.csproj /m /p:Configuration=Release /p:Platform=AnyCPU /verbosity:minimal
++      - name: Verify product and both smoke lanes
++        shell: powershell
++        run: ./Scripts/Verify-PbiBench.ps1
+\ No newline at end of file
+diff --git a/PbiBench.Core.Smoke/Program.cs b/PbiBench.Core.Smoke/Program.cs
+index 567a6d0..29b94c5 100644
+--- a/PbiBench.Core.Smoke/Program.cs
++++ b/PbiBench.Core.Smoke/Program.cs
+@@ -19,6 +19,7 @@ internal static class Program
+             RunDaxFormatterChecks();
+             RunDaxPrivacyPolicyChecks();
+             RunDaxQueryContractChecks();
++            DaxRetentionSmoke.Run();
+             RunQuickOpenChecks();
+             SemanticDependencySmoke.Run();
+             Console.WriteLine("PbiBench.Core smoke: PASS");
+@@ -136,6 +137,17 @@ internal static class Program
+ 
+         var result = new DaxQueryResult();
+         Assert(result.Columns.Length == 0 && result.Rows.Length == 0, "Default query result collections must be empty, not null.");
++        result.Rows = new[] { new object[] { 1 }, new object[] { 2 } };
++        result.IsTruncated = true;
++        var completed = history.Add("EVALUATE ROW(\"Value\", 1)", result);
++        result.Rows = Array.Empty<object[]>();
++        result.IsTruncated = false;
++        Assert(completed.ReturnedRowCount == 2 && completed.IsTruncated, "History must snapshot result metadata without retaining rows.");
++        history.Add(completed.QueryText, new DaxQueryResult { State = DaxQueryExecutionState.Cancelled });
++        Assert(history.Items[0].State == DaxQueryExecutionState.Cancelled && !history.Items[0].Succeeded,
++            "Duplicate collapse must preserve cancellation state.");
++        AssertThrows<ArgumentException>(() => history.Add("query", new DaxQueryResult { State = DaxQueryExecutionState.Running }),
++            "Unfinished execution must not enter history.");
+     }
+ 
+     private static void RunQuickOpenChecks()
+diff --git a/PbiBench.Core/Dax/DaxFormatterRequestPolicy.cs b/PbiBench.Core/Dax/DaxFormatterRequestPolicy.cs
+index fe28387..5455380 100644
+--- a/PbiBench.Core/Dax/DaxFormatterRequestPolicy.cs
++++ b/PbiBench.Core/Dax/DaxFormatterRequestPolicy.cs
+@@ -22,7 +22,7 @@ namespace PbiBench.Core.Dax
+ 
+                 return IncludeModelTelemetry
+                     ? "Remote DAX formatting is enabled and model telemetry may be included."
+-                    : "Remote DAX formatting is enabled for DAX text only; model telemetry is disabled.";
++                    : "Remote DAX formatting is enabled for DAX text and formatting protocol fields; model telemetry is disabled.";
+             }
+         }
+     }
+diff --git a/PbiBench.Core/Dax/DaxQueryContracts.cs b/PbiBench.Core/Dax/DaxQueryContracts.cs
+index 5d09844..3dabcf3 100644
+--- a/PbiBench.Core/Dax/DaxQueryContracts.cs
++++ b/PbiBench.Core/Dax/DaxQueryContracts.cs
+@@ -6,6 +6,7 @@ using System.Threading.Tasks;
+ 
+ namespace PbiBench.Core.Dax
+ {
++    public enum DaxQueryReason { None, UserCancellation, Timeout, Connection, Authentication, Query, Unexpected, RowLimit, MemoryLimit, CellLimit, ColumnLimit, UnsupportedValue }
+     public enum DaxQueryExecutionState
+     {
+         Draft = 0,
+@@ -24,7 +25,19 @@ namespace PbiBench.Core.Dax
+         public const int DefaultMaxRows = 5000;
+         public const int MaxAllowedRows = 100000;
+         public const int DefaultTimeoutSeconds = 120;
++        public const long DefaultMaxRetainedBytes = 32L * 1024 * 1024;
+ 
++        private long _maxRetainedBytes = DefaultMaxRetainedBytes;
++        public long MaxRetainedBytes
++        {
++            get => _maxRetainedBytes;
++            set
++            {
++                if (value <= 0 || value > DefaultMaxRetainedBytes)
++                    throw new ArgumentOutOfRangeException(nameof(value));
++                _maxRetainedBytes = value;
++            }
++        }
+         private int _maxRows = DefaultMaxRows;
+         private int _timeoutSeconds = DefaultTimeoutSeconds;
+ 
+@@ -62,6 +75,7 @@ namespace PbiBench.Core.Dax
+         public long DurationMilliseconds { get; set; }
+         public string ErrorMessage { get; set; } = string.Empty;
+         public bool IsTruncated { get; set; }
++        public DaxQueryReason Reason { get; set; }
+         public int ReturnedRowCount => _rows.Length;
+ 
+         public string[] Columns
+@@ -90,7 +104,16 @@ namespace PbiBench.Core.Dax
+     {
+         public string QueryText { get; set; } = string.Empty;
+         public DateTime ExecutedUtc { get; set; }
+-        public bool Succeeded { get; set; }
++        public DaxQueryExecutionState State { get; set; } = DaxQueryExecutionState.Failed;
++        // Retain compatibility for existing callers that only distinguish success/failure.
++        public bool Succeeded
++        {
++            get => State == DaxQueryExecutionState.Completed;
++            set => State = value ? DaxQueryExecutionState.Completed : DaxQueryExecutionState.Failed;
++        }
++        public int ReturnedRowCount { get; set; }
++        public bool IsTruncated { get; set; }
++        public DaxQueryReason Reason { get; set; }
+         public long DurationMilliseconds { get; set; }
+         public string ErrorMessage { get; set; } = string.Empty;
+     }
+@@ -120,11 +143,23 @@ namespace PbiBench.Core.Dax
+             long durationMilliseconds,
+             string errorMessage = "",
+             DateTime? executedUtc = null)
++            => Add(queryText, new DaxQueryResult
++            {
++                State = succeeded ? DaxQueryExecutionState.Completed : DaxQueryExecutionState.Failed,
++                DurationMilliseconds = durationMilliseconds,
++                ErrorMessage = errorMessage
++            }, executedUtc);
++
++        public DaxQueryHistoryEntry Add(string queryText, DaxQueryResult result, DateTime? executedUtc = null)
+         {
++            if (result == null) throw new ArgumentNullException(nameof(result));
++            if (result.State != DaxQueryExecutionState.Completed && result.State != DaxQueryExecutionState.Failed
++                && result.State != DaxQueryExecutionState.Cancelled)
++                throw new ArgumentException("History requires a completed, failed or cancelled execution.", nameof(result));
+             if (string.IsNullOrWhiteSpace(queryText))
+                 throw new ArgumentException("Query text is required.", nameof(queryText));
+-            if (durationMilliseconds < 0)
+-                throw new ArgumentOutOfRangeException(nameof(durationMilliseconds));
++            if (result.DurationMilliseconds < 0)
++                throw new ArgumentOutOfRangeException(nameof(result.DurationMilliseconds));
+ 
+             var normalized = queryText.Trim();
+             if (_items.First != null
+@@ -137,9 +172,11 @@ namespace PbiBench.Core.Dax
+             {
+                 QueryText = normalized,
+                 ExecutedUtc = executedUtc ?? DateTime.UtcNow,
+-                Succeeded = succeeded,
+-                DurationMilliseconds = durationMilliseconds,
+-                ErrorMessage = errorMessage ?? string.Empty
++                State = result.State,
++                DurationMilliseconds = result.DurationMilliseconds,
++                ErrorMessage = result.ErrorMessage ?? string.Empty,
++                ReturnedRowCount = result.ReturnedRowCount,
++                IsTruncated = result.IsTruncated, Reason = result.Reason
+             };
+ 
+             _items.AddFirst(entry);
+diff --git a/README_PBIBENCH.md b/README_PBIBENCH.md
+index a7c0030..1f7a417 100644
+--- a/README_PBIBENCH.md
++++ b/README_PBIBENCH.md
+@@ -2,6 +2,8 @@
+ 
+ A focused Power BI model-and-report engineering workbench built on the open-source Tabular Editor 2 codebase.
+ 
++Current delivery plan, architecture decisions, developer/tester handoffs and sprint status: [projectmanagement](projectmanagement/README.md).
++
+ This repository intentionally keeps the upstream Tabular Editor 2 tree recognizable so that upstream fixes can be synchronized with low conflict. PbiBench additions live in their own projects/folders and upstream shell edits must stay small and documented.
+ 
+ ## Product scope
+@@ -39,13 +41,13 @@ The fork's `master` matched that upstream commit when this work started.
+ 
+ Stable foundation checkpoint: `pbi-workflow-pro-v0.1`
+ 
+-Current integration branch: `pbi-workflow-pro-v0.2`
++Current S001 delivery branch: `codex/stabilize-pbibench-v02` (uncommitted delivery; see STATUS).
+ 
+ ### v0.1 foundation
+ 
+ 1. scope/update contract;
+ 2. neutral `PbiBench.Core` library;
+-3. bounded PBIP project discovery;
++3. PBIP discovery primitives (root, ambiguity and traversal fixes remain required before Project UI wiring);
+ 4. provider-neutral project-context serialization;
+ 5. Git status parsing primitives without becoming a Git client;
+ 6. explicit DAX formatter capability/privacy metadata;
+@@ -56,9 +58,48 @@ Current integration branch: `pbi-workflow-pro-v0.2`
+ - semantic Quick Open ranking/search in neutral Core;
+ - `Ctrl+P` loaded-model navigation wired to TE2 through isolated partial classes;
+ - read-only TOMWrapper semantic indexing;
+-- remote formatter consent/telemetry policy contract;
+-- bounded DAX query request/result/executor contracts with cancellation;
++- shared SQLBI formatter gate with explicit process-session consent, administrative override and no model telemetry;
++- dedicated AMO query session with asynchronous cancellation and retained-result limits;
+ - bounded memory-only query history;
+ - dedicated TE2 integration build lane.
+ 
+ See `docs/pbibench/ARCHITECTURE.md`, `docs/pbibench/ROADMAP.md`, and `docs/pbibench/V0_2_MODEL_DAX.md`.
++
++## S001 implementation and verification limits
++
++The DAX Workbench supports local UTF-8 drafts, selection execution (F5/Ctrl+Enter),
++one result set, transient history and explicit CSV export. Query defaults: 5,000
++rows, 120 seconds requested timeout, 32 MiB retained estimate, 256 columns, 1 MiB
++per retained string/binary cell. The result grid, history and export status identify
++incomplete results. Limits preserve accepted values; they do not bound server
++work, AMO buffering or the time to receive one provider value.
++
++Cancellation signals a dedicated session on a worker. The draft stays open and
++new execution/document replacement/export remain blocked until provider cleanup
++finishes. Native connection/command timeout settings are applied, but a stuck
++provider/authentication/cleanup call is not a proven hard wall-clock deadline.
++Force exit or OS shutdown can still lose an unsaved draft; there is no autosave.
++
++Use **Remote formatting** in the Workbench to enable or revoke session consent.
++This also governs inherited expression F6/Ctrl+F6 and script/CLI formatting.
++Restart disables consent. SQLBI requests contain DAX, formatting options and
++app/version fields; no model telemetry is collected, even when the inherited
++telemetry preference is enabled. Workbench F6 formats the entire draft as one
++undoable edit; edits/cancellation/close/revocation discard pending responses.
++Revocation cannot retract a request already sent.
++
++CSV uses comma-separated, quoted fields, doubled quotes, preserved embedded
++newlines, UTF-8 BOM, invariant numbers, and round-trip ISO date/time values.
++Null is empty; binary is Base64. Formula-like text is preserved as data (no
++spreadsheet formula sanitization). A sibling temporary file is replaced/moved
++only after successful writing. This preserves an existing destination on ordinary
++write failure; it is not power-loss durability or concurrent-editor exclusion.
++
++Run `./Scripts/Verify-PbiBench.ps1` with VS MSBuild, NuGet, .NET Framework 4.8
++reference assemblies and .NET 10 SDK. `-NuGetPath` supports an explicit tool path.
++`-HostOnlyDiagnostic` runs the host lane and explicitly excludes canonical Core
++smoke; it cannot certify the full sprint. See the
++[developer handoff](projectmanagement/handoffs/S001-DEVELOPER.md) for evidence.
++Independent QA, real Desktop/XMLA/authentication, native DPI interaction and lead
++acceptance remain separate gates. The Project/report features above are product
++direction, not a claim of delivered end-to-end workflows.
+\ No newline at end of file
+diff --git a/TabularEditor/FormMain.cs b/TabularEditor/FormMain.cs
+index 28a821d..df30cd1 100644
+--- a/TabularEditor/FormMain.cs
++++ b/TabularEditor/FormMain.cs
+@@ -422,34 +422,52 @@ Selected.Hierarchies.ForEach(item => item.TranslatedDisplayFolders.SetAll(item.D
+             }
+         }
+ 
+-        private void actExpressionFormatDAX_Execute(object sender, EventArgs e)
+-        {
+-            if (Policies.Instance.DisableWebDaxFormatter || string.IsNullOrEmpty(txtExpression.Text)) return;
+-
+-            using (var hg = new Hourglass())
++        private bool _pbiBenchExpressionFormatting;
++        private async void actExpressionFormatDAX_Execute(object sender, EventArgs e)
++        {
++            if (_pbiBenchExpressionFormatting || string.IsNullOrEmpty(txtExpression.Text)) return;
++            var changed = false;
++            EventHandler<FastColoredTextBoxNS.TextChangedEventArgs> revisionChanged = (s, args) => changed = true;
++            txtExpression.TextChanged += revisionChanged;
++            _pbiBenchExpressionFormatting = true;
++            try
+             {
+-                var textToFormat = ScriptHelper.PrepareForDaxFormatter(txtExpression.Text, UI.ExpressionEditor_Current is Function, out var firstComments);
++                TabularEditor.PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
++                var originalObject = UI.ExpressionEditor_Current;
++                var isFunction = originalObject is Function;
++                var textToFormat = ScriptHelper.PrepareForDaxFormatter(txtExpression.Text, isFunction, out var firstComments);
+                 var newline = txtExpression.Text.StartsWith("\n") || txtExpression.Text.StartsWith("\r\n");
+-                try
++                var consentRevision = TabularEditor.PbiBench.Dax.RemoteFormatterConsent.Revision;
++                var separators = Preferences.Current.UseSemicolonsAsSeparators;
++                var shortFormat = sender == actExpressionFormatDAXShort;
++                var skipSpace = Preferences.Current.DaxFormatterSkipSpaceAfterFunctionName;
++                var response = await System.Threading.Tasks.Task.Run(() => TabularEditor.Dax.DaxFormatterProxy.Instance
++                    .FormatDax(textToFormat, separators, shortFormat, skipSpace));
++                if (IsDisposed || Disposing || changed || originalObject != UI.ExpressionEditor_Current ||
++                    consentRevision != TabularEditor.PbiBench.Dax.RemoteFormatterConsent.Revision) return;
++                if (response == null || string.IsNullOrWhiteSpace(response.FormattedDax) || response.errors?.Count > 0)
+                 {
+-                    var result = TabularEditor.Dax.DaxFormatterProxy.Instance.FormatDax(textToFormat, Preferences.Current.UseSemicolonsAsSeparators, sender == actExpressionFormatDAXShort, Preferences.Current.DaxFormatterSkipSpaceAfterFunctionName).FormattedDax;
+-                    if (string.IsNullOrWhiteSpace(result))
+-                    {
+-                        lblStatus.Text = "Could not format DAX (invalid syntax).";
+-                        return;
+-                    }
+-                    lblStatus.Text = "DAX formatted successfully";
+-                    txtExpression.Text = (newline ? "\n" : "") +
+-                        ScriptHelper.ExtractFromDaxFormatter(result, UI.ExpressionEditor_Current is Function, firstComments);
+-                    result.Substring(6).Trim();
+-                }
+-                catch (Exception ex)
+-                {
+-                    lblStatus.Text = "Could not format DAX (" + ex.Message + ").";
++                    lblStatus.Text = "Remote formatter returned no valid result; text is unchanged.";
++                    return;
+                 }
++                // Compute extraction fully before modifying the editor.
++                var formatted = (newline ? "\n" : "") + ScriptHelper.ExtractFromDaxFormatter(response.FormattedDax, isFunction, firstComments);
++                txtExpression.Text = formatted;
++                lblStatus.Text = "DAX formatted via SQLBI";
++            }
++            catch (Exception)
++            {
++                if (!IsDisposed && !Disposing)
++                    lblStatus.Text = TabularEditor.PbiBench.Dax.RemoteFormatterConsent.Enabled
++                        ? "Remote DAX formatting failed; text is unchanged."
++                        : "Remote formatting disabled. Enable session consent in PbiBench DAX Workbench > Remote formatting.";
++            }
++            finally
++            {
++                txtExpression.TextChanged -= revisionChanged;
++                _pbiBenchExpressionFormatting = false;
+             }
+         }
+-
+         private void actToggleInfoColumns_Execute(object sender, EventArgs e)
+         {
+             UI.SetInfoColumns(actToggleInfoColumns.Checked);
+diff --git a/TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs b/TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs
+index ad6e4a9..eebdbbe 100644
+--- a/TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs
++++ b/TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs
+@@ -1,12 +1,13 @@
+ using System;
+ using System.Collections.Generic;
+ using System.Diagnostics;
++using System.Data;
+ using System.Linq;
+ using System.Security;
+ using System.Threading;
+ using System.Threading.Tasks;
+ using Microsoft.AnalysisServices;
+-using Microsoft.AnalysisServices.Tabular;
++using Server = Microsoft.AnalysisServices.Tabular.Server;
+ using PbiBench.Core.Dax;
+ using TabularEditor.TOMWrapper;
+ 
+@@ -19,11 +20,14 @@ namespace TabularEditor.PbiBench.Dax
+     /// </summary>
+     internal sealed class PbiBenchAmoDaxQueryExecutor : IDaxQueryExecutor
+     {
++        private readonly Func<IDaxQuerySession> _sessionFactory;
++        private int _active;
+         private readonly string _connectionString;
+         private readonly string _databaseName;
+ 
+         private PbiBenchAmoDaxQueryExecutor(string connectionString, string databaseName, string connectionLabel)
+         {
++            _sessionFactory = () => new AmoDaxQuerySession();
+             _connectionString = connectionString;
+             _databaseName = databaseName;
+             ConnectionLabel = connectionLabel;
+@@ -74,166 +78,182 @@ namespace TabularEditor.PbiBench.Dax
+             return true;
+         }
+ 
++        internal PbiBenchAmoDaxQueryExecutor(Func<IDaxQuerySession> factory)
++        {
++            _sessionFactory = factory;
++            _connectionString = "";
++            _databaseName = "";
++            ConnectionLabel = "Controlled session";
++        }
++
+         public async Task<DaxQueryResult> ExecuteAsync(DaxQueryRequest request, CancellationToken cancellationToken)
+         {
+             if (request == null) throw new ArgumentNullException(nameof(request));
+-            if (string.IsNullOrWhiteSpace(request.QueryText))
+-            {
+-                return new DaxQueryResult
+-                {
+-                    State = DaxQueryExecutionState.Failed,
+-                    ErrorMessage = "DAX query text is required."
+-                };
+-            }
+-
+-            using (var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(request.TimeoutSeconds)))
+-            using (var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token))
++            // Snapshot before dispatch: caller mutations must not affect this run.
++            var captured = new DaxQueryRequest { QueryText = request.QueryText, MaxRows = request.MaxRows,
++                TimeoutSeconds = request.TimeoutSeconds, MaxRetainedBytes = request.MaxRetainedBytes };
++            if (Interlocked.CompareExchange(ref _active, 1, 0) != 0)
++                return Failure(DaxQueryReason.Unexpected, "Query cleanup is still active.");
++            try
+             {
+-                return await Task.Run(
+-                    () => ExecuteCore(request, cancellationToken, timeoutCts.Token, linkedCts.Token),
+-                    CancellationToken.None).ConfigureAwait(false);
++                using (var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(captured.TimeoutSeconds)))
++                using (var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeout.Token))
++                    return await Task.Run(() => ExecuteCore(captured, cancellationToken, timeout.Token, linked.Token)).ConfigureAwait(false);
+             }
++            finally { Volatile.Write(ref _active, 0); }
+         }
+ 
+-        private DaxQueryResult ExecuteCore(
+-            DaxQueryRequest request,
+-            CancellationToken userCancellationToken,
+-            CancellationToken timeoutToken,
+-            CancellationToken combinedToken)
++        private DaxQueryResult ExecuteCore(DaxQueryRequest request, CancellationToken user, CancellationToken timeout, CancellationToken token)
+         {
+-            var stopwatch = Stopwatch.StartNew();
+-            var server = new Server();
+-
++            var watch = Stopwatch.StartNew();
++            IDaxQuerySession session = null;
++            IDataReader reader = null;
++            var sync = new object();
++            var connected = false;
++            var finishing = false;
++            Task cancelWork = null;
++            var finished = new ManualResetEventSlim();
++            // Callback only enqueues work. Never runs blocking AMO on the cancelling/UI thread.
++            System.Action signal = () =>
++            {
++                lock (sync)
++                    if (connected && !finishing && cancelWork == null)
++                        cancelWork = Task.Run(() => { do { try { session.Cancel(); } catch { } } while (!finished.Wait(100)); });
++            };
++            var registration = token.Register(signal);
++            DaxQueryResult result;
++            var phase = DaxQueryReason.Connection;
+             try
+             {
+-                combinedToken.ThrowIfCancellationRequested();
+-                server.Connect(_connectionString);
+-                combinedToken.ThrowIfCancellationRequested();
+-
+-                using (combinedToken.Register(() => TryCancel(server)))
++                token.ThrowIfCancellationRequested();
++                if (string.IsNullOrWhiteSpace(request.QueryText))
++                    result = Failure(DaxQueryReason.Query, "DAX query text is required.");
++                else
+                 {
+-                    var xmla = "<Statement>" + SecurityElement.Escape(request.QueryText.Trim()) + "</Statement>";
+-                    var properties = new Dictionary<string, string>
+-                    {
+-                        { "Catalog", _databaseName },
+-                        { "Format", "Tabular" }
+-                    };
+-
+-                    XmlaResultCollection xmlaResults;
+-                    using (var reader = server.ExecuteReader(xmla, out xmlaResults, properties))
+-                    {
+-                        if (reader == null)
+-                        {
+-                            stopwatch.Stop();
+-                            return new DaxQueryResult
+-                            {
+-                                State = DaxQueryExecutionState.Failed,
+-                                DurationMilliseconds = stopwatch.ElapsedMilliseconds,
+-                                ErrorMessage = "The Analysis Services endpoint did not return a tabular rowset."
+-                            };
+-                        }
+-
+-                        var columns = Enumerable.Range(0, reader.FieldCount)
+-                            .Select(reader.GetName)
+-                            .ToArray();
+-                        var rows = new List<object[]>(Math.Min(request.MaxRows, 4096));
+-
+-                        while (rows.Count < request.MaxRows && reader.Read())
+-                        {
+-                            combinedToken.ThrowIfCancellationRequested();
+-                            var row = new object[reader.FieldCount];
+-                            for (var i = 0; i < reader.FieldCount; i++)
+-                            {
+-                                var value = reader.GetValue(i);
+-                                row[i] = value == DBNull.Value ? null : value;
+-                            }
+-                            rows.Add(row);
+-                        }
+-
+-                        var truncated = rows.Count == request.MaxRows && reader.Read();
+-                        combinedToken.ThrowIfCancellationRequested();
+-                        stopwatch.Stop();
+-
+-                        return new DaxQueryResult
+-                        {
+-                            State = DaxQueryExecutionState.Completed,
+-                            DurationMilliseconds = stopwatch.ElapsedMilliseconds,
+-                            Columns = columns,
+-                            Rows = rows.ToArray(),
+-                            IsTruncated = truncated
+-                        };
+-                    }
++                    session = _sessionFactory();
++                    session.Connect(_connectionString, request.TimeoutSeconds);
++                    lock (sync) connected = true;
++                    if (token.IsCancellationRequested) signal();
++                    token.ThrowIfCancellationRequested();
++                    phase = DaxQueryReason.Query;
++                    reader = session.Execute(request.QueryText, _databaseName);
++                    token.ThrowIfCancellationRequested();
++                    result = reader == null ? Failure(DaxQueryReason.Query, "No tabular rowset was returned.")
++                        : ReadResult(reader, request, token);
+                 }
+             }
+-            catch (OperationCanceledException)
+-            {
+-                stopwatch.Stop();
+-                return CancelledResult(stopwatch.ElapsedMilliseconds, request.TimeoutSeconds, userCancellationToken, timeoutToken);
+-            }
+             catch (Exception ex)
+             {
+-                stopwatch.Stop();
+-                if (combinedToken.IsCancellationRequested)
+-                    return CancelledResult(stopwatch.ElapsedMilliseconds, request.TimeoutSeconds, userCancellationToken, timeoutToken);
+-
+-                return new DaxQueryResult
++                // No provider message/body (including nested exceptions) is a diagnostic channel.
++                var reason = ex is UnauthorizedAccessException ? DaxQueryReason.Authentication :
++                    ex is TimeoutException ? DaxQueryReason.Timeout : phase;
++                if (ex is ConnectionException connection)
+                 {
+-                    State = DaxQueryExecutionState.Failed,
+-                    DurationMilliseconds = stopwatch.ElapsedMilliseconds,
+-                    ErrorMessage = SafeErrorMessage(ex)
+-                };
++                    if (connection.ExceptionCause == ConnectionExceptionCause.AuthenticationFailed) reason = DaxQueryReason.Authentication;
++                    if (connection.ExceptionCause == ConnectionExceptionCause.Timeout) reason = DaxQueryReason.Timeout;
++                }
++                result = Failure(reason, reason == DaxQueryReason.Connection ? "Could not connect to the query endpoint." :
++                    reason == DaxQueryReason.Authentication ? "Query authentication failed." :
++                    reason == DaxQueryReason.Timeout ? "The query provider reported a timeout." : "The endpoint could not execute the query.");
+             }
+             finally
+             {
+-                try
+-                {
+-                    if (server.Connected) server.Disconnect();
+-                }
+-                catch
+-                {
+-                    // Query cleanup must never mask the query result.
+-                }
++                lock (sync) finishing = true;
++                finished.Set();
++                registration.Dispose();
++                // One owner retains admission until cancel, reader and session cleanup all finish.
++                // A stuck provider remains active: no abandoned calls or hard deadline claim.
++                if (cancelWork != null) cancelWork.GetAwaiter().GetResult();
++                finished.Dispose();
++                try { reader?.Dispose(); } catch { }
++                try { session?.Disconnect(); } catch { }
++                try { session?.Dispose(); } catch { }
+             }
++            // Terminal commit follows cleanup. User cancellation wins over timeout at this point.
++            if (user.IsCancellationRequested || timeout.IsCancellationRequested)
++                result = new DaxQueryResult { State = DaxQueryExecutionState.Cancelled,
++                    Reason = user.IsCancellationRequested ? DaxQueryReason.UserCancellation : DaxQueryReason.Timeout,
++                    ErrorMessage = user.IsCancellationRequested ? "Query cancelled." : "Query timeout requested; provider cleanup completed." };
++            result.DurationMilliseconds = watch.ElapsedMilliseconds;
++            return result;
+         }
+ 
+-        private static DaxQueryResult CancelledResult(
+-            long elapsedMilliseconds,
+-            int timeoutSeconds,
+-            CancellationToken userCancellationToken,
+-            CancellationToken timeoutToken)
++        private static DaxQueryResult ReadResult(IDataReader reader, DaxQueryRequest request, CancellationToken token)
+         {
+-            var timedOut = timeoutToken.IsCancellationRequested && !userCancellationToken.IsCancellationRequested;
+-            return new DaxQueryResult
++            var count = reader.FieldCount;
++            if (count < 0 || count > DaxResultRetention.MaxColumns)
++                return Failure(DaxQueryReason.ColumnLimit, "Result exceeds the 256-column limit.");
++            var columns = new string[count];
++            long retained = 64 + 32 + 8L * count;
++            for (var i = 0; i < count; i++)
+             {
+-                State = DaxQueryExecutionState.Cancelled,
+-                DurationMilliseconds = elapsedMilliseconds,
+-                ErrorMessage = timedOut
+-                    ? "Query timed out after " + timeoutSeconds + " seconds."
+-                    : "Query cancelled."
+-            };
+-        }
+-
+-        private static void TryCancel(Server server)
+-        {
+-            try
+-            {
+-                if (server != null && server.Connected) server.CancelCommand();
++                var name = reader.GetName(i) ?? "";
++                DaxResultRetention.TryEstimate(name, out var size);
++                if (size > DaxResultRetention.MaxCellBytes || retained + size > request.MaxRetainedBytes)
++                    return Failure(DaxQueryReason.MemoryLimit, "Result schema exceeds the retained-result budget.");
++                columns[i] = name;
++                retained += size;
+             }
+-            catch
++            var rows = new List<object[]>();
++            var reason = DaxQueryReason.None;
++            while (reader.Read())
+             {
+-                // Cancellation is best-effort at the transport boundary. The execution task will
+-                // still observe its linked cancellation token and return a Cancelled result.
++                token.ThrowIfCancellationRequested();
++                if (rows.Count == request.MaxRows) { reason = DaxQueryReason.RowLimit; break; }
++                // Account for row array and list/final-array references conservatively.
++                long rowBytes = 32 + 8L * count + 32;
++                if (retained + rowBytes > request.MaxRetainedBytes) { reason = DaxQueryReason.MemoryLimit; break; }
++                var row = new object[count];
++                for (var i = 0; i < count; i++)
++                {
++                    token.ThrowIfCancellationRequested();
++                    var value = reader.GetValue(i);
++                    if (value == DBNull.Value) value = null;
++                    if (!DaxResultRetention.TryEstimate(value, out var bytes)) { reason = DaxQueryReason.UnsupportedValue; break; }
++                    if (bytes > DaxResultRetention.MaxCellBytes) { reason = DaxQueryReason.CellLimit; break; }
++                    if (retained + rowBytes + bytes > request.MaxRetainedBytes) { reason = DaxQueryReason.MemoryLimit; break; }
++                    rowBytes += bytes;
++                    row[i] = value is byte[] binary ? (byte[])binary.Clone() : value;
++                }
++                if (reason != DaxQueryReason.None) break;
++                retained += rowBytes;
++                rows.Add(row);
+             }
++            token.ThrowIfCancellationRequested();
++            return new DaxQueryResult { State = DaxQueryExecutionState.Completed, Columns = columns,
++                Rows = rows.ToArray(), IsTruncated = reason != DaxQueryReason.None, Reason = reason };
+         }
+ 
+-        private static string SafeErrorMessage(Exception ex)
++        private static DaxQueryResult Failure(DaxQueryReason reason, string message) =>
++            new DaxQueryResult { State = DaxQueryExecutionState.Failed, Reason = reason, ErrorMessage = message };
++    }
++
++    internal interface IDaxQuerySession : IDisposable
++    {
++        void Connect(string connectionString, int timeoutSeconds);
++        IDataReader Execute(string query, string catalog);
++        void Cancel();
++        void Disconnect();
++    }
++
++    internal sealed class AmoDaxQuerySession : IDaxQuerySession
++    {
++        private readonly Server _server = new Server();
++        public void Connect(string connectionString, int timeoutSeconds)
++        {
++            var builder = new System.Data.Common.DbConnectionStringBuilder { ConnectionString = connectionString };
++            builder["Connect Timeout"] = timeoutSeconds;
++            builder["Timeout"] = timeoutSeconds;
++            _server.Connect(builder.ConnectionString);
++        }
++        public IDataReader Execute(string query, string catalog)
+         {
+-            // Never concatenate or expose the cloned connection string. AMO exception messages
+-            // normally contain server-side query diagnostics; cap their length before surfacing.
+-            var message = ex?.Message;
+-            if (string.IsNullOrWhiteSpace(message)) return "DAX query execution failed.";
+-            message = message.Trim();
+-            return message.Length <= 2000 ? message : message.Substring(0, 2000) + "…";
++            XmlaResultCollection results;
++            return _server.ExecuteReader("<Statement>" + SecurityElement.Escape(query.Trim()) + "</Statement>",
++                out results, new Dictionary<string, string> { { "Catalog", catalog }, { "Format", "Tabular" } });
+         }
++        public void Cancel() => _server.CancelCommand();
++        public void Disconnect() { if (_server.Connected) _server.Disconnect(); }
++        public void Dispose() => _server.Dispose();
+     }
+ }
+diff --git a/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs b/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs
+index 9dc5910..2263806 100644
+--- a/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs
++++ b/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs
+@@ -1,4 +1,5 @@
+ using System;
++using System.Diagnostics;
+ using System.Drawing;
+ using System.IO;
+ using System.Linq;
+@@ -14,7 +15,7 @@ namespace TabularEditor.PbiBench.Dax
+     /// occurs only after an explicit Save dialog. The form remains useful in draft mode when the
+     /// loaded model does not expose a live Analysis Services connection.
+     /// </summary>
+-    internal sealed class PbiBenchDaxWorkbenchForm : Form
++    internal sealed partial class PbiBenchDaxWorkbenchForm : Form
+     {
+         private readonly IDaxQueryExecutor _executor;
+         private readonly string _connectionLabel;
+@@ -39,6 +40,10 @@ namespace TabularEditor.PbiBench.Dax
+             IDaxQueryExecutor executor,
+             string connectionLabel,
+             string unavailableReason)
++            : this(executor, connectionLabel, unavailableReason, null) { }
++
++        public PbiBenchDaxWorkbenchForm(IDaxQueryExecutor executor, string connectionLabel,
++            string unavailableReason, IDaxDocumentDialogs documentDialogs)
+         {
+             _executor = executor;
+             _connectionLabel = connectionLabel ?? string.Empty;
+@@ -64,7 +69,7 @@ namespace TabularEditor.PbiBench.Dax
+             _executeButton = new Button { Text = "Execute", AutoSize = true };
+             _executeButton.Click += (s, e) => ExecuteQuery();
+             _cancelButton = new Button { Text = "Cancel", AutoSize = true, Enabled = false };
+-            _cancelButton.Click += (s, e) => CancelQuery();
++            _cancelButton.Click += (s, e) => { if (_formatting) CancelFormatting(); else CancelQuery(); };
+             _exportButton = new Button { Text = "Export CSV", AutoSize = true, Enabled = false };
+             _exportButton.Click += (s, e) => ExportCsv();
+ 
+@@ -103,6 +108,8 @@ namespace TabularEditor.PbiBench.Dax
+ 
+             var vertical = new SplitContainer
+             {
++                // Set a usable size before assigning panel minima; docking happens after parenting.
++                Size = new Size(ClientSize.Width, ClientSize.Height - commandBar.Height - 34),
+                 Dock = DockStyle.Fill,
+                 Orientation = Orientation.Horizontal,
+                 SplitterDistance = 270,
+@@ -120,9 +127,12 @@ namespace TabularEditor.PbiBench.Dax
+                 Text = "EVALUATE\nROW(\"Value\", 1)"
+             };
+             vertical.Panel1.Controls.Add(_queryEditor);
++            _queryEditor.SelectionChanged += (s, e) =>
++                _executeButton.Text = _queryEditor.SelectionLength > 0 ? "Execute selection" : "Execute";
+ 
+             var bottom = new SplitContainer
+             {
++                Size = vertical.Panel2.ClientSize,
+                 Dock = DockStyle.Fill,
+                 Orientation = Orientation.Vertical,
+                 SplitterDistance = 830,
+@@ -158,8 +168,9 @@ namespace TabularEditor.PbiBench.Dax
+                 ShowItemToolTips = true
+             };
+             _historyList.Columns.Add("Time", 72);
+-            _historyList.Columns.Add("State", 68);
++            _historyList.Columns.Add("State", 90);
+             _historyList.Columns.Add("ms", 62);
++            _historyList.Columns.Add("Rows", 65);
+             _historyList.Columns.Add("Query", 330);
+             _historyList.DoubleClick += (s, e) => LoadSelectedHistory();
+             bottom.Panel2.Controls.Add(_historyList);
+@@ -179,6 +190,9 @@ namespace TabularEditor.PbiBench.Dax
+             Controls.Add(footer);
+             Controls.Add(commandBar);
+ 
++            InitializeDocuments(documentDialogs);
++            InitializeFormatting();
++
+             FormClosing += OnWorkbenchClosing;
+             ApplyExecutionAvailability();
+         }
+@@ -225,7 +239,7 @@ namespace TabularEditor.PbiBench.Dax
+         private void ApplyExecutionAvailability()
+         {
+             var available = _executor != null;
+-            _executeButton.Enabled = available;
++            _executeButton.Enabled = available && !_formatting && _runCts == null;
+ 
+             if (available)
+             {
+@@ -241,9 +255,10 @@ namespace TabularEditor.PbiBench.Dax
+ 
+         private async void ExecuteQuery()
+         {
+-            if (_executor == null || _runCts != null || _closing) return;
++            if (_executor == null || _runCts != null || _formatting || _closing) return;
+ 
+-            var queryText = _queryEditor.Text;
++            // A whitespace-only selection must not accidentally execute the whole document.
++            var queryText = _queryEditor.SelectionLength > 0 ? _queryEditor.SelectedText : _queryEditor.Text;
+             if (string.IsNullOrWhiteSpace(queryText))
+             {
+                 SetStatus("Enter a DAX query before executing.");
+@@ -259,6 +274,7 @@ namespace TabularEditor.PbiBench.Dax
+             };
+ 
+             _runCts = new CancellationTokenSource();
++            var stopwatch = Stopwatch.StartNew();
+             SetRunning(true);
+             SetStatus("Running · " + _connectionLabel);
+ 
+@@ -274,11 +290,7 @@ namespace TabularEditor.PbiBench.Dax
+                 };
+ 
+                 BindResult(_currentResult);
+-                _history.Add(
+-                    queryText,
+-                    _currentResult.State == DaxQueryExecutionState.Completed,
+-                    Math.Max(0, _currentResult.DurationMilliseconds),
+-                    _currentResult.ErrorMessage);
++                _history.Add(queryText, _currentResult);
+                 RefreshHistory();
+                 UpdateResultStatus(_currentResult);
+             }
+@@ -288,11 +300,15 @@ namespace TabularEditor.PbiBench.Dax
+ 
+                 _currentResult = new DaxQueryResult
+                 {
+-                    State = DaxQueryExecutionState.Failed,
+-                    ErrorMessage = string.IsNullOrWhiteSpace(ex.Message) ? "DAX query execution failed." : ex.Message
++                    State = ex is OperationCanceledException && _runCts.IsCancellationRequested
++                        ? DaxQueryExecutionState.Cancelled : DaxQueryExecutionState.Failed,
++                    DurationMilliseconds = stopwatch.ElapsedMilliseconds,
++                    ErrorMessage = ex is OperationCanceledException && _runCts.IsCancellationRequested
++                        ? "Query cancelled."
++                        : "The query provider failed unexpectedly."
+                 };
+                 BindResult(_currentResult);
+-                _history.Add(queryText, false, 0, _currentResult.ErrorMessage);
++                _history.Add(queryText, _currentResult);
+                 RefreshHistory();
+                 UpdateResultStatus(_currentResult);
+             }
+@@ -311,17 +327,22 @@ namespace TabularEditor.PbiBench.Dax
+         private void CancelQuery()
+         {
+             if (_runCts == null || _runCts.IsCancellationRequested) return;
+-            SetStatus("Cancelling query…");
++            SetStatus("Cancellation requested · waiting for provider and cleanup; the draft remains open.");
+             _runCts.Cancel();
+         }
+ 
+         private void SetRunning(bool running)
+         {
+-            _executeButton.Enabled = !running && _executor != null;
++            _executeButton.Enabled = !running && !_formatting && _executor != null;
++            _formatLong.Enabled = _formatShort.Enabled = !running && !_formatting;
+             _cancelButton.Enabled = running;
+             _maxRows.Enabled = !running;
+             _timeoutSeconds.Enabled = !running;
+             _queryEditor.ReadOnly = running;
++            _historyList.Enabled = !running;
++            _newDocument.Enabled = _openDocument.Enabled = _saveDocument.Enabled = _saveDocumentAs.Enabled = !running;
++            _exportButton.Enabled = !running && _currentResult.State == DaxQueryExecutionState.Completed
++                && _currentResult.Columns.Length > 0;
+         }
+ 
+         private void BindResult(DaxQueryResult result)
+@@ -352,7 +373,7 @@ namespace TabularEditor.PbiBench.Dax
+             if (rows == null || e.RowIndex < 0 || e.RowIndex >= rows.Length) return;
+             var row = rows[e.RowIndex];
+             if (row == null || e.ColumnIndex < 0 || e.ColumnIndex >= row.Length) return;
+-            e.Value = row[e.ColumnIndex];
++            e.Value = DaxResultRetention.FormatValue(row[e.ColumnIndex]);
+         }
+ 
+         private void RefreshHistory()
+@@ -369,8 +390,10 @@ namespace TabularEditor.PbiBench.Dax
+                         Tag = entry,
+                         ToolTipText = entry.QueryText
+                     };
+-                    item.SubItems.Add(entry.Succeeded ? "OK" : "Failed");
++                    item.SubItems.Add(entry.State.ToString());
+                     item.SubItems.Add(entry.DurationMilliseconds.ToString());
++                    item.SubItems.Add(entry.State == DaxQueryExecutionState.Completed
++                        ? entry.ReturnedRowCount + (entry.IsTruncated ? "+" : string.Empty) : "—");
+                     item.SubItems.Add(preview);
+                     _historyList.Items.Add(item);
+                 }
+@@ -383,11 +406,15 @@ namespace TabularEditor.PbiBench.Dax
+ 
+         private void LoadSelectedHistory()
+         {
++            if (_runCts != null) return;
+             if (_historyList.SelectedItems.Count != 1) return;
+             var entry = _historyList.SelectedItems[0].Tag as DaxQueryHistoryEntry;
+             if (entry == null) return;
+ 
+-            _queryEditor.Text = entry.QueryText;
++            if (!ConfirmDocumentReplacement()) return;
++            _document.New(entry.QueryText, unsaved: true);
++            DisplayDocument();
++
+             _queryEditor.Focus();
+             _queryEditor.SelectionStart = _queryEditor.TextLength;
+             SetStatus("Loaded query from in-memory history · not executed.");
+@@ -400,7 +427,7 @@ namespace TabularEditor.PbiBench.Dax
+                 case DaxQueryExecutionState.Completed:
+                     SetStatus(
+                         "Completed · " + result.ReturnedRowCount + " rows · " + result.DurationMilliseconds + " ms"
+-                        + (result.IsTruncated ? " · row limit reached; additional rows were not loaded" : string.Empty));
++                        + (result.IsTruncated ? " · incomplete result (" + result.Reason + "); additional values were not loaded" : string.Empty));
+                     break;
+                 case DaxQueryExecutionState.Cancelled:
+                     SetStatus("Cancelled · " + result.DurationMilliseconds + " ms · " + result.ErrorMessage);
+@@ -411,38 +438,32 @@ namespace TabularEditor.PbiBench.Dax
+             }
+         }
+ 
+-        private void ExportCsv()
++        internal Func<IWin32Window, string> ExportPath = owner =>
+         {
+-            if (_currentResult == null || _currentResult.Columns.Length == 0) return;
++            using (var dialog = new SaveFileDialog { Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
++                DefaultExt = "csv", AddExtension = true, OverwritePrompt = true, FileName = "dax-query-results.csv" })
++                return dialog.ShowDialog(owner) == DialogResult.OK ? dialog.FileName : null;
++        };
++        internal Action<string, DaxQueryResult> SaveCsv = (path, result) => DaxCsvExport.Save(path, result);
+ 
+-            using (var dialog = new SaveFileDialog
++        private void ExportCsv()
++        {
++            if (_runCts != null || _currentResult == null || _currentResult.State != DaxQueryExecutionState.Completed
++                || _currentResult.Columns.Length == 0) return;
++            try
+             {
+-                Filter = "CSV files (*.csv)|*.csv|All files (*.*)|*.*",
+-                DefaultExt = "csv",
+-                AddExtension = true,
+-                FileName = "dax-query-results.csv"
+-            })
++                var path = ExportPath(this);
++                if (path == null) return;
++                SaveCsv(path, _currentResult);
++                SetStatus("Exported " + _currentResult.ReturnedRowCount + " rows to CSV."
++                    + (_currentResult.IsTruncated ? " Incomplete result (" + _currentResult.Reason + ")." : ""));
++            }
++            catch (Exception)
+             {
+-                if (dialog.ShowDialog(this) != DialogResult.OK) return;
+-
+-                using (var writer = new StreamWriter(dialog.FileName, false, new UTF8Encoding(true)))
+-                {
+-                    writer.WriteLine(string.Join(",", _currentResult.Columns.Select(CsvCell)));
+-                    foreach (var row in _currentResult.Rows)
+-                        writer.WriteLine(string.Join(",", row.Select(v => CsvCell(Convert.ToString(v)))));
+-                }
++                // File paths, encoders and injectable transports are not safe diagnostic sources.
++                SetStatus("CSV export failed. Check the destination and file access; results and draft are unchanged.");
+             }
+-
+-            SetStatus("Exported " + _currentResult.ReturnedRowCount + " rows to CSV.");
+-        }
+-
+-        private static string CsvCell(string value)
+-        {
+-            value = value ?? string.Empty;
+-            var escaped = value.Replace("\"", "\"\"");
+-            return "\"" + escaped + "\"";
+         }
+-
+         private static string QueryPreview(string query)
+         {
+             if (string.IsNullOrWhiteSpace(query)) return string.Empty;
+@@ -460,6 +481,18 @@ namespace TabularEditor.PbiBench.Dax
+ 
+         private void OnWorkbenchClosing(object sender, FormClosingEventArgs e)
+         {
++            if (_formatting) CancelFormatting();
++            if (_runCts != null)
++            {
++                CancelQuery();
++                e.Cancel = true;
++                return;
++            }
++            if (!ConfirmDocumentReplacement())
++            {
++                e.Cancel = true;
++                return;
++            }
+             _closing = true;
+             if (_runCts != null && !_runCts.IsCancellationRequested)
+                 _runCts.Cancel();
+diff --git a/TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs b/TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs
+index 75d71b3..a7de031 100644
+--- a/TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs
++++ b/TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs
+@@ -48,6 +48,8 @@ namespace TabularEditor.PbiBench.Semantic
+ 
+             var split = new SplitContainer
+             {
++                // Docking cannot size an unparented control before its panel minima are applied.
++                Size = new Size(ClientSize.Width, ClientSize.Height - top.Height),
+                 Dock = DockStyle.Fill,
+                 Orientation = Orientation.Vertical,
+                 SplitterDistance = 390,
+diff --git a/TabularEditor/Scripting/ScriptHelper.cs b/TabularEditor/Scripting/ScriptHelper.cs
+index 0261f56..1d1560c 100644
+--- a/TabularEditor/Scripting/ScriptHelper.cs
++++ b/TabularEditor/Scripting/ScriptHelper.cs
+@@ -226,7 +226,7 @@ namespace TabularEditor.Scripting
+         [ScriptMethod][Obsolete]
+         public static string FormatDax(string dax, bool shortFormat = false, bool skipSpaceAfterFunctionName = false)
+         {
+-            if (Policies.Instance.DisableWebDaxFormatter) throw new Exception("DAX formatting disabled through policy.");
++            TabularEditor.PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
+ 
+             daxFormatterDirectCalls++;
+             if(daxFormatterDirectCalls > 3 && !daxFormatterWarningShown)
+@@ -285,7 +285,7 @@ namespace TabularEditor.Scripting
+         [ScriptMethod]
+         public static void FormatDax(this IDaxDependantObject obj)
+         {
+-            if (Policies.Instance.DisableWebDaxFormatter) throw new Exception("DAX formatting disabled through policy.");
++            TabularEditor.PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
+             objectsFlaggedForFormatting.Add(obj);
+         }
+ 
+@@ -352,7 +352,7 @@ namespace TabularEditor.Scripting
+             }
+             if (expressions.Count == 0) return;
+ 
+-            if (Policies.Instance.DisableWebDaxFormatter) throw new Exception("DAX formatting disabled through policy.");
++            TabularEditor.PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
+ 
+             var formatResult = DaxFormatter.FormatDaxMulti(expressions, false, shortFormat, skipSpaceAfterFunctionName ?? Preferences.Current.DaxFormatterSkipSpaceAfterFunctionName);
+ 
+diff --git a/TabularEditor/UIServices/DaxFormatter.cs b/TabularEditor/UIServices/DaxFormatter.cs
+index 0cc8816..2076ea3 100644
+--- a/TabularEditor/UIServices/DaxFormatter.cs
++++ b/TabularEditor/UIServices/DaxFormatter.cs
+@@ -52,7 +52,7 @@ namespace TabularEditor.Dax
+         }
+     }
+ 
+-    public class DaxFormatterRequest : ServerDatabaseInfo
++    public class DaxFormatterRequest
+     {
+         public int? MaxLineLenght { get; set; }
+         public bool? SkipSpaceAfterFunctionName { get; set; }
+@@ -71,8 +71,7 @@ namespace TabularEditor.Dax
+             this.CallerApp = assemblyName.Name;
+             this.CallerVersion = assemblyName.Version.ToString();
+ 
+-            var telemetry = ModelTelemetry.Collect();
+-            if (telemetry != null) PopulateFromTelemetry(telemetry);
++            // S001 never collects model telemetry.
+         }
+ 
+         public DaxFormatterRequest(bool useSemicolonsAsSeparators, bool shortFormat, bool skipSpaceAfterFunctionName)
+@@ -87,24 +86,11 @@ namespace TabularEditor.Dax
+             this.CallerApp = assemblyName?.Name;
+             this.CallerVersion = assemblyName?.Version.ToString();
+ 
+-            var telemetry = ModelTelemetry.Collect();
+-            if(telemetry != null) PopulateFromTelemetry(telemetry);
++            // S001 never collects model telemetry.
+         }
+ 
+-        private void PopulateFromTelemetry(ModelTelemetry telemetry)
+-        {
+-            ServerName = telemetry.ServerName;
+-            ServerEdition = telemetry.ServerEdition;
+-            ServerType = telemetry.ServerType;
+-            ServerMode = telemetry.ServerMode;
+-            ServerLocation = telemetry.ServerLocation;
+-            ServerVersion = telemetry.ServerVersion;
+-            DatabaseName = telemetry.DatabaseName;
+-            DatabaseCompatibilityLevel = telemetry.DatabaseCompatibilityLevel;
+-        }
+     }
+ 
+-
+     public class DaxFormatterResult
+     {
+         [JsonProperty(PropertyName = "formatted")]
+@@ -124,9 +110,7 @@ namespace TabularEditor.Dax
+         public const string DaxTextFormatUri = "https://www.daxformatter.com/api/daxformatter/daxtextformat";
+         public const string DaxTextFormatMultiUri = "https://www.daxformatter.com/api/daxformatter/daxtextformatmulti";
+ 
+-        private string redirectUrl;  // cache the redirected URL
+-        private string redirectHost;
+-
++        internal IDaxFormatterTransport Transport { get; set; } = new WebDaxFormatterTransport();
+         public DaxFormatterResult FormatDax(string query, bool useSemicolonsAsSeparators, bool shortFormat, bool skipSpaceAfterFunctionName)
+         {
+             string output = CallDaxFormatterSingle(DaxTextFormatUri, query, useSemicolonsAsSeparators, shortFormat, skipSpaceAfterFunctionName);
+@@ -157,155 +141,74 @@ namespace TabularEditor.Dax
+             return res;
+         }
+ 
+-        private string CallDaxFormatterSingle(string uri, string dax, bool useSemicolonsAsSeparators, bool shortFormat, bool skipSpaceAfterFunctionName)
++        private string CallDaxFormatterSingle(string uri, string dax, bool separators, bool shortFormat, bool skipSpace)
+         {
+-            try
+-            {
+-                PrimeConnection(uri);
+-                var originalUri = new Uri(uri);
+-                var actualUri = new UriBuilder(originalUri.Scheme, redirectHost, originalUri.Port, originalUri.PathAndQuery).ToString();
+-
+-                var req = new DaxFormatterRequestSingle(useSemicolonsAsSeparators, shortFormat, skipSpaceAfterFunctionName)
+-                {
+-                    Dax = dax
+-                };
+-
+-                var data = JsonConvert.SerializeObject(req, Formatting.Indented);
+-
+-                var enc = System.Text.Encoding.UTF8;
+-                var data1 = enc.GetBytes(data);
+-
+-                // this should allow DaxFormatter to work through http 1.0 proxies
+-                // see: http://stackoverflow.com/questions/566437/http-post-returns-the-error-417-expectation-failed-c
+-                //System.Net.ServicePointManager.Expect100Continue = false;
+-
+-                var wr = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(actualUri);
+-                wr.Proxy = ProxyCache.GetProxy(actualUri);
+-
+-                wr.Timeout = Preferences.Current.DaxFormatterRequestTimeout;
+-                wr.Method = "POST";
+-                wr.Accept = "application/json, text/javascript, */*; q=0.01";
+-                wr.Headers.Add("Accept-Encoding", "gzip,deflate");
+-                wr.Headers.Add("Accept-Language", "en-US,en;q=0.8");
+-                wr.ContentType = "application/json; charset=UTF-8";
+-                wr.AutomaticDecompression = DecompressionMethods.GZip;
+-
+-                string output = "";
+-                using (var strm = wr.GetRequestStream())
+-                {
+-                    strm.Write(data1, 0, data1.Length);
+-
+-                    using (var resp = wr.GetResponse())
+-                    {
+-                        //var outStrm = new System.IO.Compression.GZipStream(resp.GetResponseStream(), System.IO.Compression.CompressionMode.Decompress);
+-                        var outStrm = resp.GetResponseStream();
+-                        using (var reader = new System.IO.StreamReader(outStrm))
+-                        {
+-                            output = reader.ReadToEnd().Trim();
+-                        }
+-                    }
+-                }
+-
+-                return output;
+-            }
+-            catch
+-            {
+-                throw;
+-            }
+-            finally
+-            {
+-            }
++            PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
++            var req = new DaxFormatterRequestSingle(separators, shortFormat, skipSpace) { Dax = dax };
++            return Send(uri, req);
+         }
+ 
+-        private string CallDaxFormatterMulti(string uri, List<string> dax, bool useSemicolonsAsSeparators, bool shortFormat, bool skipSpaceAfterFunctionName)
++        private string CallDaxFormatterMulti(string uri, List<string> dax, bool separators, bool shortFormat, bool skipSpace)
+         {
+-            try
+-            {
+-                PrimeConnection(uri);
+-                var originalUri = new Uri(uri);
+-                var actualUri = new UriBuilder(originalUri.Scheme, redirectHost, originalUri.Port, originalUri.PathAndQuery).ToString();
+-
+-                var req = new DaxFormatterRequestMulti(useSemicolonsAsSeparators, shortFormat, skipSpaceAfterFunctionName)
+-                {
+-                    Dax = dax
+-                };
+-
+-                var data = JsonConvert.SerializeObject(req, Formatting.Indented);
+-
+-                var enc = System.Text.Encoding.UTF8;
+-                var data1 = enc.GetBytes(data);
+-
+-                // this should allow DaxFormatter to work through http 1.0 proxies
+-                // see: http://stackoverflow.com/questions/566437/http-post-returns-the-error-417-expectation-failed-c
+-                //System.Net.ServicePointManager.Expect100Continue = false;
+-
+-                var wr = (System.Net.HttpWebRequest)System.Net.WebRequest.Create(actualUri);
+-                wr.Proxy = ProxyCache.GetProxy(actualUri);
+-
+-                wr.Timeout = Preferences.Current.DaxFormatterRequestTimeout;
+-                wr.Method = "POST";
+-                wr.Accept = "application/json, text/javascript, */*; q=0.01";
+-                wr.Headers.Add("Accept-Encoding", "gzip,deflate");
+-                wr.Headers.Add("Accept-Language", "en-US,en;q=0.8");
+-                wr.ContentType = "application/json; charset=UTF-8";
+-                wr.AutomaticDecompression = DecompressionMethods.GZip;
++            PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
++            var req = new DaxFormatterRequestMulti(separators, shortFormat, skipSpace) { Dax = dax };
++            return Send(uri, req);
++        }
+ 
+-                string output = "";
+-                using (var strm = wr.GetRequestStream())
+-                {
+-                    strm.Write(data1, 0, data1.Length);
++        private string Send(string uri, DaxFormatterRequest request)
++        {
++            var consent = PbiBench.Dax.RemoteFormatterConsent.Revision;
++            PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
++            var data = JsonConvert.SerializeObject(request, Formatting.Indented);
++            var transport = Transport;
++            var timeout = Preferences.Current.DaxFormatterRequestTimeout;
++            var destination = transport.Prime(uri, timeout);
++            PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
++            if (consent != PbiBench.Dax.RemoteFormatterConsent.Revision)
++                throw new InvalidOperationException("Remote formatter consent changed. Retry explicitly.");
++            return transport.Post(destination, data, timeout);
++        }
++    }
+ 
+-                    using (var resp = wr.GetResponse())
+-                    {
+-                        //var outStrm = new System.IO.Compression.GZipStream(resp.GetResponseStream(), System.IO.Compression.CompressionMode.Decompress);
+-                        var outStrm = resp.GetResponseStream();
+-                        using (var reader = new System.IO.StreamReader(outStrm))
+-                        {
+-                            output = reader.ReadToEnd().Trim();
+-                        }
+-                    }
+-                }
++    internal interface IDaxFormatterTransport
++    {
++        string Prime(string uri, int timeout);
++        string Post(string uri, string body, int timeout);
++    }
+ 
+-                return output;
+-            }
+-            catch
+-            {
+-                throw;
+-            }
+-            finally
++    internal sealed class WebDaxFormatterTransport : IDaxFormatterTransport
++    {
++        public string Prime(string uri, int timeout)
++        {
++            var request = (HttpWebRequest)WebRequest.Create(uri);
++            request.Proxy = ProxyCache.GetProxy(uri);
++            request.Timeout = request.ReadWriteTimeout = timeout;
++            request.AllowAutoRedirect = false;
++            using (var response = (HttpWebResponse)request.GetResponse())
+             {
++                var location = response.Headers["Location"];
++                if (string.IsNullOrEmpty(location)) return uri;
++                var redirect = new Uri(new Uri(uri), location);
++                if (redirect.Scheme != Uri.UriSchemeHttps)
++                    throw new InvalidOperationException("Formatter requires HTTPS.");
++                return new UriBuilder(new Uri(uri)) { Host = redirect.Host }.ToString();
+             }
+         }
+-
+-        private void PrimeConnection(string uri)
++        public string Post(string uri, string body, int timeout)
+         {
+-            if (redirectHost == null)
+-            {
+-                // www.daxformatter.com redirects request to another site.  HttpWebRequest does redirect with GET.  It fails, since the web service works only with POST
+-                // The following 2 requests are doing manual POST re-direct
+-                //var webRequestFactory = IoC.Get<WebRequestFactory>();
+-                var redirectRequest = (HttpWebRequest)WebRequest.Create(uri);
+-                redirectRequest.Proxy = ProxyCache.GetProxy(uri);
+-
+-                redirectRequest.AllowAutoRedirect = false;
+-                redirectRequest.Timeout = Preferences.Current.DaxFormatterRequestTimeout;
+-                try
+-                {
+-                    using (var netResponse = redirectRequest.GetResponse())
+-                    {
+-                        var redirectResponse = (HttpWebResponse)netResponse;
+-                        redirectUrl = redirectResponse.Headers["Location"];
+-                        var redirectUri = new Uri(redirectUrl);
+-
+-                        // set the shared redirectHost variable
+-                        redirectHost = redirectUri.Host;
+-                    }
+-                }
+-                catch
+-                {
+-                    
+-                }
+-            }
++            var request = (HttpWebRequest)WebRequest.Create(uri);
++            request.Proxy = ProxyCache.GetProxy(uri);
++            request.Timeout = request.ReadWriteTimeout = timeout;
++            request.AllowAutoRedirect = false;
++            request.Method = "POST";
++            request.Accept = "application/json";
++            request.ContentType = "application/json; charset=UTF-8";
++            request.AutomaticDecompression = DecompressionMethods.GZip;
++            var bytes = System.Text.Encoding.UTF8.GetBytes(body);
++            using (var stream = request.GetRequestStream()) stream.Write(bytes, 0, bytes.Length);
++            using (var response = request.GetResponse())
++            using (var reader = new System.IO.StreamReader(response.GetResponseStream()))
++                return reader.ReadToEnd().Trim();
+         }
+     }
+-}
++}
+\ No newline at end of file
+diff --git a/docs/pbibench/ROADMAP.md b/docs/pbibench/ROADMAP.md
+index bc5bb88..f25c2a2 100644
+--- a/docs/pbibench/ROADMAP.md
++++ b/docs/pbibench/ROADMAP.md
+@@ -1,5 +1,7 @@
+ # PbiBench roadmap — focused TE2++++++
+ 
++Delivery authority: [STATUS](../../projectmanagement/STATUS.md). Checked entries mean implemented, not lead-accepted. Historical version groupings do not authorize future work.
++
+ ## v0.1 — clean foundation checkpoint
+ 
+ - preserve exact upstream TE2 tree;
+@@ -25,10 +27,11 @@ Port/adapt the proven model/DAX ideas from `powerbi_enhanced_dev` without import
+ - [x] privacy-default remote DAX formatter policy contract;
+ - [x] bounded DAX query request/result/executor contracts;
+ - [x] bounded in-memory query history with no implicit persistence;
+-- [ ] Semantic View based on TE2 model/dependency data;
+-- [ ] stronger model-aware DAX editor/workbench shell;
+-- [ ] real Desktop/XMLA DAX query execution/results with cancellation;
+-- [ ] enforce formatter consent in the PbiBench host and add a telemetry-free request path;
++- [x] Semantic View based on TE2 model/dependency data (implemented; QA/lead gate pending);
++- [x] plain-text DAX Workbench, explicit UTF-8 documents, history and CSV export;
++- [ ] stronger model-aware DAX editor/language services;
++- [x] dedicated AMO execution/results/cancellation adapter (controlled-session tests; live Desktop/XMLA validation pending);
++- [x] shared formatter session-consent boundary and telemetry-free payload (implemented; independent QA pending);
+ - [ ] investigate an offline formatter only if a compatible tested implementation exists;
+ - [ ] keep `Analyze in DAX Studio` as the deep-performance bridge.
+ 
+diff --git a/docs/pbibench/UPSTREAM_TE2_SYNC.md b/docs/pbibench/UPSTREAM_TE2_SYNC.md
+index a179c3d..2327f85 100644
+--- a/docs/pbibench/UPSTREAM_TE2_SYNC.md
++++ b/docs/pbibench/UPSTREAM_TE2_SYNC.md
+@@ -57,3 +57,18 @@ Do not resolve conflicts by blindly keeping the PbiBench side. TE2 behavior is t
+ ## Provenance
+ 
+ TE2 remains MIT licensed under the repository root `LICENSE`. New PbiBench-owned code should preserve clear provenance and must not copy Tabular Editor 3 proprietary code/assets/internal implementation.
++
++## S001 upstream formatter changes
++
++| PbiBench pass | Upstream file | Reason | Expected conflict risk |
++|---|---|---|---|
++| S001-C | TabularEditor/UIServices/DaxFormatter.cs | Shared session/admin gate before payload/redirect; remove model-telemetry collection and inherited telemetry fields from request DTO; recording transport seam; explicit HTTP timeouts. Single/batch protocol options retained. | Medium: reconcile future SQLBI protocol/transport/telemetry changes against the shared gate. |
++| S001-C | TabularEditor/Scripting/ScriptHelper.cs | Gate obsolete single, queued-object and enumerable/batch calls before throttling, dialogs or formatting. Disabled script/CLI requests fail clearly. | Low: three policy checks; retain UDF wrapper/comment extraction. |
++| S001-C | TabularEditor/FormMain.cs | Inherited expression formatting runs off UI thread; gates consent, tracks edits/object identity/consent and prevents overlapping requests; safe failure status directs to Workbench consent. | Medium: expression editor event types and undo behavior are upstream-owned. |
++
++Regression evidence: PbiBench.Host.Smoke/FormatterExportSmoke.cs executes the
++actual single/multi proxy with recording redirect/post transport; actual expression
++handler; script single/batch/UDF wrappers; fresh CLI single/batch denial; payload
++field inventory; admin/revoke controls; stale/failed/cancelled responses and
++Workbench undo. No automated remote SQLBI calls. See the S001 developer handoff.
++No dependency or target-framework changes were made.
+diff --git a/docs/pbibench/V0_2_MODEL_DAX.md b/docs/pbibench/V0_2_MODEL_DAX.md
+index 6dbe180..e0a14f1 100644
+--- a/docs/pbibench/V0_2_MODEL_DAX.md
++++ b/docs/pbibench/V0_2_MODEL_DAX.md
+@@ -25,11 +25,11 @@ The first host implementation intentionally rebuilds the index when Quick Open i
+ - model telemetry is a separate opt-in;
+ - enabling remote formatting alone must not imply telemetry consent.
+ 
+-The inherited TE2 SQLBI DAX Formatter implementation is still the existing upstream service path. The new policy is a Core contract; the host must enforce it before PbiBench exposes a new formatter entry point.
++S001 enforces a shared deny-by-default gate in the actual single/batch proxy before payload creation or redirect discovery. Workbench session consent also governs inherited expression and script/CLI requests. No model telemetry is collected. The serialized payload includes DAX, separator/length/spacing options and app/version fields. Restart revokes consent.
+ 
+ ### DAX query/workbench contracts
+ 
+-Core now contains provider-neutral contracts for future query execution:
++Core contains provider-neutral contracts used by the dedicated AMO execution adapter:
+ 
+ - bounded row requests (`5000` default, `100000` hard contract maximum);
+ - bounded timeout (`120s` default, maximum `3600s`);
+@@ -38,7 +38,7 @@ Core now contains provider-neutral contracts for future query execution:
+ - in-memory bounded query history does not persist DAX to disk implicitly;
+ - consecutive identical queries collapse to the newest history entry.
+ 
+-There is intentionally **no new DAX execution adapter yet**. A concrete Desktop/XMLA implementation should only be added after connection, cancellation and result-shape behavior are tested against real Power BI Desktop / XMLA endpoints.
++The dedicated AMO adapter and Workbench are implemented, with local UTF-8 documents, selection execution, history, retained-result budgets and explicit CSV export. Controlled sessions test production orchestration. This is not live Desktop/XMLA certification; real authentication, cancellation and editor-session continuity remain required QA gates. See [S001 developer handoff](../../projectmanagement/handoffs/S001-DEVELOPER.md).
+ 
+ ## Upstream-sync strategy
+ 
+@@ -46,7 +46,7 @@ PbiBench application code lives under `TabularEditor/PbiBench/**`.
+ 
+ A root `Directory.Build.targets` injects those sources and the `PbiBench.Core` project reference only when `MSBuildProjectName == TabularEditor`. This avoids editing the large upstream `TabularEditor.csproj` solely to register PbiBench files and reduces future TE2 merge conflicts.
+ 
+-No existing `FormMain.cs`, `FormMain.Designer.cs`, `UIController.cs`, or `UIController_Tree.cs` behavior is replaced. Shell integration uses partial classes.
++Shell integration uses partial classes. S001 makes authorized formatter-boundary, scripting and expression-handler edits; see the [upstream ledger](UPSTREAM_TE2_SYNC.md).
+ 
+ ## Verification
+ 
+@@ -55,11 +55,12 @@ Two CI lanes are expected on v0.2:
+ 1. `PbiBench foundation` — build `PbiBench.Core` and run dependency-free smoke checks.
+ 2. `PbiBench TE2 integration` — restore the legacy TE2 solution and compile the actual WinForms application with the PbiBench host additions.
+ 
+-## Next v0.2 slices
++## Remaining gates and later work
+ 
+-1. real-model Quick Open interaction test on Windows with a PBIX/PBIP model;
+-2. richer Semantic View using TE2 dependency data;
+-3. model-aware DAX workbench shell with query documents/results;
+-4. Desktop/XMLA query adapter with cancellation and bounded result materialization;
+-5. explicit PbiBench formatter consent UI and telemetry-free request path;
+-6. DAX Studio handoff retained for deep timings/query-plan analysis.
++Semantic View, a plain-text Workbench, query adapter and formatter consent are
++implemented. Independent QA and lead review have not accepted them. First verify
++real Desktop/XMLA, native keyboard/DPI and supported Core/CI checks. Rich language
++services, multiple result sets, autosave and recovery remain later work.
++
++The retained estimate, provider-timeout limits, CSV format and concurrent document
++save limitations are documented in [README](../../README_PBIBENCH.md).
+\ No newline at end of file

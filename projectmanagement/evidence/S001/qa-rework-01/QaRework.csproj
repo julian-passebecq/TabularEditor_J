@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><AssemblyName>PbiBench.Host.Smoke</AssemblyName><EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>10.0</LangVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup><Compile Include="QaRework.cs"/><Compile Include="ExtendedRework.cs"/><Compile Include="../../../../PbiBench.Host.Smoke/QueryLifecycleSmoke.cs"/></ItemGroup><!-- Test the built host, including its internal dialogs, without editing upstream visibility. -->
+  <ItemGroup>
+    <Reference Include="Newtonsoft.Json"><HintPath>../../../../packages/Newtonsoft.Json.13.0.3/lib/net45/Newtonsoft.Json.dll</HintPath></Reference>
+    <Reference Include="TabularEditor">
+      <HintPath>../../../../TabularEditor/bin/$(Configuration)/TabularEditor.exe</HintPath>
+    </Reference>
+    <Reference Include="TOMWrapper">
+      <HintPath>../../../../TOMWrapper/bin/$(Configuration)/TOMWrapper.dll</HintPath>
+    </Reference>
+    <Reference Include="PbiBench.Core">
+      <HintPath>../../../../PbiBench.Core/bin/$(Configuration)/netstandard2.0/PbiBench.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <Target Name="RequireBuiltHost" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('../../../../TabularEditor/bin/$(Configuration)/TabularEditor.exe')"
+           Text="Build the TE2 host in the same configuration before running host smoke checks." />
+  </Target>
+</Project>
+
+

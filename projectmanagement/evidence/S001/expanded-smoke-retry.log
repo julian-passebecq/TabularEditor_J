@@ -1,0 +1,12 @@
+Navigation.PbiBenchQuickOpenForm: construction, resize and scaled layout PASS
+Semantic.PbiBenchSemanticViewForm: construction, resize and scaled layout PASS
+Dax.PbiBenchDaxWorkbenchForm: construction, resize and scaled layout PASS
+DAX Workbench: selection, results, history, cancellation and failure recovery PASS
+DAX documents: files, conflicts, dirty state, cancelled dialogs and replacement guards PASS
+T05/T06/T07: production orchestration, cancellation/UI message, ownership, diagnostics and retained bounds PASS
+PbiBench host smoke: FAIL
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at TabularEditor.TOMWrapper.TabularModelHandler.Save(String path, SaveFormat format, SerializeOptions options, Boolean useAnnotatedSerializeOptions, Boolean resetCheckpoint, Boolean restoreSerializationOptions)
+   at FormatterExportSmoke.CliDenial() in D:\PROJ\TabularEditor_J\PbiBench.Host.Smoke\FormatterExportSmoke.cs:line 210
+   at FormatterExportSmoke.Run() in D:\PROJ\TabularEditor_J\PbiBench.Host.Smoke\FormatterExportSmoke.cs:line 78
+   at Program.Main() in D:\PROJ\TabularEditor_J\PbiBench.Host.Smoke\Program.cs:line 37

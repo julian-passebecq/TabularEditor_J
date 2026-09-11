@@ -1,0 +1,9 @@
+{
+  "hostCopyMatches": true,
+  "onlyExpectedManagement": true,
+  "changed": [
+    "projectmanagement/BACKLOG.md",
+    "projectmanagement/REGISTERS.md",
+    "projectmanagement/STATUS.md"
+  ]
+}
