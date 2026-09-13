@@ -1,99 +1,88 @@
-# TE2 Enhanced - Codex local audit contract
+# TE2 Enhanced - Pro implementation contract
 
 ## Product identity
 
 This repository is **TE2 Enhanced**, the lighter Power BI engineering extension built directly on the Tabular Editor 2 fork in `julian-passebecq/TabularEditor_J`.
 
-Do **not** confuse this project with the older/full `powerbi_enhanced_dev` / standalone PbiBench product. Some historical namespaces, folders and management documents inside this repository still use the internal name `PbiBench`; those names do not change the repository/product identity for this audit.
+Do **not** confuse it with the older/full `powerbi_enhanced_dev` / standalone PbiBench product. Historical namespaces and folders in this repository may still use the internal name `PbiBench`; that does not authorize importing the old full application or expanding this fork into it.
 
-## Operating model
+## Current operating model
 
-Use **one Codex conversation in the local `TE2` workspace**. A multi-agent lead/developer/tester chain is not required for routine validation. Historical multi-role documents remain evidence only unless the user explicitly reactivates that workflow.
+Use one strong **Pro implementation conversation** in the local `TE2` workspace. Pro owns architecture review, coding, refactoring, focused regression tests and implementation handoff.
 
-The current job is release-candidate **audit and local Windows validation first**, not a new feature pass.
+A separate **Light model conversation will perform the broad independent Windows QA afterwards**. Therefore Pro should spend its budget primarily on implementation, not on repeating exhaustive manual test campaigns that Light can run later.
 
-## Read first
+Pro must still keep the code buildable and run targeted automated/smoke checks for every subsystem it changes. Do not knowingly hand Light a broken tree.
+
+Do not recreate the old lead/developer/tester multi-agent chain. Historical workflow documents are evidence only unless the user explicitly reactivates them.
+
+## Authoritative starting point
+
+Work from the existing takeover work on branch:
+
+`codex/pro-ai-handover-2026-09-11`
+
+Before changing anything, inspect the local workspace and record branch, HEAD, remotes, `git status --short --branch`, untracked/modified files, and toolchain versions. Preserve any local work newer than the remote branch. Do not reset, clean, discard, stash, rebase, merge, or switch branches blindly.
+
+Read in this order:
 
 1. `handover/2026-09-11/README.md`
-2. `projectmanagement/STATUS.md`
-3. `projectmanagement/handoffs/S001-QA-REWORK-01.md`
-4. `projectmanagement/reviews/S001-DECISION.md`
-5. relevant verification scripts/tests referenced by those files
+2. `handover/2026-09-11/PRO_IMPLEMENTATION_MASTER_PROMPT.md`
+3. `handover/2026-09-11/REMAINING.md`
+4. `projectmanagement/STATUS.md`
+5. `projectmanagement/ARCHITECTURE.md`
+6. `projectmanagement/BACKLOG.md`
+7. `projectmanagement/handoffs/S001-QA-REWORK-01.md`
+8. `projectmanagement/reviews/S001-DECISION.md`
+9. deeper implementation/test files only as needed
 
-Treat the newest handover/status entries as authoritative when older documents conflict.
+Newest takeover instructions override older workflow-routing language when they conflict.
 
-## Repository safety
+## Do not restart completed work
 
-Before any build or edit, record:
+S001 A/B/C and correction batch 01 already exist. BUG-001 and BUG-002 are QA-verified. Do not reimplement those fixes simply because the older lead decision says `REWORK_REQUIRED`.
 
-- repository root
-- `git status --short --branch`
-- current branch and HEAD
-- remotes
-- tracked/untracked changes
-- available .NET SDK/MSBuild/NuGet versions
+Perform the focused code-logic review needed to close the outdated decision. Preserve honest open gates for live Desktop/XMLA/auth, canonical environments or native interaction where evidence is still absent.
 
-Preserve all existing work. Do **not** reset, clean, discard, stash, switch branches, rebase, merge, or stage everything automatically. Do not move work to the old PbiBench repository.
+## Implementation strategy
 
-The handover branch `codex/pro-ai-handover-2026-09-11` is the intended review branch when that is what the local TE2 workspace already has checked out. Do not switch to it blindly if the local workspace contains different/newer work; inspect first and report any divergence.
+The goal is to advance the product as far as is technically coherent in one Pro run. Do not stop after writing a plan or after one tiny pass. Work through successive bounded workstreams, committing coherent checkpoints and continuing automatically until:
 
-## Audit-first rule
+- the useful planned implementation that can be completed safely is exhausted;
+- a genuine external/environment blocker prevents further implementation;
+- a major product decision requires the user; or
+- execution/context limits require a handoff.
 
-Do not begin another implementation pass merely because an older sprint document contains TODOs.
+Prioritize the roadmap and dependencies in `ARCHITECTURE.md`, `BACKLOG.md`, `REMAINING.md` and the master prompt. Prefer completed vertical slices over broad half-built scaffolding.
 
-First determine the actual current state and answer:
+## Architectural boundaries
 
-1. Does the current source build on this Windows laptop?
-2. Do the canonical/focused tests pass?
-3. Does `Scripts/Verify-PbiBench.ps1` pass, or exactly which gate is blocked and why?
-4. Does the **actual rebuilt Tabular Editor host** launch and behave correctly?
-5. Are BUG-001 and BUG-002 still fixed in the current source?
-6. Which previously open gates are now testable on this laptop?
-7. Is there any reproducible release-blocking defect that needs a Pro coding pass?
+- Preserve the recognizable TE2 WinForms host and upstream editing behavior.
+- TE2/TOMWrapper remain semantic/undo/serialization owners.
+- `PbiBench.Core` remains neutral and must not import WinForms/TOM/AMO/HTTP/auth/provider-specific UI dependencies.
+- Host/TOM/AMO/WinForms adapters remain under the TE2 integration area.
+- Keep query execution on dedicated owned sessions; cancellation/timeout claims remain truthful and best-effort unless architecture changes are justified by evidence.
+- Preserve explicit formatter consent, privacy boundaries and stale-response guards.
+- Separate restricted reviewed recipes from arbitrary trusted C# execution.
+- Treat Disk, Loaded, Live, Git and Baseline as distinct identities; no silent overwrite.
+- Unknown report schemas remain read-only.
+- New writes/bulk changes require proposal/review/stale detection plus undo or recovery.
+- Do not copy proprietary TE3 code/assets or non-compatible third-party implementations.
+- Keep Fabric administration external, deep timings/plans in DAX Studio, final report rendering in Power BI Desktop, and AI/agent orchestration outside the core product.
 
-Do not silently alter production code while performing this audit. Test-only diagnostics may be created outside production paths or clearly marked as audit evidence.
+## Testing split
 
-## Required local Windows validation
+**Pro:** build after meaningful changes; add/run focused unit/integration/smoke tests around changed logic; verify the actual host launches when a change affects host wiring. Fix failures caused by Pro's work.
 
-Use the real locally rebuilt TE2 Enhanced application, not only smoke-harness compilation.
+**Light later:** full independent clean rebuild/test campaign, real Windows UI journey, DPI/keyboard/focus, regression matrix, external-tool handoffs, live endpoints when approved, screenshots/logs, release GREEN/YELLOW/RED verdict.
 
-At minimum verify, where the environment allows:
+Do not spend Pro's implementation budget recreating an exhaustive independent QA report that Light can produce later.
 
-- clean restore/build of the intended solution/project path;
-- canonical and focused automated tests referenced by the current handover;
-- verification runner and both smoke lanes;
-- launch of the actual `TabularEditor.exe`/enhanced host built from current source;
-- opening the supplied/synthetic BIM test model;
-- model tree/property/editor basics inherited from TE2;
-- Ctrl+P / quick-open journey and navigation to the known `Margin` fixture when available;
-- DAX document open/edit/save behavior and external-change protection;
-- DAX query lifecycle states, cancellation/timeout/result limits using safe fixtures;
-- CSV export precision/encoding behavior, including the former float/double regression;
-- remote DAX formatting consent plus stale-response/document-replacement protection, without sending private model data;
-- keyboard/focus/resize/DPI sanity for the enhanced UI;
-- no regression to ordinary TE2 workflows caused by the enhancement layer.
+## Required Pro handoff
 
-For live Power BI Desktop/XMLA/authenticated endpoints: test only when the user explicitly supplies/approves an endpoint and credentials. Otherwise report the gate as `BLOCKED_ENV`; never convert offline fixtures into a live-readiness claim.
+Before stopping, leave the branch buildable and create/update:
 
-## Evidence
+- `handover/2026-09-11/PRO_IMPLEMENTATION_STATUS.md` - completed work, commits, design decisions, known limits and remaining backlog;
+- `handover/2026-09-11/LIGHT_QA_HANDOFF.md` - exact branch/HEAD, build commands, targeted changed areas, risk-based test matrix and any environment requirements.
 
-Create a concise local audit folder, preferably under `artifacts/local-audit-<timestamp>/`, containing only non-sensitive evidence such as:
-
-- environment/version summary
-- commands run and exit codes
-- test/build logs or summaries
-- screenshots of the real application for the required UI journeys
-- reproduced defect notes
-- final audit report
-
-Do not store credentials, connection strings, access tokens, customer data, private DAX, or business rows.
-
-## Decision at the end
-
-Return exactly one release recommendation:
-
-- `GREEN - no Pro pass needed`: current candidate is technically sound; only explicitly listed environment/live gates remain.
-- `YELLOW - bounded validation/fix`: a small, well-reproduced issue or environment gate remains; describe the smallest next action.
-- `RED - Pro pass needed`: one or more reproducible product/architecture defects require substantive coding. Provide exact reproduction steps, failing evidence, suspected ownership/files, and acceptance criteria for the Pro model.
-
-Do not start a broad redesign. Do not expand this lighter TE2 fork into the old full PbiBench product.
+Do not merge to `master` or claim a release. The Light QA pass and final release decision happen after Pro.
