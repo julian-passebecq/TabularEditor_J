@@ -1,5 +1,6 @@
 param(
     [switch]$HostOnlyDiagnostic,
+    [string]$DotNetPath,
     [string]$NuGetPath,
     [string]$EvidenceDirectory = (Join-Path $env:TEMP 'pbibench-verification')
 )
@@ -14,12 +15,14 @@ $exitCode = 1
 function Stage($name, $exe, $arguments) {
     $log = Join-Path $EvidenceDirectory ($name + '.log')
     $priorErrorAction = $ErrorActionPreference
+    $stageSdk = $env:MSBuildSDKsPath
     try {
         # Windows PowerShell wraps native stderr in ErrorRecord; retain the process exit code.
         $ErrorActionPreference = 'Continue'
+        if ($exe -eq $dotnet) { $env:MSBuildSDKsPath = $null }
         & $exe @arguments *> $log
         $code = $LASTEXITCODE
-    } finally { $ErrorActionPreference = $priorErrorAction }
+    } finally { $ErrorActionPreference = $priorErrorAction; $env:MSBuildSDKsPath = $stageSdk }
     $stages.Add([pscustomobject]@{stage=$name; exitCode=$code; result=$(if ($code -eq 0) {'PASS'} else {'FAIL'}); log=$log})
     Write-Host "$name : exit $code ($log)"
     if ($code -ne 0) { throw "Stage $name failed; dependent stages not run." }
@@ -28,7 +31,8 @@ try {
     $env:PATH = (($env:PATH -split ';' | ForEach-Object { $_.Trim().Trim('"') } | Where-Object { $_ -and $_ -notmatch '[\r\n]' }) -join ';')
     Set-Location $root
     New-Item -ItemType Directory -Force $EvidenceDirectory | Out-Null
-    $dotnet = (Get-Command dotnet -ErrorAction Stop).Source
+    $legacyDotnet = (Get-Command dotnet -ErrorAction Stop).Source
+    $dotnet = if ($DotNetPath) { (Resolve-Path $DotNetPath).Path } else { $legacyDotnet }
     $sdks = & $dotnet --list-sdks
     $hasNet10 = @($sdks | Where-Object { $_ -match '^10\.' }).Count -gt 0
     $sdks | Set-Content (Join-Path $EvidenceDirectory 'sdks.txt')
@@ -40,7 +44,10 @@ try {
     if (!(Test-Path "${env:ProgramFiles(x86)}\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.8\mscorlib.dll")) { throw 'BLOCKED_ENV: .NET Framework 4.8 reference assemblies required.' }
     if (!$NuGetPath) { $NuGetPath = (Get-Command nuget -ErrorAction Stop).Source }
     # Resolve SDK dynamically for legacy VS imports. Restore the caller environment in finally.
-    $sdkLine = $sdks | Where-Object { $_ -match '^\d+\.\d+\.\d+ \[' } | Select-Object -Last 1
+    # VS MSBuild and the canonical CLI can use different compatible SDKs. In particular,
+    # VS 17.12 cannot load SDK 10. A private SDK for Core must not poison host imports.
+    $legacySdks = & $legacyDotnet --list-sdks
+    $sdkLine = $legacySdks | Where-Object { $_ -match '^\d+\.\d+\.\d+ \[' } | Select-Object -Last 1
     if (!$sdkLine) { throw 'BLOCKED_ENV: stable .NET SDK required.' }
     if ($sdkLine -match '^(\S+) \[(.+)\]') { $env:MSBuildSDKsPath = Join-Path (Join-Path $Matches[2] $Matches[1]) 'Sdks' }
     $env:MSBuildEnableWorkloadResolver = 'false'

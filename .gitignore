@@ -67,3 +67,4 @@ bin/
 obj/
 *.runsettings
 /.claude
+/.tools/

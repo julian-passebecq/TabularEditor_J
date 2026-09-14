@@ -1,3 +1,4 @@
+> 2026-09-14 Pro contract update: **ACCEPTED — evidenced S001 offline correction milestone only**. The master prompt authorizes this focused historical decision. Reviewed G17/G9 numeric conversion, successful-replacement generation, and handler/object/property guards against S001-QA-REWORK-01. BUG-001/BUG-002 are closed for that evidenced scope; do not reimplement them. Live Desktop/XMLA/authentication, full native/DPI, legacy regression and remote CI gates remain OPEN; canonical build evidence is being refreshed in the Pro pass. OBS-001 remains OPEN. New Pro implementation awaits independent Light QA; no release or whole-product acceptance. Historical decision/routing below is superseded only to this extent. See [Pro status](../../handover/2026-09-11/PRO_IMPLEMENTATION_STATUS.md).
 # S001 technical-lead decision
 
 State: **REWORK_REQUIRED**. Date: 2026-09-08. Owner: technical lead.

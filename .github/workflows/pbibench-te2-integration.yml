@@ -5,6 +5,7 @@ on:
     branches:
       - pbi-workflow-pro-v0.2
       - 'codex/stabilize-pbibench-*'
+      - 'codex/pro-ai-*'
     paths:
       - 'TabularEditor/**'
       - 'TOMWrapper/**'
@@ -56,3 +57,9 @@ jobs:
       - name: Verify product and both smoke lanes
         shell: powershell
         run: ./Scripts/Verify-PbiBench.ps1
+      - name: Preserve verification logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: te2-enhanced-verification
+          path: ${{ runner.temp }}/pbibench-verification
