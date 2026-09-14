@@ -47,6 +47,14 @@ namespace TabularEditor.PbiBench.Dax
             UpdateDocumentTitle();
         }
 
+        internal void LoadPreviewDraft(string query, int rowLimit)
+        {
+            _document.New(query, unsaved: true);
+            _maxRows.Value = rowLimit;
+            DisplayDocument();
+            SetStatus("Table preview draft · F5 executes. TOPN ties may exceed rows; retention limits do not bound server work.");
+        }
+
         private static ToolStripMenuItem DocumentCommand(string text, Keys shortcut, Action action)
         {
             var item = new ToolStripMenuItem(text) { ShortcutKeys = shortcut };

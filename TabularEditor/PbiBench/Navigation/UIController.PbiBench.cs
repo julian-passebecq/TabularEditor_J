@@ -7,6 +7,36 @@ namespace TabularEditor.UI
 {
     public partial class UIController
     {
+        public void PbiBench_ShowProject()
+        {
+            using (var dialog = new TabularEditor.PbiBench.Project.PbiBenchProjectForm(Handler?.Model?.Name ?? "No model", Handler?.IsConnected == true))
+                dialog.ShowDialog(UI.FormMain);
+        }
+        public void PbiBench_ShowRecipes()
+        {
+            if (Handler?.Model == null) return;
+            using (var dialog = new TabularEditor.PbiBench.Automation.PbiBenchRecipeForm(() => Handler))
+                dialog.ShowDialog(UI.FormMain);
+        }
+        public void PbiBench_ShowTablePreview()
+        {
+            if (Handler?.Model == null) return;
+            var handler = Handler;
+            using (var builder = new PbiBenchTablePreviewForm(Handler.Model))
+            {
+                if (builder.ShowDialog(UI.FormMain) != DialogResult.OK) return;
+                if (!ReferenceEquals(handler, Handler) || !builder.IsCurrent()) return;
+                PbiBenchAmoDaxQueryExecutor.TryCreate(Handler, out var executor, out var reason);
+                using (var dialog = new PbiBenchDaxWorkbenchForm(executor, executor?.ConnectionLabel ?? "", reason))
+                {
+                    dialog.AuthoringModel = () => Handler?.Model;
+                    dialog.NavigateToObject = obj => Goto(obj);
+                    dialog.LoadPreviewDraft(builder.Query, builder.RowLimit);
+                    dialog.ExecutionContextIsCurrent = () => ReferenceEquals(handler, Handler) && builder.IsCurrent();
+                    dialog.ShowDialog(UI.FormMain);
+                }
+            }
+        }
         // Installing the host from this partial keeps PbiBench commands out of FormMain.cs and
         // the legacy WinForms designer. It registers shortcuts and a small Tools > PbiBench menu.
         private static readonly PbiBenchShortcutFilter PbiBenchShortcutFilterRegistration =

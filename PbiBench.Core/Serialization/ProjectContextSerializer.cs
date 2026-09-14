@@ -49,20 +49,15 @@ namespace PbiBench.Core.Serialization
 
             var json = Serialize(context);
             var temp = destination + ".tmp-" + Guid.NewGuid().ToString("N");
-            File.WriteAllText(temp, json, new UTF8Encoding(false));
-
             try
             {
+                File.WriteAllText(temp, json, new UTF8Encoding(false));
                 if (File.Exists(destination))
                     File.Replace(temp, destination, null);
                 else
                     File.Move(temp, destination);
             }
-            catch
-            {
-                TryDelete(temp);
-                throw;
-            }
+            finally { TryDelete(temp); }
         }
 
         private static void TryDelete(string path)

@@ -35,6 +35,7 @@ namespace TabularEditor.PbiBench.Dax
         private CancellationTokenSource _runCts;
         private DaxQueryResult _currentResult = new DaxQueryResult();
         private bool _closing;
+        internal Func<bool> ExecutionContextIsCurrent;
 
         public PbiBenchDaxWorkbenchForm(
             IDaxQueryExecutor executor,
@@ -259,6 +260,8 @@ namespace TabularEditor.PbiBench.Dax
         private async void ExecuteQuery()
         {
             if (_executor == null || _runCts != null || _formatting || _closing) return;
+            if (ExecutionContextIsCurrent != null && !ExecutionContextIsCurrent())
+            { SetStatus("Preview model/table/column changed. Create a new table preview before executing."); return; }
 
             // A whitespace-only selection must not accidentally execute the whole document.
             var queryText = _queryEditor.SelectionLength > 0 ? _queryEditor.SelectedText : _queryEditor.Text;

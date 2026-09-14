@@ -37,6 +37,13 @@ namespace PbiBench.Core.Project
 
         [DataMember(Name = "capabilities", Order = 10)]
         public ProjectCapabilities Capabilities { get; set; } = new ProjectCapabilities();
+
+        [DataMember(Name = "pbipCandidates", Order = 11)]
+        public string[] PbipCandidates { get; set; } = Array.Empty<string>();
+        [DataMember(Name = "discoveryIncomplete", Order = 12)]
+        public bool DiscoveryIncomplete { get; set; }
+        [DataMember(Name = "discoveryDiagnostics", Order = 13)]
+        public string[] DiscoveryDiagnostics { get; set; } = Array.Empty<string>();
     }
 
     [DataContract]

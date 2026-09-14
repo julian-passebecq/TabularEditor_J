@@ -115,6 +115,15 @@ namespace TabularEditor.PbiBench.Navigation
             pbiBench.DropDownItems.Add(semanticView);
             pbiBench.DropDownItems.Add(new ToolStripSeparator());
             pbiBench.DropDownItems.Add(daxWorkbench);
+            var project = new ToolStripMenuItem("Project (read-only)…");
+            project.Click += (s, args) => RunCommand(c => c.PbiBench_ShowProject());
+            pbiBench.DropDownItems.Add(project);
+            var recipes = new ToolStripMenuItem("Reviewed metadata recipes…");
+            recipes.Click += (s, args) => RunCommand(c => c.PbiBench_ShowRecipes());
+            pbiBench.DropDownItems.Add(recipes);
+            var preview = new ToolStripMenuItem("Table preview query…");
+            preview.Click += (s, args) => RunCommand(c => c.PbiBench_ShowTablePreview());
+            pbiBench.DropDownItems.Add(preview);
             pbiBench.DropDownOpening += (s, args) =>
             {
                 var controller = FormMain.Singleton?.UI;

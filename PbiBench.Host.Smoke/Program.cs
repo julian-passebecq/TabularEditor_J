@@ -24,6 +24,11 @@ internal static class Program
                 table.AddMeasure("Base measure", "1");
                 table.AddMeasure("Dependent measure", "[Base measure] + 1");
                 AuthoringSmoke.Run(handler.Model);
+                RecipeSmoke.Run(handler);
+                using (var recipeForm = new TabularEditor.PbiBench.Automation.PbiBenchRecipeForm(() => handler))
+                { var handle = recipeForm.Handle; recipeForm.Show(); Application.DoEvents(); recipeForm.Close(); }
+                using (var previewForm = new TabularEditor.PbiBench.Dax.PbiBenchTablePreviewForm(handler.Model))
+                { var handle = previewForm.Handle; previewForm.Show(); Application.DoEvents(); previewForm.Close(); }
                 var snapshotType = Host.GetType("TabularEditor.PbiBench.Semantic.PbiBenchSemanticSnapshot", true);
                 var snapshot = snapshotType.GetMethod("Build").Invoke(null, new object[] { handler.Model });
                 var index = snapshotType.GetProperty("Index").GetValue(snapshot);
@@ -32,10 +37,13 @@ internal static class Program
                 CheckDialog("Navigation.PbiBenchQuickOpenForm", new[] { descriptors });
                 CheckDialog("Semantic.PbiBenchSemanticViewForm", new[] { snapshot });
                 CheckDialog("Dax.PbiBenchDaxWorkbenchForm", new object[] { null, "", "Offline smoke check" });
+                using (var project = new TabularEditor.PbiBench.Project.PbiBenchProjectForm("Synthetic", false))
+                { var handle = project.Handle; project.Show(); Application.DoEvents(); project.Close(); }
                 DaxWorkbenchSmoke.Run(Host);
                 DaxDocumentSmoke.Run(Host);
                 QueryLifecycleSmoke.Run();
                 MultipleResultsSmoke.Run();
+                ProjectSmoke.Run();
                 FormatterExportSmoke.Run();
                 Rework01Smoke.Run();
             }
@@ -46,6 +54,7 @@ internal static class Program
         {
             Console.Error.WriteLine("PbiBench host smoke: FAIL");
             Console.Error.WriteLine(error);
+            Console.Error.WriteLine("Base exception HRESULT: 0x" + error.GetBaseException().HResult.ToString("X8"));
             return 1;
         }
     }

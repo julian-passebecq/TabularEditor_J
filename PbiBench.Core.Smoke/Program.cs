@@ -15,11 +15,13 @@ internal static class Program
         {
             BuildFixture(root);
             RunProjectDiscoveryChecks(root);
+            ProjectDiscoverySmoke.Run(root);
             RunGitChecks();
             RunDaxFormatterChecks();
             RunDaxPrivacyPolicyChecks();
             RunDaxQueryContractChecks();
             DaxRetentionSmoke.Run();
+            TablePreviewSmoke.Run();
             RunQuickOpenChecks();
             SemanticDependencySmoke.Run();
             Console.WriteLine("PbiBench.Core smoke: PASS");

@@ -198,6 +198,7 @@ internal static class QueryLifecycleSmoke
         private int _index;
         internal int Values;
         internal Action OnRead;
+        internal Action OnNextResult;
         internal object Value = 1;
         internal Reader(int rows, int columns) { _rows = rows; FieldCount = columns; }
         public int FieldCount { get; }
@@ -206,7 +207,7 @@ internal static class QueryLifecycleSmoke
         public object GetValue(int i) { Values++; return Value; }
         public void Dispose() { }
         public void Close() { }
-        public bool NextResult() => false;
+        public bool NextResult() { OnNextResult?.Invoke(); return false; }
         public DataTable GetSchemaTable() => null;
         public int Depth => 0;
         public bool IsClosed => false;

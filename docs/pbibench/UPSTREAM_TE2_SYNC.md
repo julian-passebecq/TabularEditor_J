@@ -85,3 +85,10 @@ Rework01Smoke exercises the real model-bound UI controller, selector, expression
 handler and controlled proxy with equal-text transitions. Same-context formatting
 still applies; stale transitions do not. No query transport, model semantics,
 package pins or target frameworks changed. Independent T14/T15 QA remains required.
+# 2026-09-14 Pro implementation note
+
+New authoring/results, relationship inventory, project view and recipe features
+remain under `TabularEditor/PbiBench`, Core and smoke projects. No additional
+upstream-owned TE2/TOMWrapper production files or package pins were changed in
+this pass. TE2 lexer/TOM identifiers/navigation/setters/undo are reused directly.
+The historical upstream edits below remain required and preserved.
