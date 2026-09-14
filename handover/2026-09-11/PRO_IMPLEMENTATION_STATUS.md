@@ -62,3 +62,12 @@ Compact logs, binary hashes and both OBS-001 failures are committed under eviden
 9. Cross-feature integration and release-candidate qualification after QA. No release, master merge or push performed.
 
 This is a substantial implementation checkpoint at the end of the Pro run, not completion of the whole master roadmap. Highest regression risks: result traversal/selection, recipe partial-failure/undo, filesystem/Git bounds, modal navigation and Windows replacement behavior. New work is READY_FOR_LIGHT_QA, not self-accepted.
+
+## Commit identity and handoff
+
+- `0b2ef50` — focused historical S001 correction acceptance and canonical SDK verification.
+- `605d673` — local DAX assistance, bounded multiple results and relationship inventory.
+- `603936b41649da088ae01cd6edff6efcc01319b9` — final product/test source: bounded Project/Git view, restricted recipes and table-preview drafts.
+- A final documentation/evidence-only commit follows; ending branch remains `codex/pro-ai-handover-2026-09-11`. `git rev-parse HEAD` identifies that handoff tip. No later production changes in this delivery.
+
+Proceed with LIGHT_QA_HANDOFF.md. Worktree is intended clean after the final documentation commit; ignored local SDK/tools/evidence remain available. No autonomous follow-up, subagent chain or scheduled task was started.

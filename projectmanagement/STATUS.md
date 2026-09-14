@@ -1,7 +1,8 @@
+> Current Pro delivery (2026-09-14): **READY_FOR_LIGHT_QA** on `codex/pro-ai-handover-2026-09-11`, product commit `603936b41649da088ae01cd6edff6efcc01319b9`. See [implementation status](../handover/2026-09-11/PRO_IMPLEMENTATION_STATUS.md) and [executable Light QA handoff](../handover/2026-09-11/LIGHT_QA_HANDOFF.md). New local authoring, multiple results, relationship inventory, project/Git view, restricted metadata recipes and table-preview slices are implemented, not independently accepted. Final canonical Core/actual-host verification PASS. OBS-001 recurred; live/native/legacy/CI gates remain open. Older routing below is historical.
 > 2026-09-14 Pro contract update: **ACCEPTED — evidenced S001 offline correction milestone only**. The master prompt authorizes this focused historical decision. Reviewed G17/G9 numeric conversion, successful-replacement generation, and handler/object/property guards against S001-QA-REWORK-01. BUG-001/BUG-002 are closed for that evidenced scope; do not reimplement them. Live Desktop/XMLA/authentication, full native/DPI, legacy regression and remote CI gates remain OPEN; canonical build evidence is being refreshed in the Pro pass. OBS-001 remains OPEN. New Pro implementation awaits independent Light QA; no release or whole-product acceptance. Historical decision/routing below is superseded only to this extent. See [Pro status](../handover/2026-09-11/PRO_IMPLEMENTATION_STATUS.md).
 > 2026-09-11 owner-directed Pro AI takeover: start with [handover](../handover/2026-09-11/README.md). The former multi-role workflow is historical; no automatic role chain or new sprint is started. Latest correction QA is verified, acceptance remains pending.
 
-# Current delivery state
+# Historical S001 delivery state
 
 Updated: 2026-09-08 by independent tester after S001-REWORK-01.
 

@@ -1,3 +1,4 @@
+> 2026-09-14 implementation update: the Pro pass has completed multiple product slices and is **READY_FOR_LIGHT_QA**. Start with [Pro implementation status](PRO_IMPLEMENTATION_STATUS.md) and [Light QA handoff](LIGHT_QA_HANDOFF.md). The original takeover inventory below is historical; it does not supersede the delivered feature/remaining-scope records. No release or merge occurred.
 # Remaining outcomes for the full app
 
 This is the documented product ambition, not a claim that every planned feature is already authorized for immediate coding. Only S001 had a detailed authorized implementation packet. The successor should prioritize against the owner's final-version scope, retaining honest supported-feature limits. IDs refer to projectmanagement/BACKLOG.md. These are outcomes, not prescribed implementation steps.
