@@ -27,6 +27,7 @@ namespace TabularEditor.PbiBench.Semantic
 
         public PbiBenchQuickOpenIndex Index { get; }
         public SemanticDependencyGraph Graph { get; }
+        public SemanticRelationshipDescriptor[] Relationships { get; private set; } = Array.Empty<SemanticRelationshipDescriptor>();
 
         public SemanticObjectDescriptor GetDescriptor(string id)
         {
@@ -72,7 +73,22 @@ namespace TabularEditor.PbiBench.Semantic
                 }
             }
 
-            return new PbiBenchSemanticSnapshot(index, new SemanticDependencyGraph(edges));
+            var relationships = new List<SemanticRelationshipDescriptor>();
+            foreach (var relationship in model.Relationships.OfType<SingleColumnRelationship>())
+            {
+                index.TryGetId(relationship, out var id);
+                var from = relationship.FromColumn;
+                var to = relationship.ToColumn;
+                relationships.Add(new SemanticRelationshipDescriptor {
+                    Id = id ?? "", Name = relationship.Name,
+                    From = from?.DaxObjectFullName ?? "Unresolved source",
+                    To = to?.DaxObjectFullName ?? "Unresolved target",
+                    Cardinality = relationship.FromCardinality + " → " + relationship.ToCardinality,
+                    FilterDirection = relationship.CrossFilteringBehavior.ToString(), Active = relationship.IsActive,
+                    Unresolved = from == null || to == null || from.IsRemoved || to.IsRemoved
+                });
+            }
+            return new PbiBenchSemanticSnapshot(index, new SemanticDependencyGraph(edges)) { Relationships = relationships.ToArray() };
         }
     }
 }

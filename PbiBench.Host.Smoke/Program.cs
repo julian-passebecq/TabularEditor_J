@@ -23,6 +23,7 @@ internal static class Program
                 var table = handler.Model.AddTable("Smoke model");
                 table.AddMeasure("Base measure", "1");
                 table.AddMeasure("Dependent measure", "[Base measure] + 1");
+                AuthoringSmoke.Run(handler.Model);
                 var snapshotType = Host.GetType("TabularEditor.PbiBench.Semantic.PbiBenchSemanticSnapshot", true);
                 var snapshot = snapshotType.GetMethod("Build").Invoke(null, new object[] { handler.Model });
                 var index = snapshotType.GetProperty("Index").GetValue(snapshot);
@@ -34,6 +35,7 @@ internal static class Program
                 DaxWorkbenchSmoke.Run(Host);
                 DaxDocumentSmoke.Run(Host);
                 QueryLifecycleSmoke.Run();
+                MultipleResultsSmoke.Run();
                 FormatterExportSmoke.Run();
                 Rework01Smoke.Run();
             }

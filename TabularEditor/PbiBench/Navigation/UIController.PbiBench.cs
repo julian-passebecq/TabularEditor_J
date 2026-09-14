@@ -94,6 +94,8 @@ namespace TabularEditor.UI
                 executor?.ConnectionLabel ?? string.Empty,
                 unavailableReason))
             {
+                dialog.AuthoringModel = () => Handler?.Model;
+                dialog.NavigateToObject = obj => Goto(obj);
                 dialog.ShowDialog(UI.FormMain);
             }
         }

@@ -138,8 +138,7 @@ namespace TabularEditor.PbiBench.Dax
                     phase = DaxQueryReason.Query;
                     reader = session.Execute(request.QueryText, _databaseName);
                     token.ThrowIfCancellationRequested();
-                    result = reader == null ? Failure(DaxQueryReason.Query, "No tabular rowset was returned.")
-                        : ReadResult(reader, request, token);
+                    result = reader == null ? new DaxQueryResult() : ReadResults(reader, request, token);
                 }
             }
             catch (Exception ex)
@@ -178,13 +177,48 @@ namespace TabularEditor.PbiBench.Dax
             return result;
         }
 
-        private static DaxQueryResult ReadResult(IDataReader reader, DaxQueryRequest request, CancellationToken token)
+        private static DaxQueryResult ReadResults(IDataReader reader, DaxQueryRequest request, CancellationToken token)
+        {
+            var sets = new List<DaxResultSet>();
+            long retained = 0;
+            var result = new DaxQueryResult();
+            var visited = 0;
+            do
+            {
+                token.ThrowIfCancellationRequested();
+                // Bound even providers returning an arbitrary number of empty non-tabular sets.
+                if (++visited > DaxQueryResult.MaxResultSets)
+                { result.RemainingResultsNotRead = true; result.Reason = DaxQueryReason.ResultSetLimit; break; }
+                if (reader.FieldCount == 0) continue;
+                var set = ReadResult(reader, request, token, ref retained);
+                if (set.State == DaxQueryExecutionState.Failed)
+                {
+                    if (sets.Count == 0) return set;
+                    result.RemainingResultsNotRead = true; result.Reason = set.Reason; break;
+                }
+                sets.Add(new DaxResultSet { Columns = set.Columns, Rows = set.Rows, IsTruncated = set.IsTruncated, Reason = set.Reason });
+                if (set.IsTruncated && result.Reason == DaxQueryReason.None) result.Reason = set.Reason;
+                if (set.Reason == DaxQueryReason.MemoryLimit)
+                { result.RemainingResultsNotRead = true; result.Reason = set.Reason; break; }
+                token.ThrowIfCancellationRequested();
+            } while (reader.NextResult());
+            token.ThrowIfCancellationRequested();
+            result.ResultSets = sets.ToArray();
+            if (sets.Count > 0) { result.Columns = sets[0].Columns; result.Rows = sets[0].Rows; }
+            result.IsTruncated = result.RemainingResultsNotRead || sets.Any(x => x.IsTruncated);
+            return result;
+        }
+
+        private static DaxQueryResult ReadResult(IDataReader reader, DaxQueryRequest request, CancellationToken token, ref long retained)
         {
             var count = reader.FieldCount;
             if (count < 0 || count > DaxResultRetention.MaxColumns)
                 return Failure(DaxQueryReason.ColumnLimit, "Result exceeds the 256-column limit.");
             var columns = new string[count];
-            long retained = 64 + 32 + 8L * count;
+            var schemaBytes = 64 + 32 + 8L * count;
+            if (retained + schemaBytes > request.MaxRetainedBytes)
+                return Failure(DaxQueryReason.MemoryLimit, "Result schema exceeds the shared retained-result budget.");
+            retained += schemaBytes;
             for (var i = 0; i < count; i++)
             {
                 var name = reader.GetName(i) ?? "";

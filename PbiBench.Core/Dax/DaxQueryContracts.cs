@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace PbiBench.Core.Dax
 {
-    public enum DaxQueryReason { None, UserCancellation, Timeout, Connection, Authentication, Query, Unexpected, RowLimit, MemoryLimit, CellLimit, ColumnLimit, UnsupportedValue }
+    public enum DaxQueryReason { None, UserCancellation, Timeout, Connection, Authentication, Query, Unexpected, RowLimit, MemoryLimit, CellLimit, ColumnLimit, UnsupportedValue, ResultSetLimit }
     public enum DaxQueryExecutionState
     {
         Draft = 0,
@@ -66,14 +66,11 @@ namespace PbiBench.Core.Dax
         }
     }
 
-    public sealed class DaxQueryResult
+    public class DaxResultSet
     {
         private string[] _columns = Array.Empty<string>();
         private object[][] _rows = Array.Empty<object[]>();
 
-        public DaxQueryExecutionState State { get; set; } = DaxQueryExecutionState.Completed;
-        public long DurationMilliseconds { get; set; }
-        public string ErrorMessage { get; set; } = string.Empty;
         public bool IsTruncated { get; set; }
         public DaxQueryReason Reason { get; set; }
         public int ReturnedRowCount => _rows.Length;
@@ -89,6 +86,18 @@ namespace PbiBench.Core.Dax
             get => _rows;
             set => _rows = value ?? Array.Empty<object[]>();
         }
+    }
+
+    public sealed class DaxQueryResult : DaxResultSet
+    {
+        public const int MaxResultSets = 32;
+        public DaxQueryExecutionState State { get; set; } = DaxQueryExecutionState.Completed;
+        public long DurationMilliseconds { get; set; }
+        public string ErrorMessage { get; set; } = string.Empty;
+        // Columns/Rows remain the first-set projection for older callers. No row copies.
+        public DaxResultSet[] ResultSets { get; set; } = Array.Empty<DaxResultSet>();
+        public bool RemainingResultsNotRead { get; set; }
+        public int TotalReturnedRowCount => ResultSets.Length == 0 ? ReturnedRowCount : ResultSets.Sum(x => x.ReturnedRowCount);
     }
 
     /// <summary>
@@ -175,7 +184,7 @@ namespace PbiBench.Core.Dax
                 State = result.State,
                 DurationMilliseconds = result.DurationMilliseconds,
                 ErrorMessage = result.ErrorMessage ?? string.Empty,
-                ReturnedRowCount = result.ReturnedRowCount,
+                ReturnedRowCount = result.TotalReturnedRowCount,
                 IsTruncated = result.IsTruncated, Reason = result.Reason
             };
 

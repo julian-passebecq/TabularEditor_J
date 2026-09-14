@@ -109,7 +109,7 @@ namespace TabularEditor.PbiBench.Dax
             _queryEditor.Text = _document.Text;
             _queryEditor.ClearUndo();
             _currentResult = new DaxQueryResult();
-            BindResult(_currentResult);
+            BindExecutionResult(_currentResult);
             UpdateDocumentTitle();
             ApplyExecutionAvailability();
             _queryEditor.Focus();

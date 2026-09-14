@@ -23,6 +23,7 @@ namespace TabularEditor.PbiBench.Semantic
         private readonly TabControl _tabs;
         private readonly CheckBox _includeIndirect;
         private readonly Label _status;
+        private readonly ListView _tableRelationships;
 
         public PbiBenchSemanticViewForm(PbiBenchSemanticSnapshot snapshot)
         {
@@ -85,6 +86,22 @@ namespace TabularEditor.PbiBench.Semantic
             usedByTab.Controls.Add(_dependants);
             _tabs.TabPages.Add(dependsTab);
             _tabs.TabPages.Add(usedByTab);
+            _tableRelationships = new ListView { Dock = DockStyle.Fill, View = View.Details, FullRowSelect = true,
+                HideSelection = false, MultiSelect = false };
+            foreach (var name in new[] { "From column", "To column", "Cardinality", "Filtering", "State" })
+                _tableRelationships.Columns.Add(name, name.Contains("column") ? 220 : 125);
+            foreach (var relationship in snapshot.Relationships)
+            {
+                var item = new ListViewItem(relationship.From) { Tag = relationship.Id };
+                item.SubItems.Add(relationship.To); item.SubItems.Add(relationship.Cardinality);
+                item.SubItems.Add(relationship.FilterDirection);
+                item.SubItems.Add(relationship.Unresolved ? "Unresolved" : relationship.Active ? "Active" : "Inactive");
+                _tableRelationships.Items.Add(item);
+            }
+            _tableRelationships.DoubleClick += (s, e) => AcceptNavigation(GetSelectedId(_tableRelationships));
+            var relationshipTab = new TabPage("All table relationships");
+            relationshipTab.Controls.Add(_tableRelationships);
+            _tabs.TabPages.Add(relationshipTab);
             right.Controls.Add(_tabs);
             right.Controls.Add(options);
             split.Panel2.Controls.Add(right);
@@ -327,6 +344,7 @@ namespace TabularEditor.PbiBench.Semantic
 
         private string GetPreferredNavigationId()
         {
+            if (_tabs.SelectedIndex == 2) return GetSelectedId(_tableRelationships);
             var active = _tabs.SelectedTab != null && _tabs.SelectedTab.Text == "Referenced by"
                 ? _dependants
                 : _dependencies;

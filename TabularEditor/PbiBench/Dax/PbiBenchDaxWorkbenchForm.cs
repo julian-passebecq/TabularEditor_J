@@ -63,6 +63,7 @@ namespace TabularEditor.PbiBench.Dax
                 Height = 42,
                 FlowDirection = FlowDirection.LeftToRight,
                 WrapContents = false,
+                AutoScroll = true,
                 Padding = new Padding(8, 7, 8, 4)
             };
 
@@ -105,6 +106,7 @@ namespace TabularEditor.PbiBench.Dax
                 SetStatus("In-memory query history cleared.");
             };
             commandBar.Controls.Add(clearHistory);
+            InitializeResultSelector(commandBar);
 
             var vertical = new SplitContainer
             {
@@ -192,6 +194,7 @@ namespace TabularEditor.PbiBench.Dax
 
             InitializeDocuments(documentDialogs);
             InitializeFormatting();
+            InitializeAuthoring();
 
             FormClosing += OnWorkbenchClosing;
             ApplyExecutionAvailability();
@@ -289,10 +292,11 @@ namespace TabularEditor.PbiBench.Dax
                     ErrorMessage = "The query provider returned no result."
                 };
 
-                BindResult(_currentResult);
-                _history.Add(queryText, _currentResult);
+                var execution = _currentResult;
+                BindExecutionResult(execution);
+                _history.Add(queryText, execution);
                 RefreshHistory();
-                UpdateResultStatus(_currentResult);
+                if (execution.ResultSets.Length == 0) UpdateResultStatus(execution);
             }
             catch (Exception ex)
             {
@@ -307,7 +311,7 @@ namespace TabularEditor.PbiBench.Dax
                         ? "Query cancelled."
                         : "The query provider failed unexpectedly."
                 };
-                BindResult(_currentResult);
+                BindExecutionResult(_currentResult);
                 _history.Add(queryText, _currentResult);
                 RefreshHistory();
                 UpdateResultStatus(_currentResult);
@@ -340,6 +344,7 @@ namespace TabularEditor.PbiBench.Dax
             _timeoutSeconds.Enabled = !running;
             _queryEditor.ReadOnly = running;
             _historyList.Enabled = !running;
+            _resultSelector.Enabled = !running;
             _newDocument.Enabled = _openDocument.Enabled = _saveDocument.Enabled = _saveDocumentAs.Enabled = !running;
             _exportButton.Enabled = !running && _currentResult.State == DaxQueryExecutionState.Completed
                 && _currentResult.Columns.Length > 0;
