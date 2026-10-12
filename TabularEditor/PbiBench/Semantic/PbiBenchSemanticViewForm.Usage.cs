@@ -63,6 +63,7 @@ namespace TabularEditor.PbiBench.Semantic
             _usageTab = new TabPage("Usage / Unresolved");
             _usageTab.Controls.Add(layout);
             _tabs.TabPages.Add(_usageTab);
+            InitializeReportUsage(layout); // S6: "Used in report" column/summary (no-op without a report lineage)
         }
 
         private ListView _lastUsageList;
