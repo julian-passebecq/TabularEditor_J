@@ -24,7 +24,7 @@ default:
   tags: [local-windows]
   interruptible: true
 
-stages: [verify, mcp]
+stages: [verify]
 
 .tools: &tools
   - $ErrorActionPreference = 'Stop'
@@ -55,9 +55,18 @@ verify:
     - git rev-parse HEAD | Tee-Object -FilePath ci-head.txt
     - powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Verify-PbiBench.ps1 -DotNetPath $env:PBIBENCH_DOTNET -NuGetPath $env:PBIBENCH_NUGET -EvidenceDirectory "$env:CI_PROJECT_DIR/ci-evidence"
     - if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    # Portable qualification package from the verified tree, then self-test the packaged companion
+    # on the runner's installed .NET runtime (not the private SDK).
+    - powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/ci/Package-PbiBench.ps1 -OutDirectory "$env:CI_PROJECT_DIR/dist" -DotNetPath $env:PBIBENCH_DOTNET
+    - if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+    - $zip = Get-ChildItem dist -Filter *.zip | Select-Object -First 1
+    - Expand-Archive $zip.FullName dist/unpacked -Force
+    - "& dist/unpacked/mcp/TE2Enhanced.Mcp.exe --self-test; if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }"
+    - Remove-Item -Recurse -Force dist/unpacked
   artifacts:
     when: always
     expire_in: 30 days
     paths:
       - ci-evidence/
       - ci-head.txt
+      - dist/

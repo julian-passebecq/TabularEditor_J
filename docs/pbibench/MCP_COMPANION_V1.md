@@ -9,7 +9,7 @@ Status 2026-10-13: **prototype, read-only, self-tested offline.** Not a dependen
 
 ## Shape
 ```
-TE2 Enhanced (net48 host)                    TE2Enhanced.Mcp (net10 exe, stdio)
+TE2 Enhanced (net48 host)                    TE2Enhanced.Mcp (net8.0 exe, roll-forward, stdio)
   PbiBench > Publish read-only snapshot  ──►  %LOCALAPPDATA%\TE2Enhanced\mcp\snapshot-v1.json  ──►  MCP client
   (explicit user action, atomic replace)       (PbiBench.Core ModelSnapshotV1, metadata only)
 ```
