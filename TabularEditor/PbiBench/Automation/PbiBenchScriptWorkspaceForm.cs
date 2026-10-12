@@ -81,8 +81,8 @@ namespace TabularEditor.PbiBench.Automation
 
             const string starter = "// C# script. Model and Selected are available, as in TE2 Advanced Scripting.\r\n";
             // The recovery prompt needs a visible owner, so it waits for Load; without opt-in nothing is read from disk.
-            if (_recoveryOptIn.Checked) Load += (s, e) => { if (!OfferRecovery()) NewDocument(starter); };
-            else NewDocument(starter);
+            if (_recoveryOptIn.Checked) Load += (s, e) => { if (!OfferRecovery()) NewStarter(starter); };
+            else NewStarter(starter);
         }
 
         internal ScriptWorkspace Workspace { get; } = new ScriptWorkspace();
@@ -93,6 +93,14 @@ namespace TabularEditor.PbiBench.Automation
         private string OptInMarkerPath => _recoveryRoot.TrimEnd(Path.DirectorySeparatorChar) + ".optin";
 
         internal ScriptDocument NewDocument(string text) => AddTab(Workspace.New(text));
+
+        // The untouched starter comment is not "unsaved work": closing without edits must not prompt.
+        private void NewStarter(string text)
+        {
+            var doc = Workspace.New(text);
+            doc.MarkSaved(null);
+            AddTab(doc);
+        }
 
         internal void SetActiveText(string text)
         {

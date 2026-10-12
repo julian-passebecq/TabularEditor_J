@@ -105,7 +105,7 @@ internal static partial class SliceSmokes
                 var confirmations = 0;
                 Func<PbiBench.Core.Automation.ScriptDocument, IReadOnlyList<ScriptDiagnostic>, bool> yes = (d, a) => { confirmations++; return true; };
                 Func<PbiBench.Core.Automation.ScriptDocument, IReadOnlyList<ScriptDiagnostic>, bool> no = (d, a) => { confirmations++; return false; };
-                AutoHostCheck(form.Workspace.Documents.Count == 1 && form.ActiveDocument != null, "Workspace must open with one tab.");
+                AutoHostCheck(form.Workspace.Documents.Count == 1 && form.ActiveDocument != null && !form.ActiveDocument.IsDirty, "Workspace must open with one clean starter tab.");
 
                 form.SetActiveText("var x = ;");
                 var broken = form.CompileActive();
