@@ -37,6 +37,12 @@ Every PbiBench pass that edits an upstream-owned file must append to this table.
 | PbiBench pass | Upstream file | Reason | Expected conflict risk |
 |---|---|---|---|
 | v0.1 foundation | none | additive core/docs only | none |
+| v0.2–S001 (reconciled 2026-10-13 from `git diff 7029129`) | `TabularEditor/FormMain.cs` | PbiBench menu/shortcut composition hooks; async expression formatting with explicit consent and stale-response guard (BUG-002) | medium: upstream edits to `actExpressionFormatDAX_Execute` conflict |
+| v0.2–S001 | `TabularEditor/UI/UIController.cs` | `Handler` setter bumps `ExpressionEditorContextGeneration` | low |
+| v0.2–S001 | `TabularEditor/UI/UIController_ExpressionEditor.cs` | context-generation counter for object/property transitions | low |
+| v0.2–S001 | `TabularEditor/UIServices/DaxFormatter.cs` | formatter transport behind consent/policy service; no telemetry | medium: whole-file rewrite of the formatter client |
+| v0.2–S001 | `TabularEditor/Scripting/ScriptHelper.cs` | script formatter entry points call `RemoteFormatterConsent.RequireEnabled()` instead of policy-only check | low |
+| (all) | `Directory.Build.targets` (repo root, not upstream) | globs `TabularEditor/PbiBench/**/*.cs` and references PbiBench.Core so `TabularEditor.csproj` stays untouched | none |
 
 ## Recommended sync procedure
 

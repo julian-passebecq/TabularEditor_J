@@ -16,6 +16,9 @@ variables:
   PBIBENCH_DOTNET: "D:/PROJ/TabularEditor_J/.tools/dotnet/dotnet.exe"
   PBIBENCH_NUGET: "D:/PROJ/TabularEditor_J/.tools/nuget.exe"
   PBIBENCH_TOOL_CACHE: "C:/GitLab-Runner/cache/pbibench-tools"
+  # LocalSystem's profile is under system32; the 32-bit VS MSBuild is WOW64-redirected away from it,
+  # so restore and build must share a package folder outside the system profile.
+  NUGET_PACKAGES: "C:/GitLab-Runner/cache/nuget-packages"
 
 default:
   tags: [local-windows]
