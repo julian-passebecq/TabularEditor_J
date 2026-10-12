@@ -157,6 +157,8 @@ namespace PbiBench.Core.Report
             private PbirSchemaInfo Schema(string relative, PbirJsonNode? root)
             {
                 var info = PbirSchemaRegistry.Describe(relative, root?.GetString("$schema"));
+                // Older PBIP definition.pbir files carry no $schema (just "version"); that alone is not "unknown".
+                if (info.Url.Length == 0 && relative == "definition.pbir") return info;
                 _schemas.Add(info);
                 if (!info.IsKnown) _diagnostics.Add(relative + ": schema " + info.Describe() + " is not in this build's registry; indexed best-effort, report is read-only.");
                 return info;

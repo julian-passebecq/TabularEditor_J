@@ -118,7 +118,8 @@ namespace TabularEditor.PbiBench.Semantic
                     unresolved.AddRange(SemanticUsageIndex.FindUnresolved(descriptor.Id, descriptor.EffectivePath, property.GetDescription(), dax, names));
                 }
             }
-            return SemanticUsageIndex.Build(objects, graph, unresolved);
+            // S6 hook: "Used in report" counts while a report lineage matches these model names (null = unknown).
+            return SemanticUsageIndex.Build(objects, graph, unresolved, Report.PbiBenchReportUsage.GetMeasureCounts(index, names));
         }
     }
 }

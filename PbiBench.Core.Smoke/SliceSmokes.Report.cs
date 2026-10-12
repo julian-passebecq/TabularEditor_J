@@ -12,10 +12,11 @@ internal static partial class SliceSmokes
 {
     static partial void Report(string fixtureRoot)
     {
+        var themes = ThemeApplyPlanSmoke.Prepare(); // written early so replaced files are not brand new (OBS-001)
         PbirJsonSmoke.Run();
         PbirIndexSmoke.Run();
         ReportLineageSmoke.Run();
-        ThemeApplyPlanSmoke.Run();
+        ThemeApplyPlanSmoke.Run(themes);
     }
 }
 
@@ -232,46 +233,80 @@ internal static class ThemeApplyPlanSmoke
 {
     private static readonly byte[] Theme = Encoding.UTF8.GetBytes("{\"name\":\"Contoso Blue\",\"dataColors\":[\"#0000FF\",\"#00AAFF\"]}");
 
-    internal static void Run()
+    internal sealed class Prepared { internal string Root = "", Main = "", Spare = ""; }
+
+    internal static Prepared Prepare()
     {
         var root = PbirFixture.NewRoot("te2-pbir-theme-");
+        return new Prepared { Root = root, Main = PbirFixture.Write(Path.Combine(root, "a"), bomCrLf: true), Spare = PbirFixture.Write(Path.Combine(root, "b"), bomCrLf: true) };
+    }
+
+    /// <summary>OBS-001: Windows may refuse File.Replace while another process holds the file without delete sharing;
+    /// ReviewedFilePlan rolls back instead of retrying, which is the specified behaviour.</summary>
+    internal static bool IsReplaceRefused(Exception ex)
+    {
+        for (var e = ex.InnerException; e != null; e = e.InnerException)
+            if (e is IOException && ((e.HResult & 0xFFFF) == 1175 || e.Message.IndexOf("to be replaced", StringComparison.OrdinalIgnoreCase) >= 0)) return true;
+        return false;
+    }
+
+    internal static void Run(Prepared prepared)
+    {
+        var root = prepared.Root;
         var journal = PbirFixture.NewRoot("te2-pbir-journal-");
         var c = (Action<bool, string>)PbirFixture.Check;
         try
         {
             // Apply + exact restore on a BOM/CRLF report.
-            var folder = PbirFixture.Write(Path.Combine(root, "a"), bomCrLf: true);
-            var reportPath = Path.Combine(folder, "definition", "report.json");
-            var originalBytes = File.ReadAllBytes(reportPath);
-            var index = PbirReportIndex.Load(folder);
-            var plan = ThemeApplyPlan.Create(index, Theme);
-            c(plan.ThemeFileName == "Contoso_Blue.json" && plan.RemovedThemePath == "StaticResources/RegisteredResources/Old_Theme.json", "theme file names");
-            var kinds = plan.Plan.Changes.Select(x => x.Kind + ":" + x.RelativePath).ToArray();
-            c(kinds.SequenceEqual(new[] { "Replace:definition/report.json", "Create:StaticResources/RegisteredResources/Contoso_Blue.json", "Delete:StaticResources/RegisteredResources/Old_Theme.json" }), "plan changes " + string.Join(",", kinds));
-            c(plan.Plan.Preview().All(p => !p.IsStale), "fresh preview not stale");
-            var text = index.ReportJsonText!;
-            var collection = index.ReportJsonRoot!.Get("themeCollection")!;
-            var packages = index.ReportJsonRoot!.Get("resourcePackages")!;
-            var newText = plan.NewReportJson;
-            c(newText.StartsWith(text.Substring(0, collection.Start), StringComparison.Ordinal) && newText.EndsWith(text.Substring(packages.End), StringComparison.Ordinal), "bytes outside theme spans unchanged");
-            c(!newText.Replace("\r\n", "").Contains("\n"), "CRLF preserved");
-            var parsed = PbirJson.Parse(newText);
-            c(parsed.Path("themeCollection", "customTheme")!.GetString("name") == "Contoso_Blue.json" && parsed.Path("themeCollection", "baseTheme")!.GetString("name") == "CY24SU10", "themeCollection updated");
-            c(parsed.Path("themeCollection", "customTheme", "reportVersionAtImport")!.GetString("report") == "2.0.0", "reportVersionAtImport kept");
-            var registered = parsed.Get("resourcePackages")!.Items.Single(p => p.GetString("type") == "RegisteredResources").Get("items")!.Items.Select(i => i.GetString("name")).ToArray();
-            c(registered.SequenceEqual(new[] { "logo.png", "Contoso_Blue.json" }), "registered items " + string.Join(",", registered));
-            c(plan.BeforeSnippet.Contains("Old_Theme.json") && plan.AfterSnippet.Contains("Contoso_Blue.json"), "snippets");
+            // Apply + exact restore on a BOM/CRLF report. Fixtures were written before the other S6 smokes ran (OBS-001).
+            if (!ApplyCase(prepared.Main, true))
+            {
+                Console.WriteLine("ThemeApplyPlanSmoke: OBS-001 observed (replace refused by another process); rolled back byte-exact; repeating once on a separate fixture");
+                ApplyCase(prepared.Spare, false);
+            }
 
-            var result = plan.Plan.Apply(journal);
-            c(result.FilesWritten == 3 && result.State == ReviewedFileJournalState.Applied, "applied " + result.State);
-            var bytesAfter = File.ReadAllBytes(reportPath);
-            c(bytesAfter.Length > 3 && bytesAfter[0] == 0xEF, "BOM preserved");
-            var reindexed = PbirReportIndex.Load(folder);
-            c(reindexed.Theme.CustomThemeName == "Contoso_Blue.json" && reindexed.Theme.CustomThemeFileExists && reindexed.IsWritable, "reindex sees new theme");
-            c(!File.Exists(Path.Combine(folder, "StaticResources", "RegisteredResources", "Old_Theme.json")), "old theme removed");
-            c(ReviewedFilePlan.Restore(result.JournalPath) == 3, "restore count");
-            c(File.ReadAllBytes(reportPath).SequenceEqual(originalBytes), "report.json restored byte-exact");
-            c(File.Exists(Path.Combine(folder, "StaticResources", "RegisteredResources", "Old_Theme.json")) && !File.Exists(Path.Combine(folder, "StaticResources", "RegisteredResources", "Contoso_Blue.json")), "theme files restored");
+            bool ApplyCase(string folder, bool tolerate)
+            {
+                var reportPath = Path.Combine(folder, "definition", "report.json");
+                var originalBytes = File.ReadAllBytes(reportPath);
+                var index = PbirReportIndex.Load(folder);
+                var plan = ThemeApplyPlan.Create(index, Theme);
+                c(plan.ThemeFileName == "Contoso_Blue.json" && plan.RemovedThemePath == "StaticResources/RegisteredResources/Old_Theme.json", "theme file names");
+                var kinds = plan.Plan.Changes.Select(x => x.Kind + ":" + x.RelativePath).ToArray();
+                c(kinds.SequenceEqual(new[] { "Replace:definition/report.json", "Create:StaticResources/RegisteredResources/Contoso_Blue.json", "Delete:StaticResources/RegisteredResources/Old_Theme.json" }), "plan changes " + string.Join(",", kinds));
+                c(plan.Plan.Preview().All(p => !p.IsStale), "fresh preview not stale");
+                var text = index.ReportJsonText!;
+                var collection = index.ReportJsonRoot!.Get("themeCollection")!;
+                var packages = index.ReportJsonRoot!.Get("resourcePackages")!;
+                var newText = plan.NewReportJson;
+                c(newText.StartsWith(text.Substring(0, collection.Start), StringComparison.Ordinal) && newText.EndsWith(text.Substring(packages.End), StringComparison.Ordinal), "bytes outside theme spans unchanged");
+                c(!newText.Replace("\r\n", "").Contains("\n"), "CRLF preserved");
+                var parsed = PbirJson.Parse(newText);
+                c(parsed.Path("themeCollection", "customTheme")!.GetString("name") == "Contoso_Blue.json" && parsed.Path("themeCollection", "baseTheme")!.GetString("name") == "CY24SU10", "themeCollection updated");
+                c(parsed.Path("themeCollection", "customTheme", "reportVersionAtImport")!.GetString("report") == "2.0.0", "reportVersionAtImport kept");
+                var registered = parsed.Get("resourcePackages")!.Items.Single(p => p.GetString("type") == "RegisteredResources").Get("items")!.Items.Select(i => i.GetString("name")).ToArray();
+                c(registered.SequenceEqual(new[] { "logo.png", "Contoso_Blue.json" }), "registered items " + string.Join(",", registered));
+                c(plan.BeforeSnippet.Contains("Old_Theme.json") && plan.AfterSnippet.Contains("Contoso_Blue.json"), "snippets");
+
+                ReviewedFilePlanResult result;
+                try { result = plan.Plan.Apply(journal); }
+                catch (ReviewedFilePlanApplyException ex) when (tolerate && ex.RolledBack && IsReplaceRefused(ex))
+                {
+                    c(File.ReadAllBytes(reportPath).SequenceEqual(originalBytes) && File.Exists(Path.Combine(folder, "StaticResources", "RegisteredResources", "Old_Theme.json"))
+                        && !File.Exists(Path.Combine(folder, "StaticResources", "RegisteredResources", "Contoso_Blue.json")), "OBS-001 rollback byte-exact");
+                    return false;
+                }
+                c(result.FilesWritten == 3 && result.State == ReviewedFileJournalState.Applied, "applied " + result.State);
+                var bytesAfter = File.ReadAllBytes(reportPath);
+                c(bytesAfter.Length > 3 && bytesAfter[0] == 0xEF, "BOM preserved");
+                var reindexed = PbirReportIndex.Load(folder);
+                c(reindexed.Theme.CustomThemeName == "Contoso_Blue.json" && reindexed.Theme.CustomThemeFileExists && reindexed.IsWritable, "reindex sees new theme");
+                c(!File.Exists(Path.Combine(folder, "StaticResources", "RegisteredResources", "Old_Theme.json")), "old theme removed");
+                c(ReviewedFilePlan.Restore(result.JournalPath) == 3, "restore count");
+                c(File.ReadAllBytes(reportPath).SequenceEqual(originalBytes), "report.json restored byte-exact");
+                c(File.Exists(Path.Combine(folder, "StaticResources", "RegisteredResources", "Old_Theme.json")) && !File.Exists(Path.Combine(folder, "StaticResources", "RegisteredResources", "Contoso_Blue.json")), "theme files restored");
+                return true;
+            }
 
             // Stale: report.json edited after review → nothing written.
             var staleFolder = PbirFixture.Write(Path.Combine(root, "s"));
