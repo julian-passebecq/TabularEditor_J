@@ -29,6 +29,19 @@ The following are separate products and must not be pulled into this repository'
 - visual theme simulation -> **Theme Forge**;
 - final report rendering -> **Power BI Desktop**.
 
+## Try it (2026-10-13 integration branch)
+
+Branch `claude/pbibench-opus-2026-10-13`. Build and smoke-test everything, then make a portable zip:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Verify-PbiBench.ps1 -DotNetPath <net10 dotnet.exe> -NuGetPath <nuget.exe>
+powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/ci/Package-PbiBench.ps1 -OutDirectory dist
+```
+
+Requirements: Windows, VS 2022/BuildTools MSBuild, .NET Framework 4.8 reference assemblies, a stable .NET SDK for legacy imports and a .NET 10 SDK for the Core smoke. Run `TabularEditor.exe` from the zip. All features are under **Tools > PbiBench**: Quick Open, Semantic View (relationships, usage, unresolved references), DAX Workbench (several documents, local completion and advisory checks, several result sets, DAX Studio handoff), script workspace, reviewed metadata recipes, Project (PBIP identity, external changes, reviewed file plans, VS Code), Report (PBIR index, lineage, reviewed theme apply), profiling drafts, model checks (curated BPA, assertions) and a read-only snapshot for the optional MCP companion (`mcp/TE2Enhanced.Mcp.exe`, see `docs/pbibench/MCP_COMPANION_V1.md`).
+
+Status: usable V1 core, pending independent Windows QA. Not a release. Per-feature status: `projectmanagement/features.csv`. Limits: `handover/2026-10-13/slices/`.
+
 ## Upstream baseline
 
 Upstream: `TabularEditor/TabularEditor`

@@ -1,59 +1,85 @@
-# Light QA handoff — TE2 Enhanced
+# Light QA handoff: TE2 Enhanced (Opus pass, 2026-10-13)
 
-Role: independent Windows QA, not implementation. Read AGENTS and PRO_IMPLEMENTATION_STATUS first. Do not restart S001 corrections or silently fix production code. Do not merge, push or release. New Pro features are implemented for review, not independently accepted.
+Your role is independent Windows QA, not implementation. Read AGENTS.md, then [PRO_IMPLEMENTATION_STATUS.md](PRO_IMPLEMENTATION_STATUS.md) (2026-10-13 section), [../2026-10-13/PLAN.md](../2026-10-13/PLAN.md), the slice notes in [../2026-10-13/slices/](../2026-10-13/slices/) and [../2026-10-13/ARCHITECT_REVIEW.md](../2026-10-13/ARCHITECT_REVIEW.md).
 
-## Identity and prerequisites
+Constraints:
+- Do not silently fix production code.
+- Do not merge, push or release.
+- Everything below is implemented for review. None of it is independently accepted.
 
-Test branch `codex/pro-ai-handover-2026-09-11`. Exact delivered product commit is recorded in the final identity section below. Inspect `git status --short --branch` and `git rev-parse HEAD` before testing; preserve any later user work. A docs-only handoff commit may follow the product commit. Rebuild product, not only the test harness.
+The 2026-09-14 handoff matrix (previous revision of this file, see `git log -p` on it) still applies to those slices and is included below as "Inherited".
 
-This machine: Windows, VS Build Tools 17.12, .NET Framework 4.8 reference assemblies, system stable SDK 9.0.101 for VS imports, private SDK 10.0.401 at `.tools/dotnet/dotnet.exe`, Git on PATH. NuGet has been copied to ignored `.tools/nuget.exe`; no dependency on the old application's source or runtime. On another machine install these prerequisites or a newer mutually compatible VS/SDK combination. The private SDK and NuGet binaries are not committed.
+## Identity
+- **Branch:** `claude/pbibench-opus-2026-10-13` on `github.com/julian-passebecq/TabularEditor_J`.
+- **CI mirror:** private GitLab project `juliandatapass-group/tabulareditor-j`.
+- **HEAD:** test the branch tip. The exact SHA is in the "Final identity" section of PRO_IMPLEMENTATION_STATUS.md. Record `git rev-parse HEAD` before testing.
+- **Base:** `43409e0`, the 2026-09-14 Pro delivery. It was never published before 2026-10-13 and is now included in this branch.
+- **Remote CI on this branch:**
+  - GitLab pipeline on the owner's local Windows runner: Verify 8 stages, plus a portable package with SHA256SUMS and a self-test of the packaged MCP companion.
+  - GitHub `PbiBench TE2 integration` (windows-latest, full Verify).
+  - GitHub `PbiBench foundation` (Core).
+  - The URLs are listed in the status file. CI does not replace your native journey.
 
-Commands from `D:/PROJ/TabularEditor_J`:
+## Prerequisites (this machine as observed 2026-10-13)
+- Windows 11, VS BuildTools 18 (vswhere picks `...\Microsoft Visual Studio\18\BuildTools\MSBuild\Current\Bin\MSBuild.exe`).
+- .NET Framework 4.8 reference assemblies.
+- System SDK 9.0.101; private SDK 10.0.401 in the ignored `.tools/dotnet`; `.tools/nuget.exe`; Git on PATH.
+- To run the MCP companion: any .NET 8+ runtime.
 
+## Build and automated lanes
 ```powershell
-git status --short --branch
-git rev-parse HEAD
-dotnet --list-sdks
-& ./.tools/dotnet/dotnet.exe --version
-powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Verify-PbiBench.ps1 -DotNetPath .tools/dotnet/dotnet.exe -NuGetPath .tools/nuget.exe -EvidenceDirectory D:/PROJ/TabularEditor_J/.tools/light-qa
+git status --short --branch; git rev-parse HEAD
+powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Verify-PbiBench.ps1 -DotNetPath .tools/dotnet/dotnet.exe -NuGetPath .tools/nuget.exe -EvidenceDirectory $PWD/.tools/light-qa
+powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/ci/Package-PbiBench.ps1 -OutDirectory $PWD/.tools/light-qa-dist -DotNetPath .tools/dotnet/dotnet.exe
 ```
 
-The runner restores dependencies, rebuilds ANTLR and the actual Release host, runs canonical net10 Core, builds the net48 host harness and executes it. Exit 0 is required for this lane. `-HostOnlyDiagnostic` does not certify canonical Core. Evidence distinguishes every stage. Do not call a harness-only rebuild a product rebuild.
+**Verify stages (8):** restore-legacy, restore-core, antlr-debug, host-release (actual Release host rebuild), core-smoke (net10), mcp-smoke, host-smoke-build, host-smoke-run. Exit 0 is required.
 
-Executable: `D:/PROJ/TabularEditor_J/TabularEditor/bin/Release/TabularEditor.exe`.
-Harness: `D:/PROJ/TabularEditor_J/PbiBench.Host.Smoke/bin/Release/net48/PbiBench.Host.Smoke.exe`.
-Synthetic BIM: `projectmanagement/evidence/S001/lead/PbiBench-Demo.bim`. Also use the existing upstream synthetic fixtures where relevant, and create disposable PBIP/report-folder/Git fixtures in an owned temp directory. Never store real rows, private DAX or credentials in test evidence.
+**Package:** builds `TE2Enhanced-<sha8>-portable.zip`, which contains the Release host plus `mcp/`, together with SHA256SUMS.txt and source-identity.json.
+- It is unsigned and is not an installer. The legacy `.vdproj` installer cannot be built headless and was not touched.
+- It installs nothing globally: extract the zip and run `TabularEditor.exe`.
 
-## Required independent matrix
+**Artifacts:**
+- Executable: `TabularEditor/bin/Release/TabularEditor.exe`.
+- Harness: `PbiBench.Host.Smoke/bin/Release/net48/PbiBench.Host.Smoke.exe`.
+- Synthetic BIM: `projectmanagement/evidence/S001/lead/PbiBench-Demo.bim`.
+- Create PBIP, PBIR, Git and theme fixtures in an owned temp folder.
+- Never put real rows, private DAX or credentials in evidence.
 
-| Area | Execute and inspect |
+## Matrix for the new 2026-10-13 work (risk order)
+| Area (IDs) | Execute and inspect |
 |---|---|
-| Ordinary TE2 | Open synthetic BIM; edit/commit expression and properties; undo/redo; save a new copy; reopen and compare. Exercise trusted C# and inherited BPA on synthetic metadata. Confirm ordinary menu/shortcut behavior remains intact. |
-| Quick Open / Semantic View | Hidden objects, duplicate labels, rename/delete/reopen freshness. New All table relationships tab: cardinalities, one/both directions, active/inactive, missing endpoint, double-click and Enter navigation. It shows all relationships, not a filter of the left object. General unresolved DAX references/report usage remain unimplemented. |
-| Local DAX authoring | Workbench Authoring menu: Ctrl+Space picker, filtering, escaped table/column names, hidden objects and model UDFs where supported; insert at caret/replace selection and Undo. Function vocabulary is pinned TE2, not a live availability list. Go to object. Ctrl+Shift+Space nested arguments; Ctrl+F7 valid/invalid delimiters with strings, nested comments, VAR and UDF syntax. Checks are advisory, not engine certification. Try equal-text replacement while formatting is pending; authoring must not weaken S001 identity guards. |
-| Multiple results | Synthetic controlled-reader smoke plus approved live multi-EVALUATE queries later. Zero/one/2/32/33 sets; each selector entry shows distinct data and CSV/copy selects only that set. Duplicate column names remain independent. Test per-set row caps, shared byte exhaustion, cell/column overflow, cancellation between sets, NextResult failure, cleanup/admission and remaining-results-not-read messages. History row count aggregates sets; first-set compatibility remains intentional. |
-| DAX documents / formatter | Existing single-document New/Open/Save/Save As, UTF-8/BOM/invalid encodings, dirty prompts, cancellation, failed save, external modify/delete and Save As preservation. Held formatter responses must not cross equal-text document/object/property/model transitions. Session consent/admin-disable/no telemetry and script/CLI entry-point denial. No real SQLBI call unless explicitly consented; controlled transport is the default test. Multiple documents, recovery and DAX Studio handoff are not implemented. |
-| Project | Tools > PbiBench > Project (read-only): select folder/PBIP, select among several PBIPs, refresh after modify/delete/rename, root path, worktree `.git` file, deep/wide trees, junction loops and unreadable directories. Verify incomplete diagnostics and no inferred PBIP association. Git clean/dirty/untracked/staged/rename/detached, missing Git and bounded timeout/output errors. Source changes during scan are disabled; close during scan must not update disposed controls. Export context to an explicit new path and inspect for only allowlisted fields. Open folder. No source files or Git index should be rewritten by inventory. |
-| Restricted recipes | Choose table, folder or hidden operation. Preview must not mutate. Check exact Before/After and scope, change input invalidates preview, no-op has no Apply, >1,000 targets rejects. Apply and one Undo restore all. Change metadata after preview, replace target with identical name/metadata, switch model or open an existing undo batch: reject. Inject a second-setter failure and confirm first change rolls back and batch depth returns to zero. If rollback itself fails, UI must report failure without pretending atomicity. No arbitrary C# or disk/live save. |
-| Table preview | Table/column selection; text with quotes and DAX-looking payload, decimal dot, true/false, blank; sorting and row limits 1/5,000. Opens an unsaved draft and does not execute automatically. Rename/delete/change model before execution must reject. Offline stays draft-only. TOPN ties may expand server output; retained row cap still applies. Unsorted order is unspecified. |
-| Native UI | All new dialogs: keyboard-only Tab/Enter/Esc, accelerators, focus return, minimum-size/resize, real 100/150/200% DPI and multi-monitor transition. Check scroll access to Workbench result selector and preview controls. Screenshots of normal/error/truncated/dirty states. Harness handle/layout checks do not certify this journey. |
+| Recovery and multi-instance (DAX-013, AUTO-001) | Opt in. Edit in two TE2 instances at once and kill one. The survivor must not offer the other instance's live drafts. Restart after the crash: drafts are restored as unsaved tabs. "Don't save" deletes only your own copy. Check retention and the disclosed location `%LOCALAPPDATA%\TE2Enhanced\recovery`. |
+| Reviewed file writes (PROJ-004, REPORT-002) | Apply a theme to a **copy** of a real Desktop PBIP. Edit report.json externally during review, then apply: it must be rejected with nothing written. Do a normal apply, reopen in Power BI Desktop (theme shown, no repair prompt), then Restore journal and reopen (old theme, byte-exact). Unknown or newer schema: read-only with a reason. Journal folder `%LOCALAPPDATA%\TE2Enhanced\journal`: delete or prune old journals. |
+| TE2 save over externally edited TMDL (PROJ-003) | **Known limit:** TE2's own Save is not hooked. Verify that the Project banner and "Review save target…" list the files, and that the UI states the limit. Report this as a limit, not as a regression. |
+| DAX authoring (DAX-010/011) | Workbench: Ctrl+Space inside `'Table'[`, bare `[`, strings and comments (no list there); Ctrl+Shift+Space; Ctrl+F7 / F8 advisory issues. Expression editor assistance (opt-in, Tools > PbiBench): insert, Ctrl+Z, Enter/Esc accept or cancel, then TOM undo. Look for false positives on calculation groups, UDFs and semicolon-locale models. Every check is advisory and lexical. |
+| Multi-document Workbench (DAX-013) | Up to 32 tabs. Each file can be open in only one tab. Ctrl+Tab. The dirty prompt on close-all stops everything on Cancel. External modify or delete is detected on activation (Reload / Keep mine). Formatter reply held for tab A, then switch to an equal-text tab B: B must stay untouched. Save failure keeps text and dirty state. |
+| DAX Studio (DAX-014) | Installed: it launches with server and database labels only and the query goes to the clipboard. Confirm DAX Studio actually connects from those positional arguments; this is unverified. Not installed: the query is saved as .dax and the reason is shown. Check that no connection string ever appears in UI, logs or arguments. |
+| Usage and lineage (MODEL-002, REPORT-001) | Semantic View Usage / Unresolved tab on a real model, with navigation. Report index of a real PBIP: counts against Desktop, the Unresolved filter, Goto. "Used in report" column after indexing; it disappears after a rename. Time a large report (indexing is synchronous on the UI thread). |
+| Recipes and scripts (AUTO-001/002) | Rename preview lists dependents. Apply, then one Undo restores everything. Rename is refused when references are unresolved. Format string and description validation. Script workspace: Problems list from a compile error; trust prompt for the exact text; any edit clears trust; failure rolls back model changes. Confirm the UI never claims a sandbox. |
+| Project (PROJ-002/003/004) | Identity line, Recent list, distinct Disk/Loaded/Live/Git/Baseline stamps. External .tmdl edit or git checkout gives one banner within about 1 s; a large checkout overflows and still converges; deleting the root folder gives a clear state. Open in VS Code with user install, system install, a path with spaces, and not installed. |
+| Explore / Optimize (EXP-002, OPT-001) | Profile and coverage drafts open unsaved and do not execute before F5; F5 after renaming the profiled column is refused. Curated BPA: rule errors = 0 on a real model, no rule file timestamps change, a same-ID user rule wins. Assertions: navigation, bidi allowlist prefilled from the annotation. |
+| MCP companion (MCP-001) | Tools > PbiBench > Publish read-only snapshot: expressions are off by default. Register `mcp\TE2Enhanced.Mcp.exe` in one MCP client: list measures; get_measure shows `expressionWithheld` without the opt-in. With TE2 closed, the companion still answers from the snapshot. A future contract or credential-like text is refused. |
+| Native UI (all new forms) | Keyboard-only Tab/Enter/Esc, focus return, minimum size and resize, real 100/150/200 % DPI, multi-monitor moves. Screenshots of normal, error, truncated and dirty states. Harness layout checks do not certify this journey. |
 
-## Open gates and known observations
+## Inherited matrix (2026-09-14 slices, unchanged)
+Ordinary TE2 open/edit/undo/save/reopen, trusted C# and inherited BPA; Quick Open and Semantic View freshness; multiple results (0/1/2/32/33 sets, per-set export, cancel between sets); single-document formatter consent and S001 guards; project discovery bounds (UNC, junctions, access denied, worktree `.git` file); table preview drafts. See the previous revision for the step lists.
 
-- **OBS-001 remains OPEN and recurred in this Pro run.** Document second Save and CSV replacement each once threw `IOException: Unable to remove the file to be replaced` from `File.Replace`; subsequent runs passed. First failures are preserved under `evidence/pro-2026-09-14`. Investigate Windows locking/permissions and capture HRESULT (the harness now reports it), file state and whether destination/draft/results survived. Do not label retries as resolution or silently add retry/sleep to tests. This may warrant a YELLOW verdict even with a passing final lane.
-- Full legacy `TabularEditorTest` still depends on absent historical VisualStudio.QualityTools references. It is isolated, not retargeted or included in the runner's passing claim. Build it with VS MSBuild on a provisioned environment and document the result. TOM endpoint-dependent tests must stay BLOCKED_ENV without approved fixtures. Existing historical 8-pass/3-blocked TOM results are not fresh evidence.
-- Remote clean-checkout CI is NOT_RUN. Both workflows now include takeover branches; no push/release occurred.
-- No live Desktop/XMLA/auth profile has been certified. Request approved disposable fixtures before live queries. Do not attach to unknown local server processes or use discovered credentials. Test editing-session survival, cancellation/timeout/cleanup, multi-results and supported authentication with endpoint/version/source identity recorded. Timeout remains best effort in-process.
-- DAX Studio/VS Code/Theme Forge integrations, report PBIR indexing/writes/themes, script documents/gallery, project synchronization/recovery, profiling/Pivot Lab and Optimize extensions are deferred. Do not report them as failed implemented features or as complete.
+## Open gates and observations
+- **OBS-001 is OPEN.** `File.Replace` occasionally fails with "Unable to remove the file to be replaced" on files written moments earlier. It has been seen on DAX document save, CSV export and now `ReviewedFilePlan` commit.
+  - The theme smokes accept exactly one such failure with a verified byte-exact rollback, then repeat on a second fixture.
+  - RecoveryStore avoids in-place replace.
+  - Investigate locking (Defender, Search indexer) and capture the HRESULT. Do not add retries.
+- **Watcher flake:** `ProjectWatcherSmoke` flaked twice (late directory events). The product filter and smoke hardening are in this branch. Repeat the host smoke at least 5 times and report the pass rate.
+- **Live gates:** no live Desktop/XMLA/auth profile is certified (DAX-006 BLOCKED_ENV). Request approved disposable fixtures from the owner. Never attach to unknown local servers or use discovered credentials.
+- **Legacy tests:** `TabularEditorTest` still lacks VisualStudio.QualityTools references. It stays isolated and is not counted as passing.
+- **Not built (V2):** PBIR-Legacy and bookmark indexing, report-level measures, AUTO-003 gallery, OPT-002 VPAX/DMV, REPORT-003 reference rewrite, MCP write proposals. Do not report these as failed features.
 
 ## Evidence and verdict
-
-Keep source/HEAD/dirty-tree identity, per-stage exit codes, binary hashes, screenshots and scenario steps. Preserve failures before retrying. For defects: expected/actual, minimal synthetic reproduction, severity, affected slice and whether regression or pre-existing. Record tests as PASS / FAIL / BLOCKED_ENV / NOT_RUN, never infer live coverage from controlled readers.
-
-Return **GREEN / YELLOW / RED** with scope and unresolved gates: GREEN only for the actually tested scope with no blocking defect; YELLOW for material unverified gates or unresolved intermittent failures; RED for reproducible correctness/data-loss/privacy/undo failure. This is a QA recommendation, not release authorization. Route a consolidated defect packet back to Pro; final release decision remains with the owner.
-
-## Final delivered identity
-
-Product source and tests: **603936b41649da088ae01cd6edff6efcc01319b9** on `codex/pro-ai-handover-2026-09-11`. A final documentation/evidence-only commit follows this product commit; test the branch tip and record its SHA. No product source changes follow the stated product commit in this delivery.
-
-Final runner `.tools/verification-delivery` exited 0 with all seven stages PASS. Committed compact evidence: `handover/2026-09-11/evidence/pro-2026-09-14/verification-summary.json`, `core-smoke.log`, `host-smoke.log`, `artifact-hashes.json`; both OBS-001 failures are beside them. Full intermediate logs stay in ignored `.tools`. Binary hashes establish this run's identity; rebuilt hashes can differ because build timestamps/toolchain are not a reproducible-binary claim.
+- Record source/HEAD/dirty state, per-stage exit codes, package hashes, screenshots and scenario steps.
+- Preserve failures before any retry.
+- Classify each check as PASS, FAIL, BLOCKED_ENV or NOT_RUN.
+- Return GREEN, YELLOW or RED for the tested scope:
+  - **RED:** reproducible data loss, overwrite, privacy or undo failure.
+  - **YELLOW:** unverified material gates, or OBS-001 recurring.
+- Send one consolidated defect packet back to Pro. The release decision belongs to the owner.

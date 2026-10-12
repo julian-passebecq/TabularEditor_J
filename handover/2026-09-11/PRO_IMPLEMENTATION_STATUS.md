@@ -71,3 +71,57 @@ This is a substantial implementation checkpoint at the end of the Pro run, not c
 - A final documentation/evidence-only commit follows; ending branch remains `codex/pro-ai-handover-2026-09-11`. `git rev-parse HEAD` identifies that handoff tip. No later production changes in this delivery.
 
 Proceed with LIGHT_QA_HANDOFF.md. Worktree is intended clean after the final documentation commit; ignored local SDK/tools/evidence remain available. No autonomous follow-up, subagent chain or scheduled task was started.
+
+# 2026-10-13 Opus pass (Claude Code, Opus 5.5)
+
+## Intake
+- Local `codex/pro-ai-handover-2026-09-11` was at `43409e0`, 4 commits ahead of the published `9fc048e`. These were the 2026-09-14 delivery, which had never been pushed.
+- New branch `claude/pbibench-opus-2026-10-13` was created from `43409e0`, so nothing was lost. No reset, stash, rebase or force push.
+- The owner granted, in one decision: the worktree and branch, local edits, sanitized pushes to this public branch, a private GitLab CI mirror on the local runner, and an MCP study with a read-only prototype. Merge and release were not granted.
+- Baseline at `43409e0`: Verify 7/7 PASS locally.
+
+## P0: S001
+Already closed by the 2026-09-14 commit `0b2ef50` (BUG-001/002 accepted for the offline scope). Nothing was reimplemented. OBS-001 is still OPEN, and the live, native and legacy gates are unchanged.
+
+## P1: build and CI
+- The 2026-09-06 GitHub failure on `a7317e7` was CS0104 (ambiguous `Server`), already fixed by an alias in `605d673`.
+- The new branch now triggers both GitHub workflows. Changes: `workflow_dispatch`; the evidence path fixed to `$RUNNER_TEMP` (logs had been lost); `.gitlab-ci.yml` added for the private mirror `juliandatapass-group/tabulareditor-j`, runner JULP (shell PowerShell, LocalSystem).
+- The first runner failure was diagnosed: the 32-bit VS MSBuild was redirected by WOW64 away from LocalSystem's NuGet folder. `NUGET_PACKAGES` now points outside the system profile.
+- Verify gained an 8th stage, `mcp-smoke`.
+- `Scripts/ci/Package-PbiBench.ps1` builds a portable zip with SHA256SUMS and source identity. The runner job then self-tests the packaged MCP companion on the installed .NET runtime.
+- `UPSTREAM_TE2_SYNC.md` was reconciled: 5 upstream files changed since v0.2 had not been logged.
+- Seams were added for parallel work: partial menu methods (`PbiBenchMenu.<Area>.cs`) and smoke hooks (`SliceSmokes.<Area>.cs`). New areas never edit the shared builders.
+
+## Slices delivered
+Each slice was built by its own coder agent in its own worktree, reviewed independently, merged into this branch locally and re-verified. Details, limits and native checks are in `handover/2026-10-13/slices/S#.md`.
+
+| Slice | IDs | Result |
+|---|---|---|
+| S2 | DAX-010/011, MODEL-002 | Lexical scanner, 224-signature catalog, caret-context completion, 6 advisory diagnostics (corpus 20 valid / 20 invalid), opt-in expression-editor assistance, Usage / Unresolved tab |
+| S3 | DAX-013/014 | Multi-document Workbench (32 tabs, per-tab S001 guards, external-change banner, opt-in recovery), DAX Studio handoff with labels only and clipboard query |
+| S4 | AUTO-001/002, RecoveryStore | Script workspace (Problems list, exact-text trust, one undo batch with rollback, never called sandboxed); recipes for folder/hidden/format/description/rename with dependent preview |
+| S5 | PROJ-002/003/004 | Project identity, distinct state stamps, debounced watcher with overflow rescan, `ReviewedFilePlan` (journaled multi-file write and restore), VS Code handoff. The TE2 save hook is deferred. |
+| S6 | REPORT-001/002 | Bounded package-free JSON reader in Core, curated PBIR schema registry (unknown = read-only), index, lineage (resolved/unresolved/ambiguous), reviewed theme apply with byte-exact restore, "Used in report" counts |
+| S7 | EXP-002, OPT-001 | Draft-only profiling and relationship-coverage queries, 7 curated BPA rules via `GetEffectiveRules` (no rule files written), 5 semantic assertions with navigation |
+| Lead | MCP-001 | `PbiBench.Core/Snapshot/ModelSnapshotV1` (metadata only, expressions opt-in, credential guard), explicit host publish dialog, separate `TE2Enhanced.Mcp` stdio server (net8.0 with roll-forward, 6 read-only tools, self-test including a real stdio round trip). See `docs/pbibench/MCP_COMPANION_V1.md`. |
+
+## Review and hardening
+- The architect review (`handover/2026-10-13/ARCHITECT_REVIEW.md`) returned GO with no RED. It raised 2 YELLOWs (multi-instance recovery; `ReviewedFilePlan` not re-hashing before each commit) and 4 LOWs. Fixes are recorded in that file's "Fixes applied" section.
+- Watcher smoke flake: the root cause was late directory LastWrite events. The product now ignores directory `Changed` echoes, and 8 of 8 repeated host smokes passed afterwards.
+- Packaged host smoke: the extracted zip launched responsive ("Tabular Editor 2.28.0") and closed with exit 0. The MCP companion was retargeted to net8.0 because the .NET 10 runtime is not installed system-wide.
+
+## Honest status
+This is a **usable V1 core pending Light QA**. It is not a release and has not been independently accepted.
+
+Open items:
+- Native and DPI journeys.
+- Live Desktop/XMLA/auth (DAX-006 BLOCKED_ENV).
+- Real DAX Studio and MCP-client handoffs.
+- Power BI Desktop reopening a theme-applied report.
+- TE2's own Save over externally edited TMDL (upstream behaviour, disclosed).
+- OBS-001.
+- Legacy `TabularEditorTest` references.
+
+V2 items not built: AUTO-003, REPORT-003, OPT-002, MCP write proposals, PBIR-Legacy and bookmarks, Pivot Lab.
+
+The acceptance index is `projectmanagement/features.csv`.
