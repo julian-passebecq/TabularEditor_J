@@ -367,7 +367,12 @@ namespace PbiBench.Core.Project
             return Path.Combine(journalFull, planId);
         }
 
-        private static void CommitContent(string target, byte[] content)
+        /// <summary>Forward writes are atomic only (temp + replace); a refused replace fails the apply,
+        /// which then rolls back. Recovery writes (rollback/restore) pass <paramref name="recovery"/>: when
+        /// Windows refuses the replace because another process holds the target without delete sharing
+        /// (scanner/indexer), the original bytes are written once in place instead and verified. This is
+        /// a different mechanism for getting the user's original content back, not a retry, and never waits.</summary>
+        private static void CommitContent(string target, byte[] content, bool recovery = false)
         {
             var directory = Path.GetDirectoryName(target)!;
             Directory.CreateDirectory(directory);
@@ -375,8 +380,14 @@ namespace PbiBench.Core.Project
             try
             {
                 WriteNew(temp, content);
-                if (File.Exists(target)) File.Replace(temp, target, null, true);
-                else File.Move(temp, target);
+                if (!File.Exists(target)) { File.Move(temp, target); return; }
+                try { File.Replace(temp, target, null, true); }
+                catch (IOException) when (recovery && File.Exists(target))
+                {
+                    using (var stream = new FileStream(target, FileMode.Open, FileAccess.Write, FileShare.None))
+                    { stream.SetLength(0); stream.Write(content, 0, content.Length); stream.Flush(true); }
+                    if (HashFile(target) != Hash(content)) throw new IOException("Recovery write could not be verified for " + Path.GetFileName(target) + ".");
+                }
             }
             finally { if (File.Exists(temp)) File.Delete(temp); }
         }
@@ -412,7 +423,7 @@ namespace PbiBench.Core.Project
             var backup = Path.Combine(journalDirectory, Path.GetFileName(entry.BackupFile));
             var bytes = File.ReadAllBytes(backup);
             if (Hash(bytes) != entry.BeforeHash) throw new InvalidDataException("Journal backup is corrupt for " + entry.RelativePath + ".");
-            CommitContent(target, bytes);
+            CommitContent(target, bytes, recovery: true);
         }
 
         private static readonly string[] StateOrder = {

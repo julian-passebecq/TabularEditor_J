@@ -60,31 +60,36 @@ internal static class ReviewedFilePlanSmoke
             if (Directory.GetFiles(root, "*.te2tmp-*", SearchOption.AllDirectories).Length != 0) throw new Exception("Temp files leaked.");
 
             // Failure on file 3 (a create) after two replaces restores both.
+            // Each scenario uses its own files: Windows scanners can refuse an atomic replace of a file
+            // replaced milliseconds earlier; the plan reports that as a real failure, it is not smoke noise.
+            File.WriteAllText(Path.Combine(root, "a3.json"), "A1");
+            File.WriteAllText(Path.Combine(root, "b3.json"), "B1");
             var failing3 = new ReviewedFilePlan(root, "fail-3");
-            failing3.AddFromCurrent("a.json", Bytes("A2"));
-            failing3.AddFromCurrent("b.json", Bytes("B2"));
-            failing3.AddFromCurrent("sub/d.json", Bytes("D2"));
+            failing3.AddFromCurrent("a3.json", Bytes("A2"));
+            failing3.AddFromCurrent("b3.json", Bytes("B2"));
+            failing3.AddFromCurrent("sub/d3.json", Bytes("D2"));
             try { failing3.Apply(journals, new ReviewedFilePlanOptions { BeforeCommit = (i, p) => { if (i == 2) throw new IOException("Injected"); } }); throw new Exception("No failure"); }
             catch (ReviewedFilePlanApplyException ex) when (ex.RolledBack) { }
-            if (read("a.json") != "A1" || read("b.json") != "B-external") throw new Exception("Failure on file 3 did not restore files 1-2.");
+            if (read("a3.json") != "A1" || read("b3.json") != "B1" || File.Exists(Path.Combine(root, "sub", "d3.json"))) throw new Exception("Failure on file 3 did not restore files 1-2.");
 
             // Successful apply: replace, create, delete; then journal restore.
+            File.WriteAllText(Path.Combine(root, "a4.json"), "A1");
             var plan = new ReviewedFilePlan(root, "apply");
-            plan.AddFromCurrent("a.json", Bytes("A3"));
-            plan.AddFromCurrent("sub/d.json", Bytes("D3"));
+            plan.AddFromCurrent("a4.json", Bytes("A3"));
+            plan.AddFromCurrent("sub/d4.json", Bytes("D3"));
             plan.Add(new ReviewedFileChange("c.json", ReviewedFileChangeKind.Delete, ReviewedFilePlan.HashFile(Path.Combine(root, "c.json")), null));
             var result = plan.Apply(journals);
-            if (result.FilesWritten != 3 || read("a.json") != "A3" || read("sub/d.json") != "D3" || File.Exists(Path.Combine(root, "c.json")))
+            if (result.FilesWritten != 3 || read("a4.json") != "A3" || read("sub/d4.json") != "D3" || File.Exists(Path.Combine(root, "c.json")))
                 throw new Exception("Apply did not write the reviewed files.");
             if (!ReviewedFilePlan.ListJournals(journals).Contains(result.JournalPath)) throw new Exception("Journal not listed.");
 
             // Restore refuses when a file changed after apply.
-            File.WriteAllText(Path.Combine(root, "a.json"), "A-later");
+            File.WriteAllText(Path.Combine(root, "a4.json"), "A-later");
             Expect(() => ReviewedFilePlan.Restore(result.JournalPath), "restore over later edit");
-            if (read("a.json") != "A-later" || read("sub/d.json") != "D3") throw new Exception("Refused restore wrote files.");
-            File.WriteAllText(Path.Combine(root, "a.json"), "A3");
+            if (read("a4.json") != "A-later" || read("sub/d4.json") != "D3") throw new Exception("Refused restore wrote files.");
+            File.WriteAllText(Path.Combine(root, "a4.json"), "A3");
             if (ReviewedFilePlan.Restore(result.JournalPath) != 3) throw new Exception("Restore count wrong.");
-            if (read("a.json") != "A1" || read("c.json") != "C1" || File.Exists(Path.Combine(root, "sub", "d.json")))
+            if (read("a4.json") != "A1" || read("c.json") != "C1" || File.Exists(Path.Combine(root, "sub", "d4.json")))
                 throw new Exception("Journal restore did not bring back the originals.");
             if (ReviewedFilePlan.ReadJournal(result.JournalPath).State != ReviewedFileJournalState.Restored) throw new Exception("Restore not recorded.");
             Expect(() => ReviewedFilePlan.Restore(result.JournalPath), "double restore");
