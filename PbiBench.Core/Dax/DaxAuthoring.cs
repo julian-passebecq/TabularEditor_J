@@ -32,15 +32,8 @@ namespace PbiBench.Core.Dax
 
     public static class DaxAuthoring
     {
-        // Small curated local help set. Unlisted/engine-specific functions still get
-        // argument position; absence never implies that a function is invalid.
-        private static readonly Dictionary<string, string> Signatures = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase) {
-            { "SUM", "SUM(column)" }, { "SUMX", "SUMX(table, expression)" },
-            { "FILTER", "FILTER(table, filter)" }, { "CALCULATE", "CALCULATE(expression, filter…)" },
-            { "DIVIDE", "DIVIDE(numerator, denominator, alternateResult?)" },
-            { "IF", "IF(test, trueValue, falseValue?)" }, { "ROW", "ROW(name, expression, …)" },
-            { "TOPN", "TOPN(count, table, orderByExpression?, order?, …)" }
-        };
+        // Signatures come from the curated DaxSignatureCatalog. Unlisted/engine-specific functions
+        // still get argument position; absence never implies that a function is invalid.
         public const int MaxTextLength = 256 * 1024;
         public const int MaxSuggestions = 200;
 
@@ -94,7 +87,7 @@ namespace PbiBench.Core.Dax
             }
             foreach (var frame in frames)
                 if (frame.Item1.Length > 0 && (char.IsLetter(frame.Item1[0]) || frame.Item1[0] == '_'))
-                    return (Signatures.TryGetValue(frame.Item1, out var signature) ? signature : frame.Item1) + " · argument " + frame.Item2;
+                    return (DaxSignatureCatalog.Default.TryGet(frame.Item1, out var signature) ? signature.Format(frame.Item2) : frame.Item1) + " · argument " + frame.Item2;
             return "No enclosing function call.";
         }
     }
