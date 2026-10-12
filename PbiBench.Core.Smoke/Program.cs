@@ -24,6 +24,7 @@ internal static class Program
             TablePreviewSmoke.Run();
             RunQuickOpenChecks();
             SemanticDependencySmoke.Run();
+            SliceSmokes.Run(root);
             Console.WriteLine("PbiBench.Core smoke: PASS");
             return 0;
         }

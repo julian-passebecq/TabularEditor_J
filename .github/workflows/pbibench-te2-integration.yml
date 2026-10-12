@@ -23,6 +23,7 @@ on:
       - 'global.json'
       - 'Directory.Build.targets'
       - '.github/workflows/pbibench-te2-integration.yml'
+  workflow_dispatch:
   pull_request:
     paths:
       - 'TabularEditor/**'
@@ -57,7 +58,7 @@ jobs:
       - uses: NuGet/setup-nuget@v2
       - name: Verify product and both smoke lanes
         shell: powershell
-        run: ./Scripts/Verify-PbiBench.ps1
+        run: ./Scripts/Verify-PbiBench.ps1 -EvidenceDirectory "$env:RUNNER_TEMP\pbibench-verification"
       - name: Preserve verification logs
         if: always()
         uses: actions/upload-artifact@v4

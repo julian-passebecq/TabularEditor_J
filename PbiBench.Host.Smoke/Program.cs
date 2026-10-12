@@ -25,6 +25,7 @@ internal static class Program
                 table.AddMeasure("Dependent measure", "[Base measure] + 1");
                 AuthoringSmoke.Run(handler.Model);
                 RecipeSmoke.Run(handler);
+                SliceSmokes.RunEarly(handler);
                 using (var recipeForm = new TabularEditor.PbiBench.Automation.PbiBenchRecipeForm(() => handler))
                 { var handle = recipeForm.Handle; recipeForm.Show(); Application.DoEvents(); recipeForm.Close(); }
                 using (var previewForm = new TabularEditor.PbiBench.Dax.PbiBenchTablePreviewForm(handler.Model))
@@ -46,6 +47,7 @@ internal static class Program
                 ProjectSmoke.Run();
                 FormatterExportSmoke.Run();
                 Rework01Smoke.Run();
+                SliceSmokes.RunLate();
             }
             Console.WriteLine("PbiBench host smoke: PASS");
             return 0;

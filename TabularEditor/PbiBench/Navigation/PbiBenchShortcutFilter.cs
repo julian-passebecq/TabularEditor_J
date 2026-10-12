@@ -9,7 +9,7 @@ namespace TabularEditor.PbiBench.Navigation
     /// routing and installs a small Tools > PbiBench menu at runtime, avoiding edits to the
     /// upstream FormMain implementation and WinForms designer.
     /// </summary>
-    internal sealed class PbiBenchShortcutFilter : IMessageFilter
+    internal sealed partial class PbiBenchShortcutFilter : IMessageFilter
     {
         private const int WmKeyDown = 0x0100;
         private const string MenuName = "pbiBenchToolStripMenuItem";
@@ -124,6 +124,13 @@ namespace TabularEditor.PbiBench.Navigation
             var preview = new ToolStripMenuItem("Table preview query…");
             preview.Click += (s, args) => RunCommand(c => c.PbiBench_ShowTablePreview());
             pbiBench.DropDownItems.Add(preview);
+            // Each product area contributes its items from its own PbiBenchMenu.<Area>.cs partial.
+            AddDaxItems(pbiBench);
+            AddDaxWorkspaceItems(pbiBench);
+            AddAutomationItems(pbiBench);
+            AddProjectItems(pbiBench);
+            AddReportItems(pbiBench);
+            AddExploreItems(pbiBench);
             pbiBench.DropDownOpening += (s, args) =>
             {
                 var controller = FormMain.Singleton?.UI;
