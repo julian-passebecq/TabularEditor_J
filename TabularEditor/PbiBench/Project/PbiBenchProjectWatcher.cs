@@ -80,6 +80,9 @@ namespace TabularEditor.PbiBench.Project
 
         private void OnEvent(object sender, FileSystemEventArgs e)
         {
+            // A directory's LastWrite "Changed" only echoes child events that are reported on their
+            // own, and Windows can deliver it late (after Start for writes made just before).
+            if (e.ChangeType == WatcherChangeTypes.Changed && Directory.Exists(e.FullPath)) return;
             lock (_gate)
             {
                 if (_disposed || !Record(e.FullPath)) return;

@@ -1,0 +1,34 @@
+id,title,release,implementation,automated_evidence,light_qa,live_or_native_gate,notes
+FND-001,Reproducible host/Core/CI verification,V1,IMPLEMENTED,Verify-PbiBench 8 stages; GitLab local runner + GitHub Actions green,NOT_RUN,clean-checkout CI now PASS on runner,2026-10-13: first remote green for takeover work
+FND-002,Preserved build/query/document baseline,V1,IMPLEMENTED,host smoke,NOT_RUN,native journey,S001
+FND-003,Status/ledger aligned with evidence,V1,IMPLEMENTED,UPSTREAM_TE2_SYNC.md reconciled 2026-10-13,NOT_RUN,n/a,
+DAX-001,Dedicated query session lifecycle/cancel/timeout,V1,IMPLEMENTED,QueryLifecycleSmoke,NOT_RUN,BLOCKED_ENV live endpoint,timeout best effort
+DAX-002,Safe diagnostics without secrets,V1,IMPLEMENTED,host smoke,NOT_RUN,n/a,
+DAX-003,Bounded retained results,V1,IMPLEMENTED,DaxRetentionSmoke,NOT_RUN,n/a,application bounds only
+DAX-004,Explicit formatter consent; no telemetry,V1,IMPLEMENTED,FormatterExportSmoke,NOT_RUN,n/a,
+DAX-005,CSV export failure handling and fidelity,V1,IMPLEMENTED,FormatterExportSmoke; T14,NOT_RUN,n/a,OBS-001 open
+DAX-006,Live Desktop/XMLA acceptance,V1 gate,BLOCKED_ENV,none,BLOCKED_ENV,approved disposable fixture required,owner must supply endpoint outside Git
+DAX-010,Language-service ownership map and corpus,V1,IMPLEMENTED,DaxDiagnosticsCorpusSmoke (20 valid/20 invalid),NOT_RUN,n/a,lexical only; no DAX grammar (S2)
+DAX-011,Completion/signatures/navigation/advisory diagnostics,V1,IMPLEMENTED,DaxCompletionContextSmoke; DaxSignatureCatalogSmoke; ExpressionAuthoringSmoke,NOT_RUN,native expression-editor keyboard,224 signatures; expression-editor assist opt-in
+DAX-012,Multiple result sets per-set selection/export,V1,IMPLEMENTED,MultipleResultsSmoke,NOT_RUN,BLOCKED_ENV live multi-rowset,2026-09-14
+DAX-013,Multi-document workspace and recovery,V1,IMPLEMENTED,MultiDocumentSmoke; DaxRecoverySmoke; DaxExternalChangeSmoke; DocumentSetSmoke,NOT_RUN,native dirty/close/DPI,recovery opt-in; focus-based external change (S3)
+DAX-014,DAX Studio handoff,V1,IMPLEMENTED,DaxStudioArgsSmoke; DaxStudioLauncherSmoke,NOT_RUN,real DAX Studio launch,labels only; query via clipboard (S3)
+MODEL-001,Quick Open and dependency navigation,V1,IMPLEMENTED,host smoke,NOT_RUN,large model/native,
+MODEL-002,Relationship/usage views with unresolved references,V1,IMPLEMENTED,SemanticUsageSmoke; UnresolvedReferenceSmoke; ReportFormSmoke,NOT_RUN,large model,report counts after report index (S2/S6)
+AUTO-001,Script workspace with diagnostics and explicit trust,V1,IMPLEMENTED,ScriptWorkspaceSmoke; ScriptDocumentSmoke,NOT_RUN,native,trusted C# never sandboxed (S4)
+AUTO-002,Restricted reviewed recipes preview/diff/apply/undo,V1,IMPLEMENTED,RecipeSmoke; RecipeCatalogSmoke; RecipeRenameSmoke; RecipeFormatStringSmoke,NOT_RUN,native,folder/hidden/format/description/rename (S4)
+AUTO-003,Recorder/macros/curated gallery,V2,NOT_STARTED,none,n/a,n/a,
+PROJ-001,Bounded discovery and multiple-PBIP selection,V1,IMPLEMENTED,ProjectDiscoverySmoke,NOT_RUN,UNC/junction native,2026-09-14
+PROJ-002,Project panel; Git state; identity; context export,V1,IMPLEMENTED,ProjectSmoke; ProjectIdentitySmoke,NOT_RUN,native,(S5)
+PROJ-003,Distinct state identities and external-change detection,V1,IMPLEMENTED,ExternalChangeSmoke; ProjectWatcherSmoke,NOT_RUN,native,watcher + rescan on overflow (S5)
+PROJ-004,Reviewed file plan with journal restore; VS Code handoff,V1,IMPLEMENTED,ReviewedFilePlanSmoke; VsCodeArgsSmoke,NOT_RUN,real VS Code,TE2 save-path conflict hook deferred (S5)
+REPORT-001,PBIR index and report-to-model lineage,V1,IMPLEMENTED,PbirIndexSmoke; ReportLineageSmoke; ReportFormSmoke,NOT_RUN,real PBIP from Desktop,curated schema registry; PBIR-Legacy not indexed (S6)
+REPORT-002,Reviewed theme apply with byte-exact restore,V1,IMPLEMENTED,ThemeApplyPlanSmoke; ThemeApplySmoke,NOT_RUN,Power BI Desktop reopen,writable known schemas only (S6)
+REPORT-003,Theme validation/Theme Forge exchange; reference rewrite,V2,NOT_STARTED,none,n/a,n/a,
+EXP-001,Bounded table preview drafts,V1,IMPLEMENTED,TablePreviewSmoke,NOT_RUN,BLOCKED_ENV live,2026-09-14
+EXP-002,Profiling and relationship coverage drafts,V1,IMPLEMENTED,DaxProfileQueryBuilderSmoke; host EarlyExplore,NOT_RUN,BLOCKED_ENV live,draft-only; Pivot Lab V2 (S7)
+OPT-001,Curated BPA pack and semantic assertions,V1,IMPLEMENTED,SemanticAssertionSmoke; host EarlyExplore,NOT_RUN,real model false positives,no rule files written (S7)
+OPT-002,VPAX/DMV/storage and usage recommendations,V2,NOT_STARTED,none,n/a,n/a,
+MCP-001,Read-only MCP companion (separate exe) and snapshot publication,V1 optional,IMPLEMENTED,mcp-smoke self-test incl. stdio; SnapshotPublisherSmoke,NOT_RUN,one real MCP client,docs/pbibench/MCP_COMPANION_V1.md
+MCP-002,MCP proposals applied through reviewed recipes,V2,NOT_STARTED,none,n/a,n/a,design sketched only
+REL-001,Integration matrix and honest supported-feature claims,V1 gate,IN_PROGRESS,portable package + hashes on runner,NOT_RUN,Light QA GREEN/YELLOW required,no release claimed
