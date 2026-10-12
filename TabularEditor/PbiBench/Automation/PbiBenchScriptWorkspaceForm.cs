@@ -54,7 +54,7 @@ namespace TabularEditor.PbiBench.Automation
                 MakeButton("Compile (F6)", (s, e) => ShowCompile(CompileActive())),
                 MakeButton("Run… (F5)", (s, e) => RunActive(ConfirmTrustDialog)),
                 _rollback, _recoveryOptIn,
-                MakeButton("Delete recovery copies", (s, e) => DeleteRecoveryCopies())
+                MakeButton("Delete script recovery copies", (s, e) => DeleteRecoveryCopies())
             });
             _problems.Columns.Add("Severity", 80); _problems.Columns.Add("Location", 110); _problems.Columns.Add("Code", 70); _problems.Columns.Add("Message", 600);
             _problems.DoubleClick += (s, e) => GoToProblem();
@@ -210,10 +210,11 @@ namespace TabularEditor.PbiBench.Automation
         {
             try
             {
-                var store = new RecoveryStore(new RecoveryStoreOptions(_recoveryRoot, false));
-                var count = Workspace.Documents.Count(d => store.Delete(d.Id));
-                var all = store.DeleteAll();
-                SetStatus("Deleted " + (count + all) + " recovery cop" + (count + all == 1 ? "y" : "ies") + " from " + _recoveryRoot + ".");
+                // Only script copies: the store is shared with other document kinds (DAX documents later).
+                var store = new RecoveryStore(new RecoveryStoreOptions(_recoveryRoot, true));
+                var ids = store.List().Where(e => e.Kind == RecoveryKind).Select(e => e.DocumentId).Concat(Workspace.Documents.Select(d => d.Id)).Distinct();
+                var count = ids.Count(store.Delete);
+                SetStatus("Deleted " + count + " script recovery cop" + (count == 1 ? "y" : "ies") + " from " + _recoveryRoot + ".");
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { SetStatus("Recovery copies not deleted: " + ex.Message); }
         }
