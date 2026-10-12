@@ -16,32 +16,31 @@ namespace TabularEditor.PbiBench.Dax
 
     internal sealed partial class PbiBenchDaxWorkbenchForm
     {
-        private readonly DaxDocument _document = new DaxDocument();
+        // Active tab's document (swapped by .Tabs.cs). The commands below act on the active tab only.
+        private DaxDocument _document;
+        // Global, monotonic: every content replacement in any tab takes the next value (tab stamps stay unique).
         private long _documentGeneration;
         private IDaxDocumentDialogs _documentDialogs;
         private ToolStripMenuItem _newDocument;
         private ToolStripMenuItem _openDocument;
         private ToolStripMenuItem _saveDocument;
         private ToolStripMenuItem _saveDocumentAs;
+        private ToolStripMenuItem _fileMenu;
 
         private void InitializeDocuments(IDaxDocumentDialogs dialogs)
         {
             _documentDialogs = dialogs ?? new DaxDocumentDialogs();
-            _document.New(_queryEditor.Text);
-            _queryEditor.TextChanged += (s, e) =>
-            {
-                _document.Text = _queryEditor.Text;
-                UpdateDocumentTitle();
-            };
             var menu = new MenuStrip();
-            var file = new ToolStripMenuItem("&File");
-            _newDocument = DocumentCommand("&New", Keys.Control | Keys.N, NewDocument);
-            _openDocument = DocumentCommand("&Open…", Keys.Control | Keys.O, OpenDocument);
+            _fileMenu = new ToolStripMenuItem("&File");
+            _newDocument = DocumentCommand("&New tab", Keys.Control | Keys.N, () => NewTab());
+            _openDocument = DocumentCommand("&Open…", Keys.Control | Keys.O, () => OpenInNewTab());
             _saveDocument = DocumentCommand("&Save", Keys.Control | Keys.S, () => SaveDocument(false));
             _saveDocumentAs = DocumentCommand("Save &As…", Keys.Control | Keys.Shift | Keys.S, () => SaveDocument(true));
-            file.DropDownItems.AddRange(new ToolStripItem[] { _newDocument, _openDocument,
-                new ToolStripSeparator(), _saveDocument, _saveDocumentAs });
-            menu.Items.Add(file);
+            _fileMenu.DropDownItems.AddRange(new ToolStripItem[] { _newDocument, _openDocument, CreateOpenInCurrentTabCommand(),
+                new ToolStripSeparator(), _saveDocument, _saveDocumentAs, CreateSaveAllCommand(),
+                new ToolStripSeparator() });
+            _fileMenu.DropDownItems.AddRange(CreateTabCommands());
+            menu.Items.Add(_fileMenu);
             MainMenuStrip = menu;
             Controls.Add(menu);
             UpdateDocumentTitle();
@@ -62,6 +61,7 @@ namespace TabularEditor.PbiBench.Dax
             return item;
         }
 
+        /// <summary>Replaces the active tab with an empty draft (after the dirty prompt).</summary>
         private void NewDocument()
         {
             if (_runCts != null || !ConfirmDocumentReplacement()) return;
@@ -69,11 +69,14 @@ namespace TabularEditor.PbiBench.Dax
             DisplayDocument();
         }
 
+        /// <summary>Opens a file into the active tab (after the dirty prompt). A file open in another tab is activated instead.</summary>
         private void OpenDocument()
         {
             if (_runCts != null) return;
             var path = _documentDialogs.OpenPath(this);
-            if (path == null || !ConfirmDocumentReplacement()) return;
+            if (path == null) return;
+            if (ActivateIfOpenElsewhere(path)) return;
+            if (!ConfirmDocumentReplacement()) return;
             DocumentOperation(() => { _document.Open(path); DisplayDocument(); });
         }
 
@@ -83,9 +86,15 @@ namespace TabularEditor.PbiBench.Dax
             var path = !saveAs && _document.FilePath != null ? _document.FilePath
                 : _documentDialogs.SavePath(this, _document.FilePath);
             if (path == null) return false;
+            if (IsOpenInOtherTab(path))
+            {
+                _documentDialogs.Error(this, "This file is open in another Workbench tab. Close that tab or choose another name.");
+                return false;
+            }
             return DocumentOperation(() =>
             {
                 _document.Save(path);
+                OnActiveDocumentSaved();
                 UpdateDocumentTitle();
                 SetStatus("Saved " + _document.FilePath);
             });
@@ -112,19 +121,27 @@ namespace TabularEditor.PbiBench.Dax
 
         private void DisplayDocument()
         {
-            // Called only after a successful New/Open/history replacement, even for equal text.
+            // Called only after a successful New/Open/history/reload replacement, even for equal text.
+            var tab = ActiveTab;
             _documentGeneration++;
+            tab.Generation = _documentGeneration;
+            tab.External = DaxDiskState.Unchanged;
+            tab.TitleSuffix = "";
             _queryEditor.Text = _document.Text;
             _queryEditor.ClearUndo();
             _currentResult = new DaxQueryResult();
             BindExecutionResult(_currentResult);
+            OnActiveContentReplaced();
+            UpdateTabTitle(tab);
             UpdateDocumentTitle();
+            ShowExternalBanner(tab);
             ApplyExecutionAvailability();
             _queryEditor.Focus();
         }
 
-        private void UpdateDocumentTitle() => Text = (_document.FilePath == null ? "Untitled.dax" : Path.GetFileName(_document.FilePath))
-            + (_document.IsDirty ? " *" : "") + " — PbiBench DAX Workbench";
+        private void UpdateDocumentTitle() => Text = (_document == null ? "Untitled.dax" : _document.Title)
+            + (_document != null && _document.IsDirty ? " *" : "") + " — PbiBench DAX Workbench"
+            + (_documents.Count > 1 ? " (" + (_documents.ActiveIndex + 1) + "/" + _documents.Count + ")" : "");
 
         private sealed class DaxDocumentDialogs : IDaxDocumentDialogs
         {

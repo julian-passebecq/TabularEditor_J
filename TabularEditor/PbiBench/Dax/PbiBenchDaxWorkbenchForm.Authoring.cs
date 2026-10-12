@@ -13,6 +13,7 @@ namespace TabularEditor.PbiBench.Dax
         internal Action<ITabularNamedObject> NavigateToObject;
         private IReadOnlyList<DaxDiagnostic> _advisoryIssues = Array.Empty<DaxDiagnostic>();
         private long _advisoryRevision = -1;
+        private long _advisoryGeneration = -1;
         private int _advisoryIndex;
 
         private void InitializeAuthoring()
@@ -25,6 +26,14 @@ namespace TabularEditor.PbiBench.Dax
             MainMenuStrip.Items.Add(menu);
         }
 
+        private void ResetAdvisoryState()
+        {
+            _advisoryIssues = Array.Empty<DaxDiagnostic>();
+            _advisoryRevision = -1;
+            _advisoryGeneration = -1;
+            _advisoryIndex = 0;
+        }
+
         private void InspectStructure(bool parameters)
         {
             if (_queryEditor.TextLength > DaxAuthoring.MaxTextLength) { SetStatus("Local assistance is limited to 256 Ki characters."); return; }
@@ -35,7 +44,8 @@ namespace TabularEditor.PbiBench.Dax
                 return;
             }
             _advisoryIssues = DaxDiagnostics.Analyze(_queryEditor.Text, names, DaxSignatureCatalog.Default);
-            _advisoryRevision = _textRevision;
+            _advisoryRevision = ActiveTab.TextRevision;
+            _advisoryGeneration = ActiveTab.Generation;
             _advisoryIndex = -1;
             if (_advisoryIssues.Count == 0) { SetStatus("No advisory DAX issues found · local lexical check, not engine validation."); return; }
             NextAdvisoryIssue();
@@ -43,7 +53,7 @@ namespace TabularEditor.PbiBench.Dax
 
         private void NextAdvisoryIssue()
         {
-            if (_advisoryRevision != _textRevision) { InspectStructure(false); return; }
+            if (_advisoryRevision != ActiveTab.TextRevision || _advisoryGeneration != ActiveTab.Generation) { InspectStructure(false); return; }
             if (_advisoryIssues.Count == 0) { SetStatus("No advisory DAX issues found · local lexical check, not engine validation."); return; }
             _advisoryIndex = (_advisoryIndex + 1) % _advisoryIssues.Count;
             var issue = _advisoryIssues[_advisoryIndex];
@@ -63,7 +73,7 @@ namespace TabularEditor.PbiBench.Dax
             return new DaxCompletionSession {
                 Model = model, Text = _queryEditor.Text, Caret = _queryEditor.SelectionStart, SelectionLength = _queryEditor.SelectionLength,
                 Revision = names.Revision, Context = context, Items = context.Suggest(names, DaxSignatureCatalog.Default),
-                Generation = _documentGeneration, TextRevision = _textRevision
+                Generation = ActiveTab.Generation, TextRevision = ActiveTab.TextRevision
             };
         }
 
@@ -72,7 +82,9 @@ namespace TabularEditor.PbiBench.Dax
         {
             reason = "";
             if (session == null || item == null) { reason = "Nothing selected."; return false; }
-            if (session.Generation != _documentGeneration || session.TextRevision != _textRevision || !ReferenceEquals(session.Model, AuthoringModel?.Invoke()))
+            // Tab stamps are unique across tabs, so a session from another tab (or an older content/text) never matches.
+            var tab = ActiveTab;
+            if (tab == null || session.Generation != tab.Generation || session.TextRevision != tab.TextRevision || !ReferenceEquals(session.Model, AuthoringModel?.Invoke()))
             { reason = "Insertion discarded because the document or model changed."; return false; }
             if (PbiBenchDaxModelBinder.Bind(session.Model).Revision != session.Revision)
             { reason = "Model objects were renamed, added or deleted; reopen completion."; return false; }

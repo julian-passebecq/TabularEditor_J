@@ -15,7 +15,7 @@ namespace TabularEditor.PbiBench.Dax
 
         private void InitializeFormatting()
         {
-            _queryEditor.TextChanged += (s, e) => _textRevision++;
+            // _textRevision is advanced by every tab editor (see .Tabs.cs CreateEditor).
             var menu = new ToolStripMenuItem("Remote formatting");
             var consent = new ToolStripMenuItem("Allow sending DAX to SQLBI for this session")
             {
@@ -43,10 +43,13 @@ namespace TabularEditor.PbiBench.Dax
             if (_runCts != null || _formatting || _closing) return;
             try { RemoteFormatterConsent.RequireEnabled(); }
             catch (InvalidOperationException ex) { SetStatus(ex.Message); return; }
-            var revision = _textRevision;
-            var generation = _documentGeneration;
+            // DAX-013: the response is keyed by document id and that tab's own stamps, never by "whatever tab is active".
+            var tab = ActiveTab;
+            var documentId = tab.Document.Id;
+            var revision = tab.TextRevision;
+            var generation = tab.Generation;
             var consent = RemoteFormatterConsent.Revision;
-            var text = _queryEditor.Text;
+            var text = tab.Editor.Text;
             var separators = Preferences.Current.UseSemicolonsAsSeparators;
             var skipSpace = Preferences.Current.DaxFormatterSkipSpaceAfterFunctionName;
             _formatting = true;
@@ -58,13 +61,15 @@ namespace TabularEditor.PbiBench.Dax
             {
                 var result = await Task.Run(() => DaxFormatterProxy.Instance.FormatDax(text, separators, shortFormat, skipSpace));
                 if (_closing || IsDisposed || Disposing) return;
-                if (_formatDiscarded || generation != _documentGeneration || revision != _textRevision || consent != RemoteFormatterConsent.Revision)
-                { SetStatus("Formatting response discarded because it was cancelled or the draft/consent changed."); return; }
+                var target = FindTab(documentId);
+                if (_formatDiscarded || target == null || !ReferenceEquals(target, tab) || generation != target.Generation ||
+                    revision != target.TextRevision || consent != RemoteFormatterConsent.Revision)
+                { SetStatus("Formatting response discarded because it was cancelled, the tab was closed or the draft/consent changed."); return; }
                 if (result == null || string.IsNullOrWhiteSpace(result.FormattedDax) || result.errors?.Count > 0)
                 { SetStatus("Remote formatting returned no valid result; draft unchanged."); return; }
-                _queryEditor.SelectAll();
-                _queryEditor.SelectedText = result.FormattedDax;
-                SetStatus("Entire draft formatted via SQLBI · Ctrl+Z to undo.");
+                target.Editor.SelectAll();
+                target.Editor.SelectedText = result.FormattedDax;
+                SetStatus((ReferenceEquals(target, ActiveTab) ? "Entire draft" : "Tab " + target.Document.Title) + " formatted via SQLBI · Ctrl+Z to undo.");
             }
             catch (Exception) { if (!_closing && !IsDisposed && !Disposing) SetStatus("Remote formatting failed; draft unchanged."); }
             finally
