@@ -13,7 +13,7 @@ namespace TabularEditor.PbiBench.Semantic
     /// TOM objects; it only returns an object id to UIController, which delegates navigation to
     /// TE2's native Goto implementation.
     /// </summary>
-    internal sealed class PbiBenchSemanticViewForm : Form
+    internal sealed partial class PbiBenchSemanticViewForm : Form
     {
         private readonly PbiBenchSemanticSnapshot _snapshot;
         private readonly TextBox _queryBox;
@@ -102,6 +102,7 @@ namespace TabularEditor.PbiBench.Semantic
             var relationshipTab = new TabPage("All table relationships");
             relationshipTab.Controls.Add(_tableRelationships);
             _tabs.TabPages.Add(relationshipTab);
+            InitializeUsage();
             right.Controls.Add(_tabs);
             right.Controls.Add(options);
             split.Panel2.Controls.Add(right);
@@ -345,6 +346,7 @@ namespace TabularEditor.PbiBench.Semantic
         private string GetPreferredNavigationId()
         {
             if (_tabs.SelectedIndex == 2) return GetSelectedId(_tableRelationships);
+            if (IsUsageTabSelected) return GetUsageSelectionId();
             var active = _tabs.SelectedTab != null && _tabs.SelectedTab.Text == "Referenced by"
                 ? _dependants
                 : _dependencies;
