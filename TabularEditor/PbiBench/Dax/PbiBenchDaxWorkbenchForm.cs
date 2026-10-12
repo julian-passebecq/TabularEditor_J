@@ -22,7 +22,8 @@ namespace TabularEditor.PbiBench.Dax
         private readonly string _unavailableReason;
         private readonly DaxQueryHistory _history = new DaxQueryHistory(100);
 
-        private readonly RichTextBox _queryEditor;
+        // Active tab's editor (each document tab owns one; see .Tabs.cs).
+        private RichTextBox _queryEditor;
         private readonly Button _executeButton;
         private readonly Button _cancelButton;
         private readonly Button _exportButton;
@@ -120,18 +121,8 @@ namespace TabularEditor.PbiBench.Dax
                 Panel2MinSize = 220
             };
 
-            _queryEditor = new RichTextBox
-            {
-                Dock = DockStyle.Fill,
-                AcceptsTab = true,
-                DetectUrls = false,
-                Font = new Font(FontFamily.GenericMonospace, 10.0f),
-                WordWrap = false,
-                Text = "EVALUATE\nROW(\"Value\", 1)"
-            };
-            vertical.Panel1.Controls.Add(_queryEditor);
-            _queryEditor.SelectionChanged += (s, e) =>
-                _executeButton.Text = _queryEditor.SelectionLength > 0 ? "Execute selection" : "Execute";
+            // DAX-013: one editor per document tab; the first tab starts with the usual sample draft.
+            InitializeTabs(vertical.Panel1, "EVALUATE\nROW(\"Value\", 1)");
 
             var bottom = new SplitContainer
             {
@@ -196,6 +187,8 @@ namespace TabularEditor.PbiBench.Dax
             InitializeDocuments(documentDialogs);
             InitializeFormatting();
             InitializeAuthoring();
+            InitializeRecovery();
+            InitializeHandoff();
 
             FormClosing += OnWorkbenchClosing;
             ApplyExecutionAvailability();
@@ -212,6 +205,24 @@ namespace TabularEditor.PbiBench.Dax
             if (keyData == Keys.F5 || keyData == (Keys.Control | Keys.Enter))
             {
                 if (_runCts == null) ExecuteQuery();
+                return true;
+            }
+
+            if (keyData == (Keys.Control | Keys.Tab) || keyData == (Keys.Control | Keys.PageDown))
+            {
+                SelectNeighbourTab(1);
+                return true;
+            }
+
+            if (keyData == (Keys.Control | Keys.F4))
+            {
+                CloseTab(ActiveTab);
+                return true;
+            }
+
+            if (keyData == (Keys.Control | Keys.Shift | Keys.Tab) || keyData == (Keys.Control | Keys.PageUp))
+            {
+                SelectNeighbourTab(-1);
                 return true;
             }
 
@@ -349,6 +360,7 @@ namespace TabularEditor.PbiBench.Dax
             _historyList.Enabled = !running;
             _resultSelector.Enabled = !running;
             _newDocument.Enabled = _openDocument.Enabled = _saveDocument.Enabled = _saveDocumentAs.Enabled = !running;
+            SetTabCommandsEnabled(!running);
             _exportButton.Enabled = !running && _currentResult.State == DaxQueryExecutionState.Completed
                 && _currentResult.Columns.Length > 0;
         }
@@ -496,12 +508,14 @@ namespace TabularEditor.PbiBench.Dax
                 e.Cancel = true;
                 return;
             }
-            if (!ConfirmDocumentReplacement())
+            // DAX-013: every dirty tab is asked about (Save / Don't save / Cancel); Cancel keeps everything open.
+            if (!ConfirmAllDocuments())
             {
                 e.Cancel = true;
                 return;
             }
             _closing = true;
+            OnWorkspaceClosed();
             if (_runCts != null && !_runCts.IsCancellationRequested)
                 _runCts.Cancel();
         }

@@ -19,6 +19,8 @@ namespace TabularEditor.PbiBench.Dax
         private void BindExecutionResult(DaxQueryResult result)
         {
             _executionResult = result;
+            var tab = ActiveTab;
+            if (tab != null) tab.Execution = result; // DAX-013: results stay with the tab that produced them
             _resultSelector.Items.Clear();
             for (var i = 0; i < result.ResultSets.Length; i++)
                 _resultSelector.Items.Add("Result " + (i + 1) + " · " + result.ResultSets[i].ReturnedRowCount + " rows" +
