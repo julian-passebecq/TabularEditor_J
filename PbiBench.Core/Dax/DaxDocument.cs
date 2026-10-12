@@ -2,22 +2,42 @@ using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
+using PbiBench.Core.Documents;
 
 namespace PbiBench.Core.Dax
 {
+    /// <summary>What <see cref="DaxDocument.CheckDisk"/> found for a file-backed document.</summary>
+    public enum DaxDiskState
+    {
+        /// <summary>Never opened from or saved to a file (or a deletion was acknowledged).</summary>
+        NotOnDisk,
+        Unchanged,
+        Changed,
+        Missing,
+        /// <summary>The file exists but could not be read (locked, too large, access denied).</summary>
+        Unreadable
+    }
+
     /// <summary>A single local DAX document. Nothing is persisted until Save is requested.</summary>
-    public sealed class DaxDocument
+    public sealed class DaxDocument : IWorkspaceDocument
     {
         public const int MaxFileBytes = 4 * 1024 * 1024;
+        private const string ExternalBaseline = "\0external-change-acknowledged";
         private string _savedText = string.Empty;
         private byte[]? _diskHash;
 
+        /// <summary>Stable per-instance identity (32 hex chars, valid as a RecoveryStore id); never reused.</summary>
+        public string Id { get; } = Guid.NewGuid().ToString("N");
+        /// <summary>Increments whenever the content is replaced by New/Open; edits and saves keep it.</summary>
+        public long Generation { get; private set; }
         public string? FilePath { get; private set; }
         public string Text { get; set; } = string.Empty;
         public bool IsDirty => Normalize(Text) != _savedText;
+        public string Title => FilePath == null ? "Untitled.dax" : Path.GetFileName(FilePath);
 
         public void New(string text = "", bool unsaved = false)
         {
+            Generation++;
             FilePath = null;
             _diskHash = null;
             Text = text ?? string.Empty;
@@ -35,6 +55,7 @@ namespace PbiBench.Core.Dax
             if (text.IndexOf('\0') >= 0) throw new IOException("The selected file is not a text document.");
 
             // Commit document state only after reading and decoding succeeded.
+            Generation++;
             FilePath = fullPath;
             Text = text;
             _savedText = Normalize(text);
@@ -68,6 +89,43 @@ namespace PbiBench.Core.Dax
             FilePath = fullPath;
             _diskHash = Hash(bytes);
             _savedText = Normalize(Text);
+        }
+
+        /// <summary>
+        /// Compares the file on disk with the bytes last opened or saved (SHA-256). Read-only: never
+        /// changes the document. Unreadable files are reported, not assumed unchanged.
+        /// </summary>
+        public DaxDiskState CheckDisk()
+        {
+            if (FilePath == null || _diskHash == null) return DaxDiskState.NotOnDisk;
+            try
+            {
+                if (!File.Exists(FilePath)) return DaxDiskState.Missing;
+                return Equal(Hash(ReadBounded(FilePath)), _diskHash) ? DaxDiskState.Unchanged : DaxDiskState.Changed;
+            }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is System.Security.SecurityException)
+            {
+                return DaxDiskState.Unreadable;
+            }
+        }
+
+        /// <summary>
+        /// Explicit "keep my version": the current disk bytes become the save baseline, so the next Save
+        /// to the same path may overwrite them (a deleted file may be recreated). The buffer is kept and
+        /// marked dirty because it no longer matches the disk. Returns the state that was acknowledged;
+        /// Unchanged/NotOnDisk/Unreadable change nothing.
+        /// </summary>
+        public DaxDiskState AcknowledgeExternalChange()
+        {
+            var state = CheckDisk();
+            if (state == DaxDiskState.Changed)
+            {
+                try { _diskHash = Hash(ReadBounded(FilePath!)); }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { return DaxDiskState.Unreadable; }
+            }
+            else if (state == DaxDiskState.Missing) _diskHash = null;
+            if (state == DaxDiskState.Changed || state == DaxDiskState.Missing) _savedText = ExternalBaseline;
+            return state;
         }
 
         private static byte[] ReadBounded(string path)
