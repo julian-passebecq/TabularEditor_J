@@ -131,6 +131,7 @@ namespace TabularEditor.PbiBench.Navigation
             AddProjectItems(pbiBench);
             AddReportItems(pbiBench);
             AddExploreItems(pbiBench);
+            AddMcpItems(pbiBench);
             pbiBench.DropDownOpening += (s, args) =>
             {
                 var controller = FormMain.Singleton?.UI;

@@ -12,6 +12,7 @@ namespace TabularEditor.PbiBench.Navigation
         static partial void AddProjectItems(ToolStripMenuItem root);
         static partial void AddReportItems(ToolStripMenuItem root);
         static partial void AddExploreItems(ToolStripMenuItem root);
+        static partial void AddMcpItems(ToolStripMenuItem root);
 
         /// <summary>Runs a command only while a model is loaded (shared by area partials).</summary>
         internal static ToolStripMenuItem Item(string text, System.Action<TabularEditor.UI.UIController> command)

@@ -57,7 +57,11 @@ try {
     Stage 'host-release' $msbuild @('TabularEditor/TabularEditor.csproj','/m','/t:Rebuild','/p:Configuration=Release','/p:Platform=AnyCPU','/verbosity:minimal')
     if ($HostOnlyDiagnostic -or !$hasNet10) {
         $stages.Add([pscustomobject]@{stage='core-smoke'; result=$(if ($HostOnlyDiagnostic) {'NOT_RUN_DIAGNOSTIC'} else {'BLOCKED_ENV'}); exitCode=$null; log='Requires .NET 10 SDK; target unchanged'})
-    } else { Stage 'core-smoke' $dotnet @('run','--project','PbiBench.Core.Smoke/PbiBench.Core.Smoke.csproj','-c','Release') }
+    } else {
+        Stage 'core-smoke' $dotnet @('run','--project','PbiBench.Core.Smoke/PbiBench.Core.Smoke.csproj','-c','Release')
+        # Separate read-only MCP companion; the host never references it.
+        Stage 'mcp-smoke' $dotnet @('run','--project','TE2Enhanced.Mcp/TE2Enhanced.Mcp.csproj','-c','Release','--','--self-test')
+    }
     Stage 'host-smoke-build' $dotnet @('build','PbiBench.Host.Smoke/PbiBench.Host.Smoke.csproj','-c','Release','--nologo')
     Stage 'host-smoke-run' (Join-Path $root 'PbiBench.Host.Smoke/bin/Release/net48/PbiBench.Host.Smoke.exe') @()
     $exitCode = if ($hasNet10 -or $HostOnlyDiagnostic) { 0 } else { 2 }
