@@ -7,6 +7,7 @@ on:
       - pbi-workflow-pro-v0.2
       - 'codex/stabilize-pbibench-*'
       - 'codex/pro-ai-*'
+      - 'claude/pbibench-*'
   pull_request:
     paths:
       - 'PbiBench.Core/**'

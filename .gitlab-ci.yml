@@ -1,0 +1,60 @@
+# TE2 Enhanced / PbiBench CI on the owner's local Windows runner (shell executor, PowerShell).
+# The private GitLab project is a CI mirror; the public source of truth is GitHub.
+# The runner needs VS MSBuild 17.x, .NET Framework 4.8 reference assemblies and a stable
+# system .NET SDK for legacy imports. The canonical net10 SDK and NuGet are taken from
+# PBIBENCH_DOTNET / PBIBENCH_NUGET when present, otherwise installed privately into the
+# runner cache (never globally).
+
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_COMMIT_BRANCH =~ /^(claude\/pbibench-|codex\/pro-ai-)/
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+variables:
+  GIT_DEPTH: "20"
+  PBIBENCH_DOTNET: "D:/PROJ/TabularEditor_J/.tools/dotnet/dotnet.exe"
+  PBIBENCH_NUGET: "D:/PROJ/TabularEditor_J/.tools/nuget.exe"
+  PBIBENCH_TOOL_CACHE: "C:/GitLab-Runner/cache/pbibench-tools"
+
+default:
+  tags: [local-windows]
+  interruptible: true
+
+stages: [verify, mcp]
+
+.tools: &tools
+  - $ErrorActionPreference = 'Stop'
+  - |
+    if (!(Test-Path $env:PBIBENCH_DOTNET)) {
+      $env:PBIBENCH_DOTNET = Join-Path $env:PBIBENCH_TOOL_CACHE 'dotnet/dotnet.exe'
+      if (!(Test-Path $env:PBIBENCH_DOTNET)) {
+        New-Item -ItemType Directory -Force $env:PBIBENCH_TOOL_CACHE | Out-Null
+        $installer = Join-Path $env:PBIBENCH_TOOL_CACHE 'dotnet-install.ps1'
+        Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $installer
+        & $installer -Channel 10.0 -InstallDir (Join-Path $env:PBIBENCH_TOOL_CACHE 'dotnet') -NoPath
+      }
+    }
+    if (!(Test-Path $env:PBIBENCH_NUGET)) {
+      $env:PBIBENCH_NUGET = Join-Path $env:PBIBENCH_TOOL_CACHE 'nuget.exe'
+      if (!(Test-Path $env:PBIBENCH_NUGET)) {
+        New-Item -ItemType Directory -Force $env:PBIBENCH_TOOL_CACHE | Out-Null
+        Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile $env:PBIBENCH_NUGET
+      }
+    }
+    & $env:PBIBENCH_DOTNET --version
+
+verify:
+  stage: verify
+  timeout: 45m
+  script:
+    - *tools
+    - git rev-parse HEAD | Tee-Object -FilePath ci-head.txt
+    - powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Verify-PbiBench.ps1 -DotNetPath $env:PBIBENCH_DOTNET -NuGetPath $env:PBIBENCH_NUGET -EvidenceDirectory "$env:CI_PROJECT_DIR/ci-evidence"
+    - if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+  artifacts:
+    when: always
+    expire_in: 30 days
+    paths:
+      - ci-evidence/
+      - ci-head.txt
