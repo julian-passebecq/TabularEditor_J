@@ -30,6 +30,8 @@ internal static class SemanticUsageSmoke
         SliceSmokes.Check(unresolved.Any(u => u.Reference == "[Deleted Cost]") && unresolved.Any(u => u.Reference == "Sales[Nope]") && unresolved.Any(u => u.Reference == "Calendar"), "Unresolved references found.");
         SliceSmokes.Check(!unresolved.Any(u => u.Code == PbiBench.Core.Dax.DaxDiagnosticCodes.Arity), "Arity is not an unresolved reference.");
         SliceSmokes.Check(SemanticUsageIndex.FindUnresolved("x", "x", "Expression", "[Anything]", PbiBench.Core.Dax.DaxModelNameSet.Empty).Count == 0, "No model, no unresolved claims.");
+        SliceSmokes.Check(SemanticUsageIndex.FindUnresolved("fp", "Params", "Expression", "{ (\"Amount\", NAMEOF('Sales'[Amount]), 0) }", SliceSmokes.SyntheticNames("SUM")).Count == 0,
+            "Functions newer than the pinned vocabulary (field-parameter NAMEOF) are not unresolved references.");
 
         var index = SemanticUsageIndex.Build(objects, graph, unresolved, new Dictionary<string, int> { { "visual", 2 } });
         var baseUsage = index.Measures.Single(m => m.Measure.Id == "base");

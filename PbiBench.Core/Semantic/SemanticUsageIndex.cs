@@ -90,7 +90,7 @@ namespace PbiBench.Core.Semantic
 
         /// <summary>
         /// Unresolved references in one DAX expression of one model object, using the advisory
-        /// diagnostics against a fresh model name set. Delimiter/arity findings are excluded.
+        /// diagnostics against a fresh model name set. Delimiter, arity and unknown-function findings are excluded.
         /// </summary>
         public static IReadOnlyList<SemanticUnresolvedReference> FindUnresolved(string sourceId, string sourcePath, string property,
             string expression, DaxModelNameSet names)
@@ -98,7 +98,9 @@ namespace PbiBench.Core.Semantic
             if (string.IsNullOrWhiteSpace(expression) || names == null || !names.HasModel) return Array.Empty<SemanticUnresolvedReference>();
             if (expression.Length > DaxAuthoring.MaxTextLength) return Array.Empty<SemanticUnresolvedReference>();
             return DaxDiagnostics.Analyze(expression, names)
-                .Where(d => DaxDiagnosticCodes.IsUnresolvedReference(d.Code))
+                // Unknown-function hints are excluded here: model expressions were accepted by an engine
+                // that may know functions newer than the pinned vocabulary (e.g. NAMEOF in field parameters).
+                .Where(d => DaxDiagnosticCodes.IsUnresolvedReference(d.Code) && d.Code != DaxDiagnosticCodes.UnknownFunction)
                 .Select(d => new SemanticUnresolvedReference {
                     SourceId = sourceId ?? "", SourcePath = sourcePath ?? "", Property = property ?? "", Code = d.Code,
                     Reference = d.Reference, Message = d.Message, Start = d.Start, Length = d.Length
