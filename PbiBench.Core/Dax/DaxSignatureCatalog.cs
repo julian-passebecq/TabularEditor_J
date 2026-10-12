@@ -239,7 +239,6 @@ namespace PbiBench.Core.Dax
                 f("WINDOW", "from, fromType?, to, toType?, relation?, orderBy?, blanks?, partitionBy?, matchBy?, reset?", 2, 10, Win, "Rows in a sliding window."),
                 f("ORDERBY", "expression, order?, expressionOrderPair?…", 1, U, Win, "Sort specification for window functions."),
                 f("PARTITIONBY", "column…", 1, U, Win, "Partition specification for window functions."),
-                f("MATCHBY", "column…", 1, U, Win, "Row identity specification for window functions."),
 
                 f("IF", "condition, valueIfTrue, valueIfFalse?", 2, 3, Log, "Conditional result."),
                 f("IF.EAGER", "condition, valueIfTrue, valueIfFalse?", 2, 3, Log, "IF that evaluates both branches eagerly."),
@@ -263,7 +262,6 @@ namespace PbiBench.Core.Dax
                 f("ERROR", "text", 1, 1, Inf, "Raises an error with a message."),
                 f("USERNAME", "", 0, 0, Inf, "Domain user name of the connection."),
                 f("USERPRINCIPALNAME", "", 0, 0, Inf, "User principal name of the connection."),
-                f("NAMEOF", "value", 1, 1, Inf, "Fully qualified name of a column or measure."),
                 f("EVALUATEANDLOG", "value, label?, maxRows?", 1, 3, Inf, "Returns the value and logs it for diagnostics."),
 
                 f("DIVIDE", "numerator, denominator, alternateResult?", 2, 3, Mth, "Safe division."),
