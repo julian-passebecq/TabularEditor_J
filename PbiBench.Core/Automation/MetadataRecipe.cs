@@ -129,6 +129,7 @@ namespace PbiBench.Core.Automation
             var definition = RecipeCatalog.For(operation);
             var invalid = definition.Validate(value);
             if (invalid != null) throw new ArgumentException(invalid);
+            value = definition.Normalize(value);
             var snapshot = Snapshot(source);
             var byId = snapshot.ToDictionary(x => x.Id, StringComparer.Ordinal);
             var targets = targetIds.Take(MaxChanges + 1).ToArray();

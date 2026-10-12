@@ -13,10 +13,12 @@ namespace PbiBench.Core.Automation
     public sealed class RecipeDefinition
     {
         private readonly Func<string, string?> _validate;
+        private readonly Func<string, string> _normalize;
 
         internal RecipeDefinition(string id, string title, string propertyName, MetadataRecipeOperation operation, RecipeValueKind valueKind,
-            int maxLength, bool singleTargetOnly, string help, Func<string, string?> validate)
+            int maxLength, bool singleTargetOnly, string help, Func<string, string?> validate, Func<string, string>? normalize = null)
         {
+            _normalize = normalize ?? (v => v);
             Id = id; Title = title; PropertyName = propertyName; Operation = operation; ValueKind = valueKind;
             MaxLength = maxLength; SingleTargetOnly = singleTargetOnly; Help = help; _validate = validate;
         }
@@ -39,6 +41,9 @@ namespace PbiBench.Core.Automation
             return _validate(value);
         }
 
+        /// <summary>The exact value TE2 will store (e.g. descriptions are stored with LF line breaks only).</summary>
+        public string Normalize(string value) => _normalize(value ?? "");
+
         public override string ToString() => Title;
     }
 
@@ -56,8 +61,9 @@ namespace PbiBench.Core.Automation
                 RecipeValueKind.Text, 512, false, "Static format string such as #,0.00 or 0.0%. Refused for measures with a format string expression; TE2 drops the legacy 'Format' annotation.",
                 ValidateFormatString),
             new RecipeDefinition("measure.description", "Set description", "Description", MetadataRecipeOperation.SetDescription,
-                RecipeValueKind.MultilineText, 4000, false, "Plain text shown as a tooltip; line breaks allowed.",
-                v => v.Any(c => char.IsControl(c) && c != '\r' && c != '\n' && c != '\t') ? "Description cannot contain control characters other than line breaks and tabs." : null),
+                RecipeValueKind.MultilineText, 4000, false, "Plain text shown as a tooltip; line breaks allowed (TE2 stores them as LF).",
+                v => v.Any(c => char.IsControl(c) && c != '\r' && c != '\n' && c != '\t') ? "Description cannot contain control characters other than line breaks and tabs." : null,
+                v => v.Replace("\r", "")),
             new RecipeDefinition("measure.rename", "Rename measure (with dependent preview)", "Name", MetadataRecipeOperation.Rename,
                 RecipeValueKind.Text, 512, true, "Exactly one measure. Dependent expressions TE2 will rewrite are previewed; refused when a textual reference is not tracked by TE2.",
                 ValidateName)

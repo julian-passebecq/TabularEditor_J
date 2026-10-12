@@ -114,6 +114,7 @@ internal static partial class SliceSmokes
         AutoCheck(fs.Validate("\"$#,0") != null && fs.Validate("0\n0") != null, "Invalid format strings accepted.");
         var desc = RecipeCatalog.For(MetadataRecipeOperation.SetDescription);
         AutoCheck(desc.Validate("Line 1\r\nLine 2\tend") == null && desc.Validate("bell\u0007") != null && desc.Validate(new string('d', 4001)) != null, "Description validator wrong.");
+        AutoCheck(desc.Normalize("a\r\nb") == "a\nb", "Description must be normalized to the LF form TE2 stores.");
         var name = RecipeCatalog.For(MetadataRecipeOperation.Rename);
         AutoCheck(name.Validate("Net Sales") == null && name.Validate("") != null && name.Validate(" Sales") != null && name.Validate("a\tb") != null, "Name validator wrong.");
 
