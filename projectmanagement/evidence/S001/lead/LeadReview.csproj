@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType><AssemblyName>PbiBench.Host.Smoke</AssemblyName>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems><TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms><LangVersion>10.0</LangVersion><AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <ItemGroup><Compile Include="LeadReview.cs" /></ItemGroup>
+  <ItemGroup>
+    <Reference Include="TabularEditor"><HintPath>../../../../TabularEditor/bin/Release/TabularEditor.exe</HintPath></Reference>
+    <Reference Include="PbiBench.Core"><HintPath>../../../../PbiBench.Core/bin/Release/netstandard2.0/PbiBench.Core.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

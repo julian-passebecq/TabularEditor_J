@@ -1,0 +1,147 @@
+ M .github/workflows/pbibench-foundation.yml
+ M .github/workflows/pbibench-te2-integration.yml
+ M PbiBench.Core.Smoke/Program.cs
+ M PbiBench.Core/Dax/DaxFormatterRequestPolicy.cs
+ M PbiBench.Core/Dax/DaxQueryContracts.cs
+ M README_PBIBENCH.md
+ M TabularEditor/FormMain.cs
+ M TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs
+ M TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs
+ M TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs
+ M TabularEditor/Scripting/ScriptHelper.cs
+ M TabularEditor/UIServices/DaxFormatter.cs
+ M docs/pbibench/ROADMAP.md
+ M docs/pbibench/UPSTREAM_TE2_SYNC.md
+ M docs/pbibench/V0_2_MODEL_DAX.md
+?? AGENTS.md
+?? PbiBench.Core.Smoke/DaxRetentionSmoke.cs
+?? PbiBench.Core/Dax/DaxCsvExport.cs
+?? PbiBench.Core/Dax/DaxDocument.cs
+?? PbiBench.Core/Dax/DaxResultRetention.cs
+?? PbiBench.Host.Smoke/DaxDocumentSmoke.cs
+?? PbiBench.Host.Smoke/DaxWorkbenchSmoke.cs
+?? PbiBench.Host.Smoke/FormatterExportSmoke.cs
+?? PbiBench.Host.Smoke/PbiBench.Host.Smoke.csproj
+?? PbiBench.Host.Smoke/Program.cs
+?? PbiBench.Host.Smoke/QueryLifecycleSmoke.cs
+?? Scripts/Verify-PbiBench.ps1
+?? TabularEditor/PbiBench/AssemblyInfo.cs
+?? TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.Documents.cs
+?? TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.Formatting.cs
+?? TabularEditor/PbiBench/Dax/RemoteFormatterConsent.cs
+?? docs/PBIBENCH_AUDIT_2026-09-08.md
+?? docs/pbibench/STABILIZATION_2026-09-08.md
+?? projectmanagement/ARCHITECTURE.md
+?? projectmanagement/BACKLOG.md
+?? projectmanagement/README.md
+?? projectmanagement/REGISTERS.md
+?? projectmanagement/STATUS.md
+?? projectmanagement/TEST-PLAN.md
+?? projectmanagement/WORKFLOW.md
+?? projectmanagement/evidence/S001/baseline-build/antlr-debug.log
+?? projectmanagement/evidence/S001/baseline-build/host-release.log
+?? projectmanagement/evidence/S001/baseline-build/host-smoke-build.log
+?? projectmanagement/evidence/S001/baseline-build/host-smoke-run.log
+?? projectmanagement/evidence/S001/baseline-build/restore-core.log
+?? projectmanagement/evidence/S001/baseline-build/restore-legacy.log
+?? projectmanagement/evidence/S001/baseline-build/sdks.txt
+?? projectmanagement/evidence/S001/baseline-build/summary.json
+?? projectmanagement/evidence/S001/built-artifacts.json
+?? projectmanagement/evidence/S001/core-canonical.log
+?? projectmanagement/evidence/S001/core-net9-diagnostic-final.log
+?? projectmanagement/evidence/S001/core-net9-diagnostic.csproj
+?? projectmanagement/evidence/S001/core-net9-diagnostic.log
+?? projectmanagement/evidence/S001/core-outcomes.json
+?? projectmanagement/evidence/S001/delivery-build/antlr-debug.log
+?? projectmanagement/evidence/S001/delivery-build/host-release.log
+?? projectmanagement/evidence/S001/delivery-build/host-smoke-build.log
+?? projectmanagement/evidence/S001/delivery-build/host-smoke-run.log
+?? projectmanagement/evidence/S001/delivery-build/restore-core.log
+?? projectmanagement/evidence/S001/delivery-build/restore-legacy.log
+?? projectmanagement/evidence/S001/delivery-build/sdks.txt
+?? projectmanagement/evidence/S001/delivery-build/summary.json
+?? projectmanagement/evidence/S001/developer-start.json
+?? projectmanagement/evidence/S001/developer-start.patch
+?? projectmanagement/evidence/S001/evidence-manifest.json
+?? projectmanagement/evidence/S001/expanded-build-2/antlr-debug.log
+?? projectmanagement/evidence/S001/expanded-build-2/host-release.log
+?? projectmanagement/evidence/S001/expanded-build-2/host-smoke-build.log
+?? projectmanagement/evidence/S001/expanded-build-2/host-smoke-run.log
+?? projectmanagement/evidence/S001/expanded-build-2/restore-core.log
+?? projectmanagement/evidence/S001/expanded-build-2/restore-legacy.log
+?? projectmanagement/evidence/S001/expanded-build-2/sdks.txt
+?? projectmanagement/evidence/S001/expanded-build-2/summary.json
+?? projectmanagement/evidence/S001/expanded-build/antlr-debug.log
+?? projectmanagement/evidence/S001/expanded-build/host-release.log
+?? projectmanagement/evidence/S001/expanded-build/restore-core.log
+?? projectmanagement/evidence/S001/expanded-build/restore-legacy.log
+?? projectmanagement/evidence/S001/expanded-build/sdks.txt
+?? projectmanagement/evidence/S001/expanded-build/summary.json
+?? projectmanagement/evidence/S001/expanded-smoke-3.log
+?? projectmanagement/evidence/S001/expanded-smoke-retry.log
+?? projectmanagement/evidence/S001/final-build/antlr-debug.log
+?? projectmanagement/evidence/S001/final-build/host-release.log
+?? projectmanagement/evidence/S001/final-build/host-smoke-build.log
+?? projectmanagement/evidence/S001/final-build/host-smoke-run.log
+?? projectmanagement/evidence/S001/final-build/restore-core.log
+?? projectmanagement/evidence/S001/final-build/restore-legacy.log
+?? projectmanagement/evidence/S001/final-build/sdks.txt
+?? projectmanagement/evidence/S001/final-build/summary.json
+?? projectmanagement/evidence/S001/final-git-status.txt
+?? projectmanagement/evidence/S001/final-source.json
+?? projectmanagement/evidence/S001/final-tracked.patch
+?? projectmanagement/evidence/S001/focused-build/antlr-debug.log
+?? projectmanagement/evidence/S001/focused-build/host-release.log
+?? projectmanagement/evidence/S001/focused-build/host-smoke-build.log
+?? projectmanagement/evidence/S001/focused-build/restore-core.log
+?? projectmanagement/evidence/S001/focused-build/restore-legacy.log
+?? projectmanagement/evidence/S001/focused-build/sdks.txt
+?? projectmanagement/evidence/S001/focused-build/summary.json
+?? projectmanagement/evidence/S001/implementation-build/antlr-debug.log
+?? projectmanagement/evidence/S001/implementation-build/host-release.log
+?? projectmanagement/evidence/S001/implementation-build/restore-core.log
+?? projectmanagement/evidence/S001/implementation-build/restore-legacy.log
+?? projectmanagement/evidence/S001/implementation-build/sdks.txt
+?? projectmanagement/evidence/S001/implementation-build/summary.json
+?? projectmanagement/evidence/S001/provider-timeout-properties.json
+?? projectmanagement/evidence/S001/start-files/.github/workflows/pbibench-te2-integration.yml
+?? projectmanagement/evidence/S001/start-files/AGENTS.md
+?? projectmanagement/evidence/S001/start-files/PbiBench.Core.Smoke/Program.cs
+?? projectmanagement/evidence/S001/start-files/PbiBench.Core/Dax/DaxDocument.cs
+?? projectmanagement/evidence/S001/start-files/PbiBench.Core/Dax/DaxQueryContracts.cs
+?? projectmanagement/evidence/S001/start-files/PbiBench.Host.Smoke/DaxDocumentSmoke.cs
+?? projectmanagement/evidence/S001/start-files/PbiBench.Host.Smoke/DaxWorkbenchSmoke.cs
+?? projectmanagement/evidence/S001/start-files/PbiBench.Host.Smoke/PbiBench.Host.Smoke.csproj
+?? projectmanagement/evidence/S001/start-files/PbiBench.Host.Smoke/Program.cs
+?? projectmanagement/evidence/S001/start-files/README_PBIBENCH.md
+?? projectmanagement/evidence/S001/start-files/TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs
+?? projectmanagement/evidence/S001/start-files/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.Documents.cs
+?? projectmanagement/evidence/S001/start-files/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs
+?? projectmanagement/evidence/S001/start-files/TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs
+?? projectmanagement/evidence/S001/start-files/docs/PBIBENCH_AUDIT_2026-09-08.md
+?? projectmanagement/evidence/S001/start-files/docs/pbibench/STABILIZATION_2026-09-08.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/ARCHITECTURE.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/BACKLOG.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/README.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/REGISTERS.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/STATUS.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/TEST-PLAN.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/WORKFLOW.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/handoffs/S001-DEVELOPER.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/handoffs/S001-QA.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/reviews/2026-09-08-baseline.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/reviews/S001-DECISION.md
+?? projectmanagement/evidence/S001/start-files/projectmanagement/reviews/baseline-source.json
+?? projectmanagement/evidence/S001/start-files/projectmanagement/sprints/SPRINT-001.md
+?? projectmanagement/evidence/S001/tom-results/S001-tom.trx
+?? projectmanagement/evidence/S001/upstream-te2-build.log
+?? projectmanagement/evidence/S001/upstream-tom-build.log
+?? projectmanagement/evidence/S001/upstream-tom-tests.log
+?? projectmanagement/evidence/S001/warning-comparison.json
+?? projectmanagement/handoffs/S001-DEVELOPER.md
+?? projectmanagement/handoffs/S001-LEAD-QUESTIONS.md
+?? projectmanagement/handoffs/S001-QA.md
+?? projectmanagement/reviews/2026-09-08-baseline.md
+?? projectmanagement/reviews/S001-DECISION.md
+?? projectmanagement/reviews/baseline-source.json
+?? projectmanagement/sprints/SPRINT-001.md

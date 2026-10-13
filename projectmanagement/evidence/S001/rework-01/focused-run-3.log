@@ -1,0 +1,9 @@
+Navigation.PbiBenchQuickOpenForm: construction, resize and scaled layout PASS
+Semantic.PbiBenchSemanticViewForm: construction, resize and scaled layout PASS
+Dax.PbiBenchDaxWorkbenchForm: construction, resize and scaled layout PASS
+DAX Workbench: selection, results, history, cancellation and failure recovery PASS
+DAX documents: files, conflicts, dirty state, cancelled dialogs and replacement guards PASS
+T05/T06/T07: production orchestration, cancellation/UI message, ownership, diagnostics and retained bounds PASS
+T08/T09: formatter denial/payload/script/UDF/stale/undo and atomic CSV/UI failures PASS (recording transport, no network)
+T14/T15 developer: numeric CSV/grid fidelity, document identity and expression context PASS
+PbiBench host smoke: PASS

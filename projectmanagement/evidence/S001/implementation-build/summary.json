@@ -1,0 +1,32 @@
+[
+    {
+        "stage":  "restore-legacy",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\implementation-build\\restore-legacy.log"
+    },
+    {
+        "stage":  "restore-core",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\implementation-build\\restore-core.log"
+    },
+    {
+        "stage":  "antlr-debug",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\implementation-build\\antlr-debug.log"
+    },
+    {
+        "stage":  "host-release",
+        "exitCode":  1,
+        "result":  "FAIL",
+        "log":  "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\implementation-build\\host-release.log"
+    },
+    {
+        "stage":  "verification",
+        "result":  "INCOMPLETE",
+        "exitCode":  1,
+        "log":  "Stage host-release failed; dependent stages not run."
+    }
+]

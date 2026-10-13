@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <LangVersion>10.0</LangVersion>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+  </PropertyGroup>
+  <!-- Test the built host, including its internal dialogs, without editing upstream visibility. -->
+  <ItemGroup>
+    <Reference Include="TabularEditor">
+      <HintPath>../TabularEditor/bin/$(Configuration)/TabularEditor.exe</HintPath>
+    </Reference>
+    <Reference Include="TOMWrapper">
+      <HintPath>../TOMWrapper/bin/$(Configuration)/TOMWrapper.dll</HintPath>
+    </Reference>
+    <Reference Include="PbiBench.Core">
+      <HintPath>../PbiBench.Core/bin/$(Configuration)/netstandard2.0/PbiBench.Core.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <Target Name="RequireBuiltHost" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('../TabularEditor/bin/$(Configuration)/TabularEditor.exe')"
+           Text="Build the TE2 host in the same configuration before running host smoke checks." />
+  </Target>
+</Project>

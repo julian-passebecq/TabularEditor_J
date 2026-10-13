@@ -1,0 +1,44 @@
+[
+    {
+        "stage":  "restore-legacy",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.tools\\verification-delivery\\restore-legacy.log"
+    },
+    {
+        "stage":  "restore-core",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.tools\\verification-delivery\\restore-core.log"
+    },
+    {
+        "stage":  "antlr-debug",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.tools\\verification-delivery\\antlr-debug.log"
+    },
+    {
+        "stage":  "host-release",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.tools\\verification-delivery\\host-release.log"
+    },
+    {
+        "stage":  "core-smoke",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.tools\\verification-delivery\\core-smoke.log"
+    },
+    {
+        "stage":  "host-smoke-build",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.tools\\verification-delivery\\host-smoke-build.log"
+    },
+    {
+        "stage":  "host-smoke-run",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.tools\\verification-delivery\\host-smoke-run.log"
+    }
+]

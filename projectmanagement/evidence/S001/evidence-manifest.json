@@ -1,0 +1,497 @@
+[
+  {
+    "path": "built-artifacts.json",
+    "bytes": 1500,
+    "sha256": "66C7DDA7ACBEC97C8E8160B02B8232CBED963D3341B346B3389BC0B6561DE4DF"
+  },
+  {
+    "path": "core-canonical.log",
+    "bytes": 480,
+    "sha256": "0299FFA1696DBE884AFE3A839F805AD1F65C41D9CD6459D617672FE390C3DFFA"
+  },
+  {
+    "path": "core-net9-diagnostic-final.log",
+    "bytes": 27,
+    "sha256": "93A28665C958B8768DEAB19FE024D878EA1A361D0683E91A809DA1F0A7275863"
+  },
+  {
+    "path": "core-net9-diagnostic.csproj",
+    "bytes": 438,
+    "sha256": "0BF92F568B0971E307868C74E308556ED00E002C34E8AE16C5913990B0FD9CA3"
+  },
+  {
+    "path": "core-net9-diagnostic.log",
+    "bytes": 27,
+    "sha256": "93A28665C958B8768DEAB19FE024D878EA1A361D0683E91A809DA1F0A7275863"
+  },
+  {
+    "path": "core-outcomes.json",
+    "bytes": 188,
+    "sha256": "2C9D91D81C834F3BF3497C23B7C458CEAE0C807FC7656826E6131608197F9C91"
+  },
+  {
+    "path": "developer-start.json",
+    "bytes": 4689,
+    "sha256": "4A9AA6C4B376056F8AD207CBFDBC5E2704FF5BD0C4161C49419DC82F9F9BCF29"
+  },
+  {
+    "path": "developer-start.patch",
+    "bytes": 16634,
+    "sha256": "CD04C361243959EC264FC53352E3CEC17277D804FDC9012DBF3A6FB23A702C93"
+  },
+  {
+    "path": "expanded-smoke-3.log",
+    "bytes": 674,
+    "sha256": "1C5EA77D153D538C41CFB91C64B38D454096E9441316CDF0AFA68E7C306F739C"
+  },
+  {
+    "path": "expanded-smoke-retry.log",
+    "bytes": 1173,
+    "sha256": "470CB4719662515EADADCE9557825966AD6FD48D312240A100E6A07B40EACBA3"
+  },
+  {
+    "path": "final-git-status.txt",
+    "bytes": 1209,
+    "sha256": "B227E6ECBC092E0DEE19A5B2F8FB1798A714018AC705D1401D84E5DD44411203"
+  },
+  {
+    "path": "final-source.json",
+    "bytes": 7577,
+    "sha256": "472877A06C6681CDCE415517DF7126CB0271462D01B31DD0DCC6A14B64ADA941"
+  },
+  {
+    "path": "final-tracked.patch",
+    "bytes": 75378,
+    "sha256": "E76C5F77257FEFE29E3025CE97F0685BA948D3771B730EA946ABCFE8C13E1A87"
+  },
+  {
+    "path": "provider-timeout-properties.json",
+    "bytes": 47,
+    "sha256": "3EAABB9A653A49A1E67E005B87FA8369D3561E536934B53D93FA1CD2E82D691C"
+  },
+  {
+    "path": "upstream-te2-build.log",
+    "bytes": 48652,
+    "sha256": "CC9A56298FD7DB1F11389FA73F59ABAD6CEAB8D13B2632E2680B2EAC3F820060"
+  },
+  {
+    "path": "upstream-tom-build.log",
+    "bytes": 4804,
+    "sha256": "0CD54C03566B8B1D6B20EAB9E0C24D82B670098077EDE9AC3EF8F133D88BFE35"
+  },
+  {
+    "path": "upstream-tom-tests.log",
+    "bytes": 3675,
+    "sha256": "3693DB2B458957D7EFF460849B97B7BBD762143472A87479A83111864BB90703"
+  },
+  {
+    "path": "warning-comparison.json",
+    "bytes": 77,
+    "sha256": "27FC55DCE8EDAB8F828B344585C7ED0E39B5ECE56CF5D08C214CD7482BC542E6"
+  },
+  {
+    "path": "baseline-build/antlr-debug.log",
+    "bytes": 1324,
+    "sha256": "3D7A7B887389F67219EE283CE35DFBCAF7E3ABFC2B7041EE56DF49A1416CEB2F"
+  },
+  {
+    "path": "baseline-build/host-release.log",
+    "bytes": 970022,
+    "sha256": "AABC6DE5BE90D5A4F0EA581D3D81FDD37384654D94AB8FF07204F9D0F1B55864"
+  },
+  {
+    "path": "baseline-build/host-smoke-build.log",
+    "bytes": 554,
+    "sha256": "6C9B702BB5C6A892C4A1B2D1A622E113F80105CEEA7EBF6CA420BE08D3028ABA"
+  },
+  {
+    "path": "baseline-build/host-smoke-run.log",
+    "bytes": 878,
+    "sha256": "A9CD2B752B4074FE124006AFD9128A15FAB9C20DDC4A3FC932BF9BAF23A9EE29"
+  },
+  {
+    "path": "baseline-build/restore-core.log",
+    "bytes": 166,
+    "sha256": "DDF68DB3D8D2F9572A71C51F3F3FDB8D71553978FEA549CDE378875132E4B7B4"
+  },
+  {
+    "path": "baseline-build/restore-legacy.log",
+    "bytes": 1522,
+    "sha256": "F57FD3DA55EC3E08122D57998F021CE86B497A6C2FA760AC30858B8BC4A4F010"
+  },
+  {
+    "path": "baseline-build/sdks.txt",
+    "bytes": 97,
+    "sha256": "21F3BEB70B3A3BAFA6ADD70838E0C312C0D57BA192673700552301DF0BC3E9C7"
+  },
+  {
+    "path": "baseline-build/summary.json",
+    "bytes": 1497,
+    "sha256": "A44FD9FE9AE0B888EEB3A2B88FA0298349EFD5625B28C0C0F9680F6003E7DB2C"
+  },
+  {
+    "path": "delivery-build/antlr-debug.log",
+    "bytes": 1324,
+    "sha256": "3D7A7B887389F67219EE283CE35DFBCAF7E3ABFC2B7041EE56DF49A1416CEB2F"
+  },
+  {
+    "path": "delivery-build/host-release.log",
+    "bytes": 970022,
+    "sha256": "8A61F0665424243D263F9E4098A4C2DC5A340701577735E5BFABE6B2FFCA7EAD"
+  },
+  {
+    "path": "delivery-build/host-smoke-build.log",
+    "bytes": 554,
+    "sha256": "A26B59214F64273851E95187328B7529A2A771640D42B04A06F99CDA1A2BD6AE"
+  },
+  {
+    "path": "delivery-build/host-smoke-run.log",
+    "bytes": 1350,
+    "sha256": "3497B32FA036FCCF5F7855C0E4B4DAB95DC5F61920C880688E2040B9945041D3"
+  },
+  {
+    "path": "delivery-build/restore-core.log",
+    "bytes": 166,
+    "sha256": "DDF68DB3D8D2F9572A71C51F3F3FDB8D71553978FEA549CDE378875132E4B7B4"
+  },
+  {
+    "path": "delivery-build/restore-legacy.log",
+    "bytes": 980,
+    "sha256": "EE3F1526EF6F14795035EB442D49A2D55EF50E47447D58EF95535CDBFB937481"
+  },
+  {
+    "path": "delivery-build/sdks.txt",
+    "bytes": 97,
+    "sha256": "21F3BEB70B3A3BAFA6ADD70838E0C312C0D57BA192673700552301DF0BC3E9C7"
+  },
+  {
+    "path": "delivery-build/summary.json",
+    "bytes": 1490,
+    "sha256": "BAECB0E67009E447913BCB458CEF69E4B0751D998E63AAF24F50D88C2DE7C6B4"
+  },
+  {
+    "path": "expanded-build/antlr-debug.log",
+    "bytes": 1324,
+    "sha256": "3D7A7B887389F67219EE283CE35DFBCAF7E3ABFC2B7041EE56DF49A1416CEB2F"
+  },
+  {
+    "path": "expanded-build/host-release.log",
+    "bytes": 970870,
+    "sha256": "1970E6BF46DF1BD88AE6F6B559FED8F87B7376A08556DADEA077F1E26FC76E48"
+  },
+  {
+    "path": "expanded-build/restore-core.log",
+    "bytes": 166,
+    "sha256": "DDF68DB3D8D2F9572A71C51F3F3FDB8D71553978FEA549CDE378875132E4B7B4"
+  },
+  {
+    "path": "expanded-build/restore-legacy.log",
+    "bytes": 980,
+    "sha256": "EE3F1526EF6F14795035EB442D49A2D55EF50E47447D58EF95535CDBFB937481"
+  },
+  {
+    "path": "expanded-build/sdks.txt",
+    "bytes": 97,
+    "sha256": "21F3BEB70B3A3BAFA6ADD70838E0C312C0D57BA192673700552301DF0BC3E9C7"
+  },
+  {
+    "path": "expanded-build/summary.json",
+    "bytes": 1056,
+    "sha256": "AE2D537F4016E9190E14AC79FD3F4EBE6AF50EC1D9E737E10099C26F5BEB2B93"
+  },
+  {
+    "path": "expanded-build-2/antlr-debug.log",
+    "bytes": 1324,
+    "sha256": "3D7A7B887389F67219EE283CE35DFBCAF7E3ABFC2B7041EE56DF49A1416CEB2F"
+  },
+  {
+    "path": "expanded-build-2/host-release.log",
+    "bytes": 970022,
+    "sha256": "F0AA6F70C302094CFF4D9A09B159071B6F39842D61E3A3DCF2B60EFDF1E524DE"
+  },
+  {
+    "path": "expanded-build-2/host-smoke-build.log",
+    "bytes": 554,
+    "sha256": "6C28A175C13BD190D964F54878C11AA45D2EECB663E64D94CB2A56EFA9BEE83F"
+  },
+  {
+    "path": "expanded-build-2/host-smoke-run.log",
+    "bytes": 1050,
+    "sha256": "EEE9FCC6291D08E0C2E8DF0B4C16E565BE16993EE185F5D30BB9A682F43687F5"
+  },
+  {
+    "path": "expanded-build-2/restore-core.log",
+    "bytes": 166,
+    "sha256": "DDF68DB3D8D2F9572A71C51F3F3FDB8D71553978FEA549CDE378875132E4B7B4"
+  },
+  {
+    "path": "expanded-build-2/restore-legacy.log",
+    "bytes": 980,
+    "sha256": "EE3F1526EF6F14795035EB442D49A2D55EF50E47447D58EF95535CDBFB937481"
+  },
+  {
+    "path": "expanded-build-2/sdks.txt",
+    "bytes": 97,
+    "sha256": "21F3BEB70B3A3BAFA6ADD70838E0C312C0D57BA192673700552301DF0BC3E9C7"
+  },
+  {
+    "path": "expanded-build-2/summary.json",
+    "bytes": 1440,
+    "sha256": "DB8CFDC065FAA7E8060ED6F15F93F59569926106618278867725E298B886CFB4"
+  },
+  {
+    "path": "final-build/antlr-debug.log",
+    "bytes": 1324,
+    "sha256": "4CC8B2ED1AD763409EAFE19E22F1D16F892A30D3DD3CC06FEBA271EAF4B4AF75"
+  },
+  {
+    "path": "final-build/host-release.log",
+    "bytes": 970022,
+    "sha256": "4334E82FFF01A4E4D812E3D313817E690ECC6CB005E3D063642D4B988A0E7F42"
+  },
+  {
+    "path": "final-build/host-smoke-build.log",
+    "bytes": 554,
+    "sha256": "952CD143125D7DD1CFF4B847CECE63FC8E011BAF1B385A02F54A8C7D31E681D0"
+  },
+  {
+    "path": "final-build/host-smoke-run.log",
+    "bytes": 1350,
+    "sha256": "3497B32FA036FCCF5F7855C0E4B4DAB95DC5F61920C880688E2040B9945041D3"
+  },
+  {
+    "path": "final-build/restore-core.log",
+    "bytes": 166,
+    "sha256": "DDF68DB3D8D2F9572A71C51F3F3FDB8D71553978FEA549CDE378875132E4B7B4"
+  },
+  {
+    "path": "final-build/restore-legacy.log",
+    "bytes": 980,
+    "sha256": "EE3F1526EF6F14795035EB442D49A2D55EF50E47447D58EF95535CDBFB937481"
+  },
+  {
+    "path": "final-build/sdks.txt",
+    "bytes": 97,
+    "sha256": "21F3BEB70B3A3BAFA6ADD70838E0C312C0D57BA192673700552301DF0BC3E9C7"
+  },
+  {
+    "path": "final-build/summary.json",
+    "bytes": 1472,
+    "sha256": "9907744DBE55E8A8FA715B0FA6DDD923A6DCAA8D473781D01107EA52BD0E0158"
+  },
+  {
+    "path": "focused-build/antlr-debug.log",
+    "bytes": 1324,
+    "sha256": "3D7A7B887389F67219EE283CE35DFBCAF7E3ABFC2B7041EE56DF49A1416CEB2F"
+  },
+  {
+    "path": "focused-build/host-release.log",
+    "bytes": 970386,
+    "sha256": "DD7B05F928C8C4B29A56381582BE1C9BABE87F5B4FA58248342FB51A31323F71"
+  },
+  {
+    "path": "focused-build/host-smoke-build.log",
+    "bytes": 4132,
+    "sha256": "08640DAD2EED4027B1AD9E6D5DD0B85F5637EA8A6B7C315DB4ADC35D7920838D"
+  },
+  {
+    "path": "focused-build/restore-core.log",
+    "bytes": 166,
+    "sha256": "DDF68DB3D8D2F9572A71C51F3F3FDB8D71553978FEA549CDE378875132E4B7B4"
+  },
+  {
+    "path": "focused-build/restore-legacy.log",
+    "bytes": 980,
+    "sha256": "EE3F1526EF6F14795035EB442D49A2D55EF50E47447D58EF95535CDBFB937481"
+  },
+  {
+    "path": "focused-build/sdks.txt",
+    "bytes": 97,
+    "sha256": "21F3BEB70B3A3BAFA6ADD70838E0C312C0D57BA192673700552301DF0BC3E9C7"
+  },
+  {
+    "path": "focused-build/summary.json",
+    "bytes": 1456,
+    "sha256": "88D98AF9C12363AD566F1B6EC4B0588D39E639BAD01985FAFD5D5D94EB631875"
+  },
+  {
+    "path": "implementation-build/antlr-debug.log",
+    "bytes": 1324,
+    "sha256": "3D7A7B887389F67219EE283CE35DFBCAF7E3ABFC2B7041EE56DF49A1416CEB2F"
+  },
+  {
+    "path": "implementation-build/host-release.log",
+    "bytes": 970742,
+    "sha256": "390CB256B6B2108F2E8D1072966AD7A36B3A1B4E8512BF4234147A051B6E764E"
+  },
+  {
+    "path": "implementation-build/restore-core.log",
+    "bytes": 166,
+    "sha256": "DDF68DB3D8D2F9572A71C51F3F3FDB8D71553978FEA549CDE378875132E4B7B4"
+  },
+  {
+    "path": "implementation-build/restore-legacy.log",
+    "bytes": 980,
+    "sha256": "EE3F1526EF6F14795035EB442D49A2D55EF50E47447D58EF95535CDBFB937481"
+  },
+  {
+    "path": "implementation-build/sdks.txt",
+    "bytes": 97,
+    "sha256": "21F3BEB70B3A3BAFA6ADD70838E0C312C0D57BA192673700552301DF0BC3E9C7"
+  },
+  {
+    "path": "implementation-build/summary.json",
+    "bytes": 1080,
+    "sha256": "DECFAD335C086D2B56405F70C00DA9C78943263ECBFD100836E6CE0B4E69C690"
+  },
+  {
+    "path": "start-files/AGENTS.md",
+    "bytes": 1949,
+    "sha256": "2DAE833F879135455FBCCB6AB16EF977C410DD68F651356CE09F9CA779F2F679"
+  },
+  {
+    "path": "start-files/README_PBIBENCH.md",
+    "bytes": 2726,
+    "sha256": "B334A6FA448952871E5ACA738E54144614FBDEE26E15471AF71CA7C3A2F30B7A"
+  },
+  {
+    "path": "start-files/.github/workflows/pbibench-te2-integration.yml",
+    "bytes": 1959,
+    "sha256": "54FDDFD5427B64DE28518B2D6F33841E050F51F3E8A12B694E8C3CE4B0737BA1"
+  },
+  {
+    "path": "start-files/docs/PBIBENCH_AUDIT_2026-09-08.md",
+    "bytes": 20807,
+    "sha256": "DE28C37227AC5C545A044DEEFD763071F0A9224B35603A5A92A00529497F96D8"
+  },
+  {
+    "path": "start-files/docs/pbibench/STABILIZATION_2026-09-08.md",
+    "bytes": 7220,
+    "sha256": "71CAF1218499B602174A0F088FB0B5935BA4214211AAACA24AC42C444FE97E84"
+  },
+  {
+    "path": "start-files/PbiBench.Core/Dax/DaxDocument.cs",
+    "bytes": 3894,
+    "sha256": "6264DF1CA4B507F1EA45F2B0F14A4AA89C6DC9743440D07D1FAB11E259A763FA"
+  },
+  {
+    "path": "start-files/PbiBench.Core/Dax/DaxQueryContracts.cs",
+    "bytes": 6653,
+    "sha256": "7973FC1394D50D55346FCCB4B49E1B035C3DB6ECB9FB0D1285620E8D3A06A6B3"
+  },
+  {
+    "path": "start-files/PbiBench.Core.Smoke/Program.cs",
+    "bytes": 12451,
+    "sha256": "E36A62D44E14D21828E6909631D4CEE3B2A9E2CDA15429704CCE900C9F0B1815"
+  },
+  {
+    "path": "start-files/PbiBench.Host.Smoke/DaxDocumentSmoke.cs",
+    "bytes": 7716,
+    "sha256": "E752218C91D1B92AFE9847645779303A399D5A4D322018A43FF2FF3214DC1952"
+  },
+  {
+    "path": "start-files/PbiBench.Host.Smoke/DaxWorkbenchSmoke.cs",
+    "bytes": 6821,
+    "sha256": "0EB455EEBBD5F977F8CF38B280EF75999AC34E147BB344F614AB6A5425B9AEB1"
+  },
+  {
+    "path": "start-files/PbiBench.Host.Smoke/PbiBench.Host.Smoke.csproj",
+    "bytes": 1137,
+    "sha256": "BA482997568444B4FDB4656B9B39D54420860820D10FC8EEEF25FA8D06C0EC23"
+  },
+  {
+    "path": "start-files/PbiBench.Host.Smoke/Program.cs",
+    "bytes": 3811,
+    "sha256": "A8FB3F9E0181F9F7A2D33AB2B8D16269C92BFAAB78FE7983484FBB5B79E3C85B"
+  },
+  {
+    "path": "start-files/projectmanagement/ARCHITECTURE.md",
+    "bytes": 10414,
+    "sha256": "2635A55944A849C225502A9A6C9BCF0C10229952948E569B5C995B65564BFD45"
+  },
+  {
+    "path": "start-files/projectmanagement/BACKLOG.md",
+    "bytes": 8875,
+    "sha256": "49D0B56A21DD739C627EA2BB51E003A7ABA1DB9E9244200126D1105C351AA535"
+  },
+  {
+    "path": "start-files/projectmanagement/README.md",
+    "bytes": 4247,
+    "sha256": "C381C2BC7D91583C4459B6050A978CB587CD0E50AFB3D512AC7734D049FB7207"
+  },
+  {
+    "path": "start-files/projectmanagement/REGISTERS.md",
+    "bytes": 5932,
+    "sha256": "E59265DA479C61CF8424BEBE58B2F60524A0BA47DD7CCE61E0439E11D13190F4"
+  },
+  {
+    "path": "start-files/projectmanagement/STATUS.md",
+    "bytes": 2675,
+    "sha256": "BB2048816128AF24A50FCB4155686EE98ADDDFB23138FEB1A2AFCD8B90174B4C"
+  },
+  {
+    "path": "start-files/projectmanagement/TEST-PLAN.md",
+    "bytes": 9018,
+    "sha256": "EDD80D6EC6A3A22AFAC77388BB68DF6A28187D9DBB181F2D42202FF4DA8391C3"
+  },
+  {
+    "path": "start-files/projectmanagement/WORKFLOW.md",
+    "bytes": 8874,
+    "sha256": "954BE32B7DA968B573800E1556164BABC57FDF068AB7275841F6F3AD31D4B06D"
+  },
+  {
+    "path": "start-files/projectmanagement/handoffs/S001-DEVELOPER.md",
+    "bytes": 2754,
+    "sha256": "520D26B575051D14B04DD30E7A29F7D0755AFC688A0C429ACCE49FBEA94FE0A3"
+  },
+  {
+    "path": "start-files/projectmanagement/handoffs/S001-QA.md",
+    "bytes": 2924,
+    "sha256": "C3DC339CDA2ACC10E098BDBABFCCD2DC39A76E7E7F0333189E455F2E7D02CB30"
+  },
+  {
+    "path": "start-files/projectmanagement/reviews/2026-09-08-baseline.md",
+    "bytes": 8050,
+    "sha256": "16F6DC0F8467AC8F0231287B17950AA9FF0556D3D6A34C9DE5C97DA5752C01F3"
+  },
+  {
+    "path": "start-files/projectmanagement/reviews/baseline-source.json",
+    "bytes": 5402,
+    "sha256": "D0AAF0CF4A02D83D8FF6F0AFD35EE5AC2E1D4CDCC3553B0699CB6499F0CB908A"
+  },
+  {
+    "path": "start-files/projectmanagement/reviews/S001-DECISION.md",
+    "bytes": 1760,
+    "sha256": "C8980E1170668742BA27D9877A3281C1705DD4A0C20D5012AC9EC543C373C102"
+  },
+  {
+    "path": "start-files/projectmanagement/sprints/SPRINT-001.md",
+    "bytes": 14081,
+    "sha256": "BA906B3C02AD576F9EFDA77BC86F22F7A9EF8A70BB008AE634353F51429477DA"
+  },
+  {
+    "path": "start-files/TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs",
+    "bytes": 10026,
+    "sha256": "56CB2A6BC38167150549951BD9B2312C66E42D8E6F3BBEC0C1E8064684AB242E"
+  },
+  {
+    "path": "start-files/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs",
+    "bytes": 19526,
+    "sha256": "92560BA1479EB633EDC71D032F4FA5F2093B8E977BE8F314280122DCC880FAFB"
+  },
+  {
+    "path": "start-files/TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.Documents.cs",
+    "bytes": 5912,
+    "sha256": "E79D9F4B5079EA5CD6630A8F3234C6C608927FF47B1B07D5EBBF3FA5D508062E"
+  },
+  {
+    "path": "start-files/TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs",
+    "bytes": 14820,
+    "sha256": "44CBE7510C55FD4B37E7239097DFAAA5C16AB7DBA06DAD9C5CB79993F7027B33"
+  },
+  {
+    "path": "tom-results/S001-tom.trx",
+    "bytes": 16957,
+    "sha256": "57AA6775F5FB93A10A4860B0C8CAFEDC614AD122FF640E1228EE9F68AD4E5085"
+  }
+]

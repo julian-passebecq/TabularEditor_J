@@ -1,0 +1,17 @@
+[
+  {
+    "Path": "D:\\PROJ\\TabularEditor_J\\TabularEditor\\bin\\Release\\TabularEditor.exe",
+    "Hash": "E6F589764FA5E43BBE28727E4678C54B362F71086519CD030C0A6976540ACD25",
+    "Algorithm": "SHA256"
+  },
+  {
+    "Path": "D:\\PROJ\\TabularEditor_J\\PbiBench.Core\\bin\\Release\\netstandard2.0\\PbiBench.Core.dll",
+    "Hash": "98852B11B0376B515E816DA84F20FFE62691A44D688F9DDE2523DC3AE3859D92",
+    "Algorithm": "SHA256"
+  },
+  {
+    "Path": "D:\\PROJ\\TabularEditor_J\\PbiBench.Host.Smoke\\bin\\Release\\net48\\PbiBench.Host.Smoke.exe",
+    "Hash": "2C16D10E1D0834922CEDC83D20E498E0FE69BD897BF913C63ABAA266DDB2B6A6",
+    "Algorithm": "SHA256"
+  }
+]

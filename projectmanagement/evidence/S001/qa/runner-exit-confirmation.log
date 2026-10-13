@@ -1,0 +1,18 @@
+restore-legacy : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa\build-exit-confirmation\restore-legacy.log)
+restore-core : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa\build-exit-confirmation\restore-core.log)
+antlr-debug : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa\build-exit-confirmation\antlr-debug.log)
+host-release : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa\build-exit-confirmation\host-release.log)
+host-smoke-build : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa\build-exit-confirmation\host-smoke-build.log)
+host-smoke-run : exit 0 (D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa\build-exit-confirmation\host-smoke-run.log)
+
+stage            result      exitCode
+-----            ------      --------
+restore-legacy   PASS               0
+restore-core     PASS               0
+antlr-debug      PASS               0
+host-release     PASS               0
+core-smoke       BLOCKED_ENV         
+host-smoke-build PASS               0
+host-smoke-run   PASS               0
+
+

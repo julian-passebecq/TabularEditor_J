@@ -28,12 +28,15 @@ namespace TabularEditor.UI
         }
 
         private IExpressionObject _expressionEditor_Current = null;
+        // Context identity is independent of text; transitions away and back invalidate work.
+        internal long ExpressionEditorContextGeneration { get; private set; }
         public IExpressionObject ExpressionEditor_Current {
             get {
                 return _expressionEditor_Current;    
             }
             set
             {
+                ExpressionEditorContextGeneration++;
                 if (_expressionEditor_Current != null) _expressionEditor_Current.PropertyChanged -= ExpressionEditor_Current_PropertyChanged;
                 _expressionEditor_Current = value;
                 if (_expressionEditor_Current != null) _expressionEditor_Current.PropertyChanged += ExpressionEditor_Current_PropertyChanged;
@@ -87,6 +90,7 @@ namespace TabularEditor.UI
 
         private void ExpressionEditor_ExpressionSelectorChanged(object sender, EventArgs e)
         {
+            ExpressionEditorContextGeneration++;
             if (ExpressionEditor_Current is IDaxDependantObject)
             {
                 SetText(UI.ExpressionEditor.Text, LastDaxProperty);

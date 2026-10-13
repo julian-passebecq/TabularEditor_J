@@ -1,0 +1,51 @@
+VSTest version 17.12.0 (x64)
+
+Starting test execution, please wait...
+A total of 1 test files matched the specified pattern.
+  Passed HierarchyTest [1 s]
+  Passed HierarchyTest2 [17 ms]
+  Failed ResetTest [614 ms]
+  Error Message:
+   Test method TabularEditor.TOMWrapper.ObjectHandlingTests.ResetTest threw exception: 
+System.TypeInitializationException: The type initializer for 'TOMWrapperTest.Constants' threw an exception. ---> Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test Server not specified. Please set environment variable TE_TestServer with the connection string of the AS engine server to use for testing
+  Stack Trace:
+     at TOMWrapperTest.Constants.GetServerName() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 16
+   at TOMWrapperTest.Constants..cctor() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 12
+--- End of inner exception stack trace ---
+    at TabularEditor.TOMWrapper.ObjectHandlingTests.ResetAndConnect() in D:\PROJ\TabularEditor_J\TOMWrapperTest\ObjectHandlingTests.cs:line 154
+   at TabularEditor.TOMWrapper.ObjectHandlingTests.ResetTest() in D:\PROJ\TabularEditor_J\TOMWrapperTest\ObjectHandlingTests.cs:line 163
+
+  Failed DeleteTableTest [29 ms]
+  Error Message:
+   Test method TabularEditor.TOMWrapper.ObjectHandlingTests.DeleteTableTest threw exception: 
+System.TypeInitializationException: The type initializer for 'TOMWrapperTest.Constants' threw an exception. ---> Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test Server not specified. Please set environment variable TE_TestServer with the connection string of the AS engine server to use for testing
+  Stack Trace:
+     at TOMWrapperTest.Constants.GetServerName() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 16
+   at TOMWrapperTest.Constants..cctor() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 12
+--- End of inner exception stack trace ---
+    at TabularEditor.TOMWrapper.ObjectHandlingTests.ResetAndConnect() in D:\PROJ\TabularEditor_J\TOMWrapperTest\ObjectHandlingTests.cs:line 154
+   at TabularEditor.TOMWrapper.ObjectHandlingTests.DeleteTableTest() in D:\PROJ\TabularEditor_J\TOMWrapperTest\ObjectHandlingTests.cs:line 170
+
+  Failed BatchActionTest [1 ms]
+  Error Message:
+   Test method TabularEditor.TOMWrapper.Tests.UndoManagerTests.BatchActionTest threw exception: 
+System.TypeInitializationException: The type initializer for 'TOMWrapperTest.Constants' threw an exception. ---> Microsoft.VisualStudio.TestTools.UnitTesting.AssertFailedException: Assert.Fail failed. Test Server not specified. Please set environment variable TE_TestServer with the connection string of the AS engine server to use for testing
+  Stack Trace:
+     at TOMWrapperTest.Constants.GetServerName() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 16
+   at TOMWrapperTest.Constants..cctor() in D:\PROJ\TabularEditor_J\TOMWrapperTest\Constants.cs:line 12
+--- End of inner exception stack trace ---
+    at TabularEditor.TOMWrapper.Tests.UndoManagerTests.BatchActionTest() in D:\PROJ\TabularEditor_J\TOMWrapperTest\UndoManagerTests.cs:line 20
+
+  Passed UndoRedoCopyPerspectiveTest [39 ms]
+  Passed UndoRedoCopyCultureTest [10 ms]
+  Passed UndoDeleteColumnUsedAsLevelTest [9 ms]
+  Passed UndoDeleteSortByColumnTest [2 ms]
+  Passed RecreateFromMetadataPerformanceTest [5 s]
+  Passed TestUndoStackDepth [35 ms]
+Results File: D:\PROJ\TabularEditor_J\projectmanagement\evidence\S001\qa\tom-results\S001-qa-tom.trx
+
+Test Run Failed.
+Total tests: 11
+     Passed: 8
+     Failed: 3
+ Total time: 8.9534 Seconds

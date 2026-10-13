@@ -1,0 +1,4 @@
+{
+  "runnerExit": 2,
+  "reason": "Confirm child exit separately from PowerShell wrapper boolean exit mapping"
+}

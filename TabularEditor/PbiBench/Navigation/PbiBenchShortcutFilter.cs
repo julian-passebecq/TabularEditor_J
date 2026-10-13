@@ -1,0 +1,156 @@
+using System;
+using System.Windows.Forms;
+using TabularEditor.UI;
+
+namespace TabularEditor.PbiBench.Navigation
+{
+    /// <summary>
+    /// Application-lifetime command host for the isolated PbiBench layer. It owns keyboard
+    /// routing and installs a small Tools > PbiBench menu at runtime, avoiding edits to the
+    /// upstream FormMain implementation and WinForms designer.
+    /// </summary>
+    internal sealed partial class PbiBenchShortcutFilter : IMessageFilter
+    {
+        private const int WmKeyDown = 0x0100;
+        private const string MenuName = "pbiBenchToolStripMenuItem";
+        private static PbiBenchShortcutFilter _instance;
+
+        private PbiBenchShortcutFilter()
+        {
+            Application.Idle += EnsureMenuOnIdle;
+        }
+
+        public static PbiBenchShortcutFilter Install()
+        {
+            if (_instance != null) return _instance;
+
+            _instance = new PbiBenchShortcutFilter();
+            Application.AddMessageFilter(_instance);
+            return _instance;
+        }
+
+        public bool PreFilterMessage(ref Message m)
+        {
+            if (m.Msg != WmKeyDown) return false;
+            if ((Keys)(int)m.WParam != Keys.P) return false;
+
+            var modifiers = Control.ModifierKeys;
+            if ((modifiers & Keys.Control) != Keys.Control) return false;
+            if ((modifiers & Keys.Alt) == Keys.Alt) return false;
+
+            var form = FormMain.Singleton;
+            if (form == null || form.IsDisposed || !ReferenceEquals(Form.ActiveForm, form))
+                return false;
+
+            var controller = form.UI;
+            if (controller?.Handler?.Model == null) return false;
+
+            if ((modifiers & Keys.Shift) == Keys.Shift)
+            {
+                controller.PbiBench_ShowSemanticView();
+                return true;
+            }
+
+            controller.PbiBench_ShowQuickOpen();
+            return true;
+        }
+
+        private void EnsureMenuOnIdle(object sender, EventArgs e)
+        {
+            var form = FormMain.Singleton;
+            if (form == null || form.IsDisposed || form.MainMenuStrip == null) return;
+
+            ToolStripMenuItem toolsMenu = null;
+            foreach (ToolStripItem item in form.MainMenuStrip.Items)
+            {
+                var candidate = item as ToolStripMenuItem;
+                if (candidate != null && string.Equals(candidate.Name, "toolsToolStripMenuItem", StringComparison.Ordinal))
+                {
+                    toolsMenu = candidate;
+                    break;
+                }
+            }
+
+            if (toolsMenu == null) return;
+
+            foreach (ToolStripItem item in toolsMenu.DropDownItems)
+            {
+                if (string.Equals(item.Name, MenuName, StringComparison.Ordinal))
+                {
+                    Application.Idle -= EnsureMenuOnIdle;
+                    return;
+                }
+            }
+
+            var pbiBench = new ToolStripMenuItem
+            {
+                Name = MenuName,
+                Text = "PbiBench"
+            };
+
+            var quickOpen = new ToolStripMenuItem
+            {
+                Name = "pbiBenchQuickOpenToolStripMenuItem",
+                Text = "Quick Open",
+                ShortcutKeyDisplayString = "Ctrl+P"
+            };
+            quickOpen.Click += (s, args) => RunCommand(c => c.PbiBench_ShowQuickOpen());
+
+            var semanticView = new ToolStripMenuItem
+            {
+                Name = "pbiBenchSemanticViewToolStripMenuItem",
+                Text = "Semantic View",
+                ShortcutKeyDisplayString = "Ctrl+Shift+P"
+            };
+            semanticView.Click += (s, args) => RunCommand(c => c.PbiBench_ShowSemanticView());
+
+            var daxWorkbench = new ToolStripMenuItem
+            {
+                Name = "pbiBenchDaxWorkbenchToolStripMenuItem",
+                Text = "DAX Workbench"
+            };
+            daxWorkbench.Click += (s, args) => RunCommand(c => c.PbiBench_ShowDaxWorkbench());
+
+            pbiBench.DropDownItems.Add(quickOpen);
+            pbiBench.DropDownItems.Add(semanticView);
+            pbiBench.DropDownItems.Add(new ToolStripSeparator());
+            pbiBench.DropDownItems.Add(daxWorkbench);
+            var project = new ToolStripMenuItem("Project (read-only)…");
+            project.Click += (s, args) => RunCommand(c => c.PbiBench_ShowProject());
+            pbiBench.DropDownItems.Add(project);
+            var recipes = new ToolStripMenuItem("Reviewed metadata recipes…");
+            recipes.Click += (s, args) => RunCommand(c => c.PbiBench_ShowRecipes());
+            pbiBench.DropDownItems.Add(recipes);
+            var preview = new ToolStripMenuItem("Table preview query…");
+            preview.Click += (s, args) => RunCommand(c => c.PbiBench_ShowTablePreview());
+            pbiBench.DropDownItems.Add(preview);
+            // Each product area contributes its items from its own PbiBenchMenu.<Area>.cs partial.
+            AddDaxItems(pbiBench);
+            AddDaxWorkspaceItems(pbiBench);
+            AddAutomationItems(pbiBench);
+            AddProjectItems(pbiBench);
+            AddReportItems(pbiBench);
+            AddExploreItems(pbiBench);
+            AddMcpItems(pbiBench);
+            pbiBench.DropDownOpening += (s, args) =>
+            {
+                var controller = FormMain.Singleton?.UI;
+                var modelAvailable = controller?.Handler?.Model != null;
+                quickOpen.Enabled = modelAvailable;
+                semanticView.Enabled = modelAvailable;
+                daxWorkbench.Enabled = modelAvailable;
+            };
+
+            toolsMenu.DropDownItems.Add(new ToolStripSeparator());
+            toolsMenu.DropDownItems.Add(pbiBench);
+            Application.Idle -= EnsureMenuOnIdle;
+        }
+
+        private static void RunCommand(Action<UIController> command)
+        {
+            var controller = FormMain.Singleton?.UI;
+            if (controller?.Handler?.Model == null) return;
+            command(controller);
+        }
+    }
+}

@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net9.0</TargetFramework><EnableDefaultCompileItems>false</EnableDefaultCompileItems></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../../PbiBench.Core.Smoke/*.cs" />
+    <Reference Include="PbiBench.Core"><HintPath>../../../PbiBench.Core/bin/Release/netstandard2.0/PbiBench.Core.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>

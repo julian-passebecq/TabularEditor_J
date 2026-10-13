@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Separate local MCP companion. Nothing in the TE2 host references it; it reads only the
+       published read-only snapshot (PbiBench.Core ModelSnapshotV1). Not part of TabularEditor.sln. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <!-- net8.0 + RollForward=Major: runs on any installed .NET 8+ runtime (built by the net10 SDK). -->
+    <TargetFramework>net8.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AssemblyName>TE2Enhanced.Mcp</AssemblyName>
+    <RootNamespace>TE2Enhanced.Mcp</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+  <!-- Release builds ship no absolute build path (Light QA D12): deterministic output and source/PDB paths
+       mapped to /_/ (the PDB path recorded in the DLL included). -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <Deterministic>true</Deterministic>
+    <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))=/_/</PathMap>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PbiBench.Core\PbiBench.Core.csproj" />
+  </ItemGroup>
+</Project>

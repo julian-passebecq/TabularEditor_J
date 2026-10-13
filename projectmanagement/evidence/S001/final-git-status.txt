@@ -1,0 +1,29 @@
+ M .github/workflows/pbibench-foundation.yml
+ M .github/workflows/pbibench-te2-integration.yml
+ M PbiBench.Core.Smoke/Program.cs
+ M PbiBench.Core/Dax/DaxFormatterRequestPolicy.cs
+ M PbiBench.Core/Dax/DaxQueryContracts.cs
+ M README_PBIBENCH.md
+ M TabularEditor/FormMain.cs
+ M TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs
+ M TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs
+ M TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs
+ M TabularEditor/Scripting/ScriptHelper.cs
+ M TabularEditor/UIServices/DaxFormatter.cs
+ M docs/pbibench/ROADMAP.md
+ M docs/pbibench/UPSTREAM_TE2_SYNC.md
+ M docs/pbibench/V0_2_MODEL_DAX.md
+?? AGENTS.md
+?? PbiBench.Core.Smoke/DaxRetentionSmoke.cs
+?? PbiBench.Core/Dax/DaxCsvExport.cs
+?? PbiBench.Core/Dax/DaxDocument.cs
+?? PbiBench.Core/Dax/DaxResultRetention.cs
+?? PbiBench.Host.Smoke/
+?? Scripts/Verify-PbiBench.ps1
+?? TabularEditor/PbiBench/AssemblyInfo.cs
+?? TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.Documents.cs
+?? TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.Formatting.cs
+?? TabularEditor/PbiBench/Dax/RemoteFormatterConsent.cs
+?? docs/PBIBENCH_AUDIT_2026-09-08.md
+?? docs/pbibench/STABILIZATION_2026-09-08.md
+?? projectmanagement/

@@ -1,0 +1,18 @@
+* codex/stabilize-pbibench-v02                      a7317e7 [origin/pbi-workflow-pro-v0.2] pbibench v0.2: add DAX workbench and AMO query adapter
+  master                                            7029129 [origin/master] Update README.md
+  remotes/origin/HEAD                               -> origin/master
+  remotes/origin/master                             7029129 Update README.md
+  remotes/origin/pbi-workflow-pro-v0.1              b717ba8 pbibench: restore smoke project before running CI
+  remotes/origin/pbi-workflow-pro-v0.2              a7317e7 pbibench v0.2: add DAX workbench and AMO query adapter
+  remotes/upstream/DLB/SeverityInBPA                ca14f73 Add severity to BPA window
+  remotes/upstream/HEAD                             -> upstream/master
+  remotes/upstream/feature/2.13.0                   e83f829 Updated version no
+  remotes/upstream/feature/docsMigration            2614cb1 change
+  remotes/upstream/feature/impr                     96ef669 added xmldoc
+  remotes/upstream/feature/refreshPolicies          65a4b41 support for refresh policies (WIP)
+  remotes/upstream/master                           7029129 Update README.md
+  remotes/upstream/udf-support                      3a17cc9 don't generate invalid names for functions - also, check that the name is valid when it is changed later on
+  remotes/upstream/user-mol/hyphenfixpowerbidesktop 7936293 Fix hyphen issue
+  remotes/upstream/user-mol/issue1319               299ca1c Fix issue
+  remotes/upstream/user-mol/selectedapi             005a717 Selected updates
+  remotes/upstream/user-mol/udfserialization        f296018 UDF serialization implementation

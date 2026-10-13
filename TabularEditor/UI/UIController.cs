@@ -31,7 +31,12 @@ namespace TabularEditor.UI
 
         public event EventHandler ModelLoaded;
 
-        public TabularModelHandler Handler { get; private set; }
+        private TabularModelHandler _handler;
+        public TabularModelHandler Handler
+        {
+            get => _handler;
+            private set { ExpressionEditorContextGeneration++; _handler = value; }
+        }
         public TabularUITree TreeModel { get; private set; }
 
         private UITreeSelection _selection;

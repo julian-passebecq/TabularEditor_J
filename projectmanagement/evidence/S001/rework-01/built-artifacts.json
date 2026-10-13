@@ -1,0 +1,27 @@
+[
+  {
+    "path": "TabularEditor/bin/Release/TabularEditor.exe",
+    "lastWriteUtc": "2026-09-08T21:34:49.7182128Z",
+    "sha256": "0F57814ED164B88132FA6AED994EB3CDCC4F20AE6F5B8CC11EB782C449DD0480"
+  },
+  {
+    "path": "PbiBench.Host.Smoke/bin/Release/net48/TabularEditor.exe",
+    "lastWriteUtc": "2026-09-08T21:34:49.7182128Z",
+    "sha256": "0F57814ED164B88132FA6AED994EB3CDCC4F20AE6F5B8CC11EB782C449DD0480"
+  },
+  {
+    "path": "PbiBench.Host.Smoke/bin/Release/net48/PbiBench.Host.Smoke.exe",
+    "lastWriteUtc": "2026-09-08T21:37:06.3485943Z",
+    "sha256": "F5B6EFE3D5C5FE5FD4082BC4A2BDD04DCED093F9A0D209337F720E7F626569D2"
+  },
+  {
+    "path": "PbiBench.Core/bin/Release/netstandard2.0/PbiBench.Core.dll",
+    "lastWriteUtc": "2026-09-08T21:34:47.2857359Z",
+    "sha256": "DE2391C57D19960957B2823657D3063440575293C3125C09CC2A2599F7A086F3"
+  },
+  {
+    "path": "PbiBench.Host.Smoke/bin/Release/net48/PbiBench.Core.dll",
+    "lastWriteUtc": "2026-09-08T21:34:47.2857359Z",
+    "sha256": "DE2391C57D19960957B2823657D3063440575293C3125C09CC2A2599F7A086F3"
+  }
+]

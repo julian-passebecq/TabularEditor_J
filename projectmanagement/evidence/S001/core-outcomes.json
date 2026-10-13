@@ -1,0 +1,5 @@
+{
+  "diagnosticNet9Exit": 0,
+  "note": "Separate net9 project references built Core and links unchanged canonical sources; repository targets not overridden.",
+  "canonicalExit": 1
+}

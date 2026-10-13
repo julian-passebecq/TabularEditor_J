@@ -226,7 +226,7 @@ namespace TabularEditor.Scripting
         [ScriptMethod][Obsolete]
         public static string FormatDax(string dax, bool shortFormat = false, bool skipSpaceAfterFunctionName = false)
         {
-            if (Policies.Instance.DisableWebDaxFormatter) throw new Exception("DAX formatting disabled through policy.");
+            TabularEditor.PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
 
             daxFormatterDirectCalls++;
             if(daxFormatterDirectCalls > 3 && !daxFormatterWarningShown)
@@ -285,7 +285,7 @@ namespace TabularEditor.Scripting
         [ScriptMethod]
         public static void FormatDax(this IDaxDependantObject obj)
         {
-            if (Policies.Instance.DisableWebDaxFormatter) throw new Exception("DAX formatting disabled through policy.");
+            TabularEditor.PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
             objectsFlaggedForFormatting.Add(obj);
         }
 
@@ -352,7 +352,7 @@ namespace TabularEditor.Scripting
             }
             if (expressions.Count == 0) return;
 
-            if (Policies.Instance.DisableWebDaxFormatter) throw new Exception("DAX formatting disabled through policy.");
+            TabularEditor.PbiBench.Dax.RemoteFormatterConsent.RequireEnabled();
 
             var formatResult = DaxFormatter.FormatDaxMulti(expressions, false, shortFormat, skipSpaceAfterFunctionName ?? Preferences.Current.DaxFormatterSkipSpaceAfterFunctionName);
 

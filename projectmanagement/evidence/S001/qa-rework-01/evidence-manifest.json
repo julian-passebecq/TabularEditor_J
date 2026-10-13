@@ -1,0 +1,110 @@
+[
+  {
+    "sha256": "819F9EBCFA74DD7C1EE7FDD7B821AFF680C6C4DF7DC38101D69674C790B7304E",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\built-artifacts.json"
+  },
+  {
+    "sha256": "ADF9E2660EBDF17BFBDEE9B5A7E4226A2A59B026B31B2C382775FDD2BE80A800",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\diff-check.log"
+  },
+  {
+    "sha256": "4B4455EB430E90A2D7F227E8E9573193065A4D7C1FCBEE6036953D458F115905",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\extended-build-final.log"
+  },
+  {
+    "sha256": "4826A9D32B6F72B1C2FE9537E8B4D5EA90BCBA2797A0E64405CABA3D56AB2ED3",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\extended-build.log"
+  },
+  {
+    "sha256": "8A7BC1A41CA9B0D198F1211B1BF464E1587B55F7D6E61A15B7B1B0A12CB6D4A8",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\extended-results-final.json"
+  },
+  {
+    "sha256": "86A9D420260CFAA89563DE982693F5B82DFE8DE7855F2A3E752FDEDF554B2C83",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\extended-results.json"
+  },
+  {
+    "sha256": "22F969EE596D02DA7D6CD6CCAA22F7C10BB78216AEEB15B2D888445D247C1289",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\extended-run-final.log"
+  },
+  {
+    "sha256": "3AAEF12EE18B95FBFD8D53B07BC198B18C8555F71FB5E6F5B002DB49C57D8099",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\extended-run-initial-fixture-error.log"
+  },
+  {
+    "sha256": "3AAEF12EE18B95FBFD8D53B07BC198B18C8555F71FB5E6F5B002DB49C57D8099",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\extended-run.log"
+  },
+  {
+    "sha256": "F6ED8AFA8E263E5DAE1024A3E5068A85A4C047051235BD02D13E303E2D450D0C",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\ExtendedRework.cs"
+  },
+  {
+    "sha256": "ADF9E2660EBDF17BFBDEE9B5A7E4226A2A59B026B31B2C382775FDD2BE80A800",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\final-diff-check.log"
+  },
+  {
+    "sha256": "27796E59EC7A8523B116275D5FB07FC2A0CC20B942B79BEE7A77ADF6D2E477E6",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\final-preservation.json"
+  },
+  {
+    "sha256": "7ED74A24168A3E60CECCDD2DB1363E85A85029E2EDEB8F2727B817FFAD1E80AF",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\post-test-source.json"
+  },
+  {
+    "sha256": "3F791BE356F0B35C5DE880F9067799855C0C6D40E10D42562AAD42C63146DD98",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\QaRework.cs"
+  },
+  {
+    "sha256": "99814B4A6A4127C0AC9A64F6912AD94EE4281429E1C8D34BE09FF134303BEB55",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\QaRework.csproj"
+  },
+  {
+    "sha256": "E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\runner.err"
+  },
+  {
+    "sha256": "3B316D42ECDA69727E72DCF0F0A641DB480600B5A9D373F70764CBB4F1771987",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\runner.log"
+  },
+  {
+    "sha256": "BCCB8EB0530FD65AADCF899560DB866A7545ABD942CAD0FE8704620E26811952",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\source-verification.json"
+  },
+  {
+    "sha256": "974201BEA6430F0EA59A2F3958DFC7C2080069E95898FE93ABA3DFCA3548EFED",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\start-status.txt"
+  },
+  {
+    "sha256": "3D7A7B887389F67219EE283CE35DFBCAF7E3ABFC2B7041EE56DF49A1416CEB2F",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\build\\antlr-debug.log"
+  },
+  {
+    "sha256": "4181463DF67D0511C0452B56C2542BE76E20D9CBF7A9F5952F0BD1DAA1F841FC",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\build\\host-release.log"
+  },
+  {
+    "sha256": "9CB7205A6DF3DBFEAA789C315C0230E6D4EE4516DCAEC8421BC2118D2AAFFE39",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\build\\host-smoke-build.log"
+  },
+  {
+    "sha256": "94C197809FE6C75EB6DBABCF6A888669A135C34EF6BDF64068273A2D886BD8FA",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\build\\host-smoke-run.log"
+  },
+  {
+    "sha256": "DDF68DB3D8D2F9572A71C51F3F3FDB8D71553978FEA549CDE378875132E4B7B4",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\build\\restore-core.log"
+  },
+  {
+    "sha256": "EE3F1526EF6F14795035EB442D49A2D55EF50E47447D58EF95535CDBFB937481",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\build\\restore-legacy.log"
+  },
+  {
+    "sha256": "21F3BEB70B3A3BAFA6ADD70838E0C312C0D57BA192673700552301DF0BC3E9C7",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\build\\sdks.txt"
+  },
+  {
+    "sha256": "15F37E0849B5A01ADDBEE64FB9C09264E3D0A8440B2DEC2E02C6AE40D8977CA6",
+    "path": "D:\\PROJ\\TabularEditor_J\\projectmanagement\\evidence\\S001\\qa-rework-01\\build\\summary.json"
+  }
+]

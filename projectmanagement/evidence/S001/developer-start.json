@@ -1,0 +1,123 @@
+{
+  "files": [
+    {
+      "path": ".github/workflows/pbibench-te2-integration.yml",
+      "sha256": "54FDDFD5427B64DE28518B2D6F33841E050F51F3E8A12B694E8C3CE4B0737BA1"
+    },
+    {
+      "path": "AGENTS.md",
+      "sha256": "2DAE833F879135455FBCCB6AB16EF977C410DD68F651356CE09F9CA779F2F679"
+    },
+    {
+      "path": "docs/PBIBENCH_AUDIT_2026-09-08.md",
+      "sha256": "DE28C37227AC5C545A044DEEFD763071F0A9224B35603A5A92A00529497F96D8"
+    },
+    {
+      "path": "docs/pbibench/STABILIZATION_2026-09-08.md",
+      "sha256": "71CAF1218499B602174A0F088FB0B5935BA4214211AAACA24AC42C444FE97E84"
+    },
+    {
+      "path": "PbiBench.Core.Smoke/Program.cs",
+      "sha256": "E36A62D44E14D21828E6909631D4CEE3B2A9E2CDA15429704CCE900C9F0B1815"
+    },
+    {
+      "path": "PbiBench.Core/Dax/DaxDocument.cs",
+      "sha256": "6264DF1CA4B507F1EA45F2B0F14A4AA89C6DC9743440D07D1FAB11E259A763FA"
+    },
+    {
+      "path": "PbiBench.Core/Dax/DaxQueryContracts.cs",
+      "sha256": "7973FC1394D50D55346FCCB4B49E1B035C3DB6ECB9FB0D1285620E8D3A06A6B3"
+    },
+    {
+      "path": "PbiBench.Host.Smoke/DaxDocumentSmoke.cs",
+      "sha256": "E752218C91D1B92AFE9847645779303A399D5A4D322018A43FF2FF3214DC1952"
+    },
+    {
+      "path": "PbiBench.Host.Smoke/DaxWorkbenchSmoke.cs",
+      "sha256": "0EB455EEBBD5F977F8CF38B280EF75999AC34E147BB344F614AB6A5425B9AEB1"
+    },
+    {
+      "path": "PbiBench.Host.Smoke/PbiBench.Host.Smoke.csproj",
+      "sha256": "BA482997568444B4FDB4656B9B39D54420860820D10FC8EEEF25FA8D06C0EC23"
+    },
+    {
+      "path": "PbiBench.Host.Smoke/Program.cs",
+      "sha256": "A8FB3F9E0181F9F7A2D33AB2B8D16269C92BFAAB78FE7983484FBB5B79E3C85B"
+    },
+    {
+      "path": "projectmanagement/ARCHITECTURE.md",
+      "sha256": "2635A55944A849C225502A9A6C9BCF0C10229952948E569B5C995B65564BFD45"
+    },
+    {
+      "path": "projectmanagement/BACKLOG.md",
+      "sha256": "49D0B56A21DD739C627EA2BB51E003A7ABA1DB9E9244200126D1105C351AA535"
+    },
+    {
+      "path": "projectmanagement/handoffs/S001-DEVELOPER.md",
+      "sha256": "520D26B575051D14B04DD30E7A29F7D0755AFC688A0C429ACCE49FBEA94FE0A3"
+    },
+    {
+      "path": "projectmanagement/handoffs/S001-QA.md",
+      "sha256": "C3DC339CDA2ACC10E098BDBABFCCD2DC39A76E7E7F0333189E455F2E7D02CB30"
+    },
+    {
+      "path": "projectmanagement/README.md",
+      "sha256": "C381C2BC7D91583C4459B6050A978CB587CD0E50AFB3D512AC7734D049FB7207"
+    },
+    {
+      "path": "projectmanagement/REGISTERS.md",
+      "sha256": "E59265DA479C61CF8424BEBE58B2F60524A0BA47DD7CCE61E0439E11D13190F4"
+    },
+    {
+      "path": "projectmanagement/reviews/2026-09-08-baseline.md",
+      "sha256": "16F6DC0F8467AC8F0231287B17950AA9FF0556D3D6A34C9DE5C97DA5752C01F3"
+    },
+    {
+      "path": "projectmanagement/reviews/baseline-source.json",
+      "sha256": "D0AAF0CF4A02D83D8FF6F0AFD35EE5AC2E1D4CDCC3553B0699CB6499F0CB908A"
+    },
+    {
+      "path": "projectmanagement/reviews/S001-DECISION.md",
+      "sha256": "C8980E1170668742BA27D9877A3281C1705DD4A0C20D5012AC9EC543C373C102"
+    },
+    {
+      "path": "projectmanagement/sprints/SPRINT-001.md",
+      "sha256": "BA906B3C02AD576F9EFDA77BC86F22F7A9EF8A70BB008AE634353F51429477DA"
+    },
+    {
+      "path": "projectmanagement/STATUS.md",
+      "sha256": "BB2048816128AF24A50FCB4155686EE98ADDDFB23138FEB1A2AFCD8B90174B4C"
+    },
+    {
+      "path": "projectmanagement/TEST-PLAN.md",
+      "sha256": "EDD80D6EC6A3A22AFAC77388BB68DF6A28187D9DBB181F2D42202FF4DA8391C3"
+    },
+    {
+      "path": "projectmanagement/WORKFLOW.md",
+      "sha256": "954BE32B7DA968B573800E1556164BABC57FDF068AB7275841F6F3AD31D4B06D"
+    },
+    {
+      "path": "README_PBIBENCH.md",
+      "sha256": "B334A6FA448952871E5ACA738E54144614FBDEE26E15471AF71CA7C3A2F30B7A"
+    },
+    {
+      "path": "TabularEditor/PbiBench/Dax/PbiBenchAmoDaxQueryExecutor.cs",
+      "sha256": "56CB2A6BC38167150549951BD9B2312C66E42D8E6F3BBEC0C1E8064684AB242E"
+    },
+    {
+      "path": "TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs",
+      "sha256": "92560BA1479EB633EDC71D032F4FA5F2093B8E977BE8F314280122DCC880FAFB"
+    },
+    {
+      "path": "TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.Documents.cs",
+      "sha256": "E79D9F4B5079EA5CD6630A8F3234C6C608927FF47B1B07D5EBBF3FA5D508062E"
+    },
+    {
+      "path": "TabularEditor/PbiBench/Semantic/PbiBenchSemanticViewForm.cs",
+      "sha256": "44CBE7510C55FD4B37E7239097DFAAA5C16AB7DBA06DAD9C5CB79993F7027B33"
+    }
+  ],
+  "head": "a7317e7ff1bbdb8949b7e6d82b6277b6e22300de",
+  "branch": "codex/stabilize-pbibench-v02",
+  "upstream": "origin/pbi-workflow-pro-v0.2"
+}

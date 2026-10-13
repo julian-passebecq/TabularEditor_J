@@ -1,0 +1,58 @@
+name: PbiBench TE2 integration
+
+on:
+  push:
+    branches:
+      - pbi-workflow-pro-v0.2
+      - 'codex/stabilize-pbibench-*'
+    paths:
+      - 'TabularEditor/**'
+      - 'TOMWrapper/**'
+      - 'AntlrGrammars/**'
+      - 'SharedAssemblyInfo.cs'
+      - 'TabularEditor.sln'
+      - 'PbiBench.Host.Smoke/**'
+      - 'PbiBench.Core/**'
+      - 'PbiBench.Core.Smoke/**'
+      - 'Scripts/Verify-PbiBench.ps1'
+      - 'Directory.Build.*'
+      - '**/packages.config'
+      - 'NuGet.Config'
+      - 'global.json'
+      - 'Directory.Build.targets'
+      - '.github/workflows/pbibench-te2-integration.yml'
+  pull_request:
+    paths:
+      - 'TabularEditor/**'
+      - 'TOMWrapper/**'
+      - 'AntlrGrammars/**'
+      - 'SharedAssemblyInfo.cs'
+      - 'TabularEditor.sln'
+      - 'PbiBench.Host.Smoke/**'
+      - 'PbiBench.Core/**'
+      - 'PbiBench.Core.Smoke/**'
+      - 'Scripts/Verify-PbiBench.ps1'
+      - 'Directory.Build.*'
+      - '**/packages.config'
+      - 'NuGet.Config'
+      - 'global.json'
+      - 'Directory.Build.targets'
+      - '.github/workflows/pbibench-te2-integration.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build TE2 with PbiBench host integration
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: microsoft/setup-msbuild@v2
+      - uses: NuGet/setup-nuget@v2
+      - name: Verify product and both smoke lanes
+        shell: powershell
+        run: ./Scripts/Verify-PbiBench.ps1
