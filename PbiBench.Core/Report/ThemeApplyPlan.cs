@@ -58,6 +58,21 @@ namespace PbiBench.Core.Report
             var fileName = FileNameFor(themeName!);
             var themePath = PbirReportIndex.RegisteredResourcesFolder + "/" + fileName;
             var oldName = index.Theme.CustomThemeName;
+            // The derived file name must not collide with another registered resource (an image, a different resource
+            // type): replacing it would destroy that file and leave two items with the same name.
+            foreach (var package in packages?.Items ?? Array.Empty<PbirJsonNode>())
+            {
+                if (package.GetString("type") != "RegisteredResources") continue;
+                foreach (var item in package.Get("items")?.Items ?? Array.Empty<PbirJsonNode>())
+                {
+                    var type = item.GetString("type");
+                    if (type == "CustomTheme" || (oldName != null && item.GetString("name") == oldName)) continue;
+                    if (string.Equals(item.GetString("name"), fileName, StringComparison.OrdinalIgnoreCase) ||
+                        string.Equals(item.GetString("path"), fileName, StringComparison.OrdinalIgnoreCase))
+                        throw new ThemeApplyRefusedException("The theme file name '" + fileName + "' (from the theme name '" + themeName +
+                            "') is already used by a registered resource of type '" + (type ?? "unknown") + "'. Rename the theme (its \"name\") and try again.");
+                }
+            }
             var newline = text.Contains("\r\n") ? "\r\n" : "\n";
             var unit = DetectIndentUnit(text);
             var memberIndent = IndentOf(text, report.PropertyNameStarts.Count > 0 ? report.PropertyNameStarts[0] : 0);

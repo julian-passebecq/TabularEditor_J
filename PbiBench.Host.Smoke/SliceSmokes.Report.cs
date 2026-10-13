@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
+using PbiBench.Core.Project;
 using PbiBench.Core.Report;
 using TabularEditor.PbiBench.Report;
 using TabularEditor.PbiBench.Semantic;
@@ -141,13 +142,15 @@ internal static class ThemeApplySmoke
 {
     private static readonly byte[] Theme = Encoding.UTF8.GetBytes("{\"name\":\"S6 Synthetic\",\"dataColors\":[\"#123456\"]}");
 
-    internal sealed class Prepared { internal string Root, Journal, Main, Spare, Stale, Unknown; }
+    internal sealed class Prepared { internal string Root, Journal, Main, Spare, Stale, Unknown, Marker, Damaged; }
 
     internal static Prepared Prepare()
     {
         var p = new Prepared { Root = S6Fixture.NewRoot("te2-s6-theme-"), Journal = S6Fixture.NewRoot("te2-s6-theme-journal-") };
         p.Main = S6Fixture.Write(Path.Combine(p.Root, "a"));
         p.Spare = S6Fixture.Write(Path.Combine(p.Root, "b"));
+        p.Marker = S6Fixture.Write(Path.Combine(p.Root, "m"));
+        p.Damaged = S6Fixture.Write(Path.Combine(p.Root, "d"));
         p.Stale = S6Fixture.Write(Path.Combine(p.Root, "s"));
         p.Unknown = S6Fixture.Write(Path.Combine(p.Root, "u"), unknownSchema: true);
         return p;
@@ -181,6 +184,43 @@ internal static class ThemeApplySmoke
                 S6Fixture.Check(!form.Applied && form.StatusText.StartsWith("Refused, nothing written") && !File.Exists(Path.Combine(p.Stale, "StaticResources", "RegisteredResources", "S6_Synthetic.json")), "stale refused: " + form.StatusText);
             }
 
+            // Review #3: the journal state marker fails after every file was committed: reported as applied with a warning,
+            // never as refused, and "Restore this apply" stays enabled.
+            using (var form = new PbiBenchThemeApplyForm(PbirReportIndex.Load(p.Marker), p.Journal, text => DialogResult.OK))
+            {
+                var h = form.Handle;
+                form.ApplyOptions = new ReviewedFilePlanOptions { BeforeMark = s => throw new IOException("synthetic marker failure") };
+                form.LoadTheme(Theme, "synthetic");
+                form.Apply();
+                if (ToleratedObs001(form, p.Marker, "marker"))
+                {
+                    S6Fixture.Check(form.Applied && form.StatusText.StartsWith("Applied:") && form.StatusText.Contains("Warning:") && !form.StatusText.Contains("refused") &&
+                        form.ApplyWarning.Contains("synthetic marker failure") && form.CanRestore, "marker failure after commit: " + form.StatusText);
+                    S6Fixture.Check(ReviewedFilePlan.ReadJournal(form.JournalPath).State == ReviewedFileJournalState.Applying, "journal listed as interrupted");
+                    form.RestoreLast();
+                    S6Fixture.Check(form.StatusText.StartsWith("Restored 2"), "restore after marker failure: " + form.StatusText);
+                }
+            }
+
+            // Review #4: a damaged backup (InvalidDataException) or journal (parse error) is shown in the form, never thrown to TE2.
+            using (var form = new PbiBenchThemeApplyForm(PbirReportIndex.Load(p.Damaged), p.Journal, text => DialogResult.OK))
+            {
+                var h = form.Handle;
+                form.LoadTheme(Theme, "synthetic");
+                form.Apply();
+                if (ToleratedObs001(form, p.Damaged, "damaged"))
+                {
+                    S6Fixture.Check(form.Applied && form.CanRestore, "apply before damage: " + form.StatusText);
+                    var directory = Path.GetDirectoryName(form.JournalPath);
+                    foreach (var backup in Directory.GetFiles(directory, "backup-*.bin")) File.WriteAllText(backup, "damaged");
+                    form.RestoreLast();
+                    S6Fixture.Check(form.StatusText.StartsWith("Restore failed") && form.StatusText.Contains("damaged"), "damaged backup shown in the form: " + form.StatusText);
+                    File.WriteAllText(form.JournalPath, "{ damaged journal");
+                    form.RestoreLast();
+                    S6Fixture.Check(form.StatusText.StartsWith("Restore failed"), "damaged journal shown in the form: " + form.StatusText);
+                }
+            }
+
             var readOnly = PbirReportIndex.Load(p.Unknown);
             using (var form = new PbiBenchThemeApplyForm(readOnly, p.Journal, text => DialogResult.OK))
             {
@@ -191,6 +231,18 @@ internal static class ThemeApplySmoke
             Console.WriteLine("ThemeApplySmoke: invalid theme refused, review rows, declined confirm, apply + journal, exact restore, stale refused, unknown schema refused PASS");
         }
         finally { S6Fixture.Delete(p.Root); S6Fixture.Delete(p.Journal); }
+    }
+
+    /// <summary>True when the apply ran; false (logged) when it hit OBS-001 and rolled back, so the scenario cannot be exercised this run.</summary>
+    private static bool ToleratedObs001(PbiBenchThemeApplyForm form, string folder, string scenario)
+    {
+        if (form.Applied) return true;
+        if (form.LastApplyFailure != null && form.LastApplyFailure.RolledBack && IsReplaceRefused(form.LastApplyFailure))
+        {
+            Console.WriteLine("ThemeApplySmoke: OBS-001 observed in the " + scenario + " scenario (replace refused, rolled back); scenario skipped this run");
+            return false;
+        }
+        throw new Exception("S6 host: " + scenario + " apply failed: " + form.StatusText);
     }
 
     /// <returns>false only when the apply hit OBS-001 and was verified to have rolled back exactly (and tolerate is true).</returns>

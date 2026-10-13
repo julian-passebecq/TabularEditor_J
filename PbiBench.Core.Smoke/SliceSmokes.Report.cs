@@ -323,6 +323,15 @@ internal static class ThemeApplyPlanSmoke
             PbirFixture.Expect<ThemeApplyRefusedException>(() => ThemeApplyPlan.Create(good, Encoding.UTF8.GetBytes("{nope")), "invalid theme");
             PbirFixture.Expect<ThemeApplyRefusedException>(() => ThemeApplyPlan.Create(good, new byte[ThemeApplyPlan.MaxThemeBytes + 1]), "oversized theme");
 
+            // Review #5: the derived theme file name collides with a non-theme RegisteredResources item: refused with a clear reason.
+            var clashFolder = PbirFixture.Write(Path.Combine(root, "x"));
+            var clashReport = Path.Combine(clashFolder, "definition", "report.json");
+            File.WriteAllText(clashReport, File.ReadAllText(clashReport).Replace("\"logo.png\"", "\"Brand.json\""), new UTF8Encoding(false));
+            var clashIndex = PbirReportIndex.Load(clashFolder);
+            try { ThemeApplyPlan.Create(clashIndex, Encoding.UTF8.GetBytes("{\"name\":\"Brand\"}")); throw new Exception("S6: theme file name clash not refused"); }
+            catch (ThemeApplyRefusedException ex) { c(ex.Message.Contains("Brand.json") && ex.Message.Contains("Image"), "clash message names file and type: " + ex.Message); }
+            c(ThemeApplyPlan.Create(clashIndex, Encoding.UTF8.GetBytes("{\"name\":\"Old Theme\"}")).ThemeFileName == "Old_Theme.json", "reusing the current custom theme name is allowed");
+
             // No custom theme yet and minified report.json without resourcePackages: customTheme appended, package inserted.
             var minFolder = PbirFixture.Write(Path.Combine(root, "m"), withCustomTheme: false);
             File.WriteAllText(Path.Combine(minFolder, "definition", "report.json"), PbirFixture.J("{'$schema':'" + PbirFixture.Prefix + "definition/report/1.0.0/schema.json','themeCollection':{'baseTheme':{'name':'CY24SU10','type':'SharedResources'}},'settings':{}}"));

@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.Serialization;
@@ -43,11 +45,83 @@ namespace PbiBench.Core.Documents
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TE2Enhanced", "recovery");
     }
 
+    /// <summary>
+    /// The TE2 process that wrote a recovery copy: process id plus process start time (UTC). The start time tells a
+    /// reused process id apart from the original writer. <see cref="Unknown"/> (pid 0) marks copies written before
+    /// owners were recorded; they are treated as orphaned.
+    /// </summary>
+    public readonly struct RecoveryOwner : IEquatable<RecoveryOwner>
+    {
+        /// <summary>Start times read twice for the same process can differ by clock rounding; one second is far below any pid reuse gap.</summary>
+        public static readonly TimeSpan StartTolerance = TimeSpan.FromSeconds(1);
+        private static readonly Lazy<RecoveryOwner> CurrentLazy = new Lazy<RecoveryOwner>(ReadCurrent);
+
+        public RecoveryOwner(int processId, DateTime startUtc)
+        {
+            if (processId < 0) throw new ArgumentOutOfRangeException(nameof(processId));
+            ProcessId = processId;
+            StartUtc = DateTime.SpecifyKind(startUtc, DateTimeKind.Utc);
+        }
+
+        public int ProcessId { get; }
+        public DateTime StartUtc { get; }
+        public bool IsKnown => ProcessId > 0;
+        public static RecoveryOwner Unknown => default;
+
+        /// <summary>The current process (read once).</summary>
+        public static RecoveryOwner Current => CurrentLazy.Value;
+
+        public bool Equals(RecoveryOwner other) =>
+            ProcessId == other.ProcessId && Math.Abs((StartUtc - other.StartUtc).Ticks) <= StartTolerance.Ticks;
+        public override bool Equals(object? obj) => obj is RecoveryOwner other && Equals(other);
+        public override int GetHashCode() => ProcessId;
+        public override string ToString() =>
+            IsKnown ? "pid " + ProcessId + " started " + StartUtc.ToString("u", System.Globalization.CultureInfo.InvariantCulture) : "unknown process";
+
+        /// <summary>
+        /// Default liveness probe: true when a process with this id runs and started at the recorded time. A process whose
+        /// start time cannot be read (another user, elevated) counts as alive, so its copies are never offered by mistake.
+        /// </summary>
+        public static bool IsRunning(RecoveryOwner owner)
+        {
+            if (!owner.IsKnown) return false;
+            if (owner.Equals(Current)) return true;
+            try
+            {
+                using (var process = Process.GetProcessById(owner.ProcessId))
+                {
+                    DateTime start;
+                    try
+                    {
+                        if (process.HasExited) return false;
+                        start = process.StartTime.ToUniversalTime();
+                    }
+                    catch (InvalidOperationException) { return false; } // exited meanwhile
+                    catch (System.ComponentModel.Win32Exception) { return true; }
+                    catch (NotSupportedException) { return true; }
+                    return Math.Abs((start - owner.StartUtc).Ticks) <= StartTolerance.Ticks;
+                }
+            }
+            catch (ArgumentException) { return false; } // no process with this id
+            catch (InvalidOperationException) { return false; }
+        }
+
+        private static RecoveryOwner ReadCurrent()
+        {
+            using (var process = Process.GetCurrentProcess())
+                return new RecoveryOwner(process.Id, process.StartTime.ToUniversalTime());
+        }
+    }
+
     /// <summary>One recovery snapshot as listed from its manifest; <see cref="IsIntact"/> is false when the content hash no longer matches.</summary>
     public sealed class RecoveryEntry
     {
-        internal RecoveryEntry(string documentId, string kind, string title, DateTime savedUtc, string sha256, int length, bool isIntact)
-        { DocumentId = documentId; Kind = kind; Title = title; SavedUtc = savedUtc; Sha256 = sha256; Length = length; IsIntact = isIntact; }
+        internal RecoveryEntry(string documentId, string kind, string title, DateTime savedUtc, string sha256, int length, bool isIntact,
+            RecoveryOwner owner, bool isOwnedByThisProcess, bool isRecoverable, bool isHeldByOtherInstance)
+        {
+            DocumentId = documentId; Kind = kind; Title = title; SavedUtc = savedUtc; Sha256 = sha256; Length = length; IsIntact = isIntact;
+            Owner = owner; IsOwnedByThisProcess = isOwnedByThisProcess; IsRecoverable = isRecoverable; IsHeldByOtherInstance = isHeldByOtherInstance;
+        }
         public string DocumentId { get; }
         public string Kind { get; }
         public string Title { get; }
@@ -55,6 +129,17 @@ namespace PbiBench.Core.Documents
         public string Sha256 { get; }
         public int Length { get; }
         public bool IsIntact { get; }
+        /// <summary>The process that wrote this copy (<see cref="RecoveryOwner.Unknown"/> for copies written before owners were recorded).</summary>
+        public RecoveryOwner Owner { get; }
+        /// <summary>Written by the store's owner (normally this process).</summary>
+        public bool IsOwnedByThisProcess { get; }
+        /// <summary>
+        /// May be offered for restore: its writer process is gone (not running, or the pid now belongs to a process with
+        /// another start time), or it was written by this process and no open editor holds it any more.
+        /// </summary>
+        public bool IsRecoverable { get; }
+        /// <summary>Another running TE2 instance owns this copy (a live draft there); never offer, overwrite or delete it implicitly.</summary>
+        public bool IsHeldByOtherInstance { get; }
     }
 
     /// <summary>
@@ -65,6 +150,9 @@ namespace PbiBench.Core.Documents
     /// OBS-001 is avoided by design, not by retries). Two TE2 instances never rewrite a shared index. Reads verify
     /// the SHA-256 recorded in the manifest. Retention prunes by age, then by count (oldest first). Nothing is sent
     /// anywhere; delete is explicit and only removes files this store owns.
+    /// Multi-instance: every copy records its owner process (<see cref="RecoveryOwner"/>). Only copies whose owner is gone
+    /// (or that an editor of this process released) are recoverable; restore moves a copy to a new id (<see cref="Adopt"/>),
+    /// and Save / Don't save paths delete only this process's copies (<see cref="DeleteOwn"/>).
     /// </summary>
     public sealed class RecoveryStore
     {
@@ -75,10 +163,29 @@ namespace PbiBench.Core.Documents
         private const int MaxKindLength = 32;
         private static readonly DataContractJsonSerializer Serializer = new DataContractJsonSerializer(typeof(RecoveryManifest));
         private readonly object _gate = new object();
+        // Ids held by open editors of this process, per root and owner. A copy written by this process is offered again
+        // only after its editor released it (window closed or disposed); while held it is a live draft, not an orphan.
+        private static readonly ConcurrentDictionary<string, byte> Held = new ConcurrentDictionary<string, byte>(StringComparer.OrdinalIgnoreCase);
+        private readonly Func<RecoveryOwner, bool> _isOwnerAlive;
 
-        public RecoveryStore(RecoveryStoreOptions options) { Options = options ?? throw new ArgumentNullException(nameof(options)); }
+        public RecoveryStore(RecoveryStoreOptions options) : this(options, null, null) { }
+
+        /// <summary>
+        /// <paramref name="owner"/> defaults to <see cref="RecoveryOwner.Current"/> and <paramref name="isOwnerAlive"/> to
+        /// <see cref="RecoveryOwner.IsRunning"/>; both are injectable so tests can model several TE2 instances.
+        /// </summary>
+        public RecoveryStore(RecoveryStoreOptions options, RecoveryOwner? owner, Func<RecoveryOwner, bool>? isOwnerAlive)
+        {
+            Options = options ?? throw new ArgumentNullException(nameof(options));
+            Owner = owner ?? RecoveryOwner.Current;
+            if (!Owner.IsKnown) throw new ArgumentException("A recovery store needs a known owner process.", nameof(owner));
+            _isOwnerAlive = isOwnerAlive ?? RecoveryOwner.IsRunning;
+        }
 
         public RecoveryStoreOptions Options { get; }
+
+        /// <summary>The process recorded on every copy this store writes.</summary>
+        public RecoveryOwner Owner { get; }
 
         /// <summary>Plain-language disclosure for the opt-in prompt and settings.</summary>
         public string Disclosure =>
@@ -107,7 +214,9 @@ namespace PbiBench.Core.Documents
                 Directory.CreateDirectory(Options.Root);
                 var stamp = nowUtc.Ticks.ToString("x16") + "-" + Guid.NewGuid().ToString("N").Substring(0, 12);
                 var manifest = new RecoveryManifest { Version = RecoveryManifest.CurrentVersion, DocumentId = documentId, Stamp = stamp, Kind = kind,
-                    Title = title, SavedUtcTicks = nowUtc.Ticks, Sha256 = hash, Length = content.Length };
+                    Title = title, SavedUtcTicks = nowUtc.Ticks, Sha256 = hash, Length = content.Length,
+                    OwnerProcessId = Owner.ProcessId, OwnerStartUtcTicks = Owner.StartUtc.Ticks };
+                Held[HeldKey(documentId)] = 0;
                 // Content first, manifest second: a crash in between leaves orphan content (pruned later), never a manifest without content.
                 WriteNew(ContentPath(documentId, stamp), bytes);
                 using (var stream = new MemoryStream())
@@ -116,9 +225,10 @@ namespace PbiBench.Core.Documents
                     WriteNew(ManifestPath(documentId, stamp), stream.ToArray());
                 }
                 // Older versions are removed only after the new one is complete; a locked old file is left for the next prune.
-                foreach (var old in VersionsLocked(documentId).Where(v => v.Stamp != stamp)) TryDeleteVersion(documentId, old.Stamp!);
+                // Only this process's versions: another instance's copy under the same id is never removed implicitly.
+                foreach (var old in VersionsLocked(documentId).Where(v => v.Stamp != stamp && OwnerOf(v).Equals(Owner))) TryDeleteVersion(documentId, old.Stamp!);
                 PruneLocked(nowUtc);
-                return new RecoveryEntry(documentId, kind, title, nowUtc, hash, content.Length, true);
+                return new RecoveryEntry(documentId, kind, title, nowUtc, hash, content.Length, true, Owner, true, false, false);
             }
         }
 
@@ -128,11 +238,85 @@ namespace PbiBench.Core.Documents
             if (!Options.Enabled || !Directory.Exists(Options.Root)) return Array.Empty<RecoveryEntry>();
             lock (_gate)
             {
-                return LatestLocked().Select(m => new RecoveryEntry(m.DocumentId!, m.Kind ?? "", m.Title ?? "",
-                        new DateTime(m.SavedUtcTicks, DateTimeKind.Utc), m.Sha256 ?? "", m.Length, TryReadVerified(m, out _)))
-                    .OrderByDescending(e => e.SavedUtc).ThenBy(e => e.DocumentId, StringComparer.Ordinal).ToArray();
+                return LatestLocked().Select(ToEntry).OrderByDescending(e => e.SavedUtc).ThenBy(e => e.DocumentId, StringComparer.Ordinal).ToArray();
             }
         }
+
+        /// <summary>Copies that may be offered for restore (see <see cref="RecoveryEntry.IsRecoverable"/>); never another live instance's drafts.</summary>
+        public IReadOnlyList<RecoveryEntry> ListRecoverable() => List().Where(e => e.IsRecoverable).ToArray();
+
+        /// <summary>
+        /// Restores a recoverable copy under a NEW id owned by this process: the new copy is written and verified first,
+        /// and only then are the source versions removed. Throws <see cref="InvalidOperationException"/> when the source is
+        /// held by a running instance (or an open editor of this process), <see cref="InvalidDataException"/> when it fails
+        /// its hash check. If the source cannot be removed afterwards it stays on disk (offered again later), never lost.
+        /// </summary>
+        public RecoveryEntry Adopt(string sourceId, string newId, DateTime nowUtc, out string text)
+        {
+            if (!IsValidDocumentId(sourceId)) throw new ArgumentException("Invalid document id.", nameof(sourceId));
+            if (!IsValidDocumentId(newId)) throw new ArgumentException("Invalid document id.", nameof(newId));
+            if (string.Equals(sourceId, newId, StringComparison.Ordinal)) throw new ArgumentException("A restored copy needs a new id.", nameof(newId));
+            if (!Options.Enabled) throw new InvalidOperationException("Recovery is disabled.");
+            lock (_gate)
+            {
+                var source = Directory.Exists(Options.Root) ? Newest(VersionsLocked(sourceId)) : null;
+                if (source == null || !TryReadVerified(source, out var verified)) throw new InvalidDataException("Recovery copy is missing or does not match its hash manifest.");
+                if (!ToEntry(source).IsRecoverable) throw new InvalidOperationException("This recovery copy belongs to a TE2 instance that is still running.");
+                var adopted = Save(newId, source.Kind ?? "", source.Title ?? "", verified!, nowUtc)!;
+                var written = Newest(VersionsLocked(newId).Where(m => OwnerOf(m).Equals(Owner)));
+                if (written == null || !TryReadVerified(written, out var check) || check != verified)
+                    throw new InvalidDataException("The restored recovery copy could not be verified; the source copy was kept.");
+                TryDeleteDocument(sourceId);
+                text = verified!;
+                return adopted;
+            }
+        }
+
+        /// <summary>Marks an id as no longer held by an open editor of this process (window closed or disposed); its copy stays on disk.</summary>
+        public void Release(string documentId)
+        {
+            if (IsValidDocumentId(documentId)) Held.TryRemove(HeldKey(documentId), out _);
+        }
+
+        /// <summary>
+        /// Deletes the versions of one document written by this store's owner (Save / Don't save). Copies of other
+        /// instances, even under the same id, are left alone. Releases the id. IO failures surface to the caller.
+        /// </summary>
+        public bool DeleteOwn(string documentId)
+        {
+            if (!IsValidDocumentId(documentId)) throw new ArgumentException("Invalid document id.", nameof(documentId));
+            Release(documentId);
+            if (!Directory.Exists(Options.Root)) return false;
+            lock (_gate)
+            {
+                var any = false;
+                foreach (var version in VersionsLocked(documentId).Where(v => OwnerOf(v).Equals(Owner)))
+                {
+                    // Manifest first so a half-deleted version is never listed with missing content.
+                    File.Delete(ManifestPath(documentId, version.Stamp!));
+                    var content = ContentPath(documentId, version.Stamp!);
+                    if (File.Exists(content)) File.Delete(content);
+                    any = true;
+                }
+                return any;
+            }
+        }
+
+        private RecoveryEntry ToEntry(RecoveryManifest m)
+        {
+            var owner = OwnerOf(m);
+            var mine = owner.IsKnown && owner.Equals(Owner);
+            var otherAlive = !mine && owner.IsKnown && _isOwnerAlive(owner);
+            var recoverable = mine ? !Held.ContainsKey(HeldKey(m.DocumentId!)) : !otherAlive;
+            return new RecoveryEntry(m.DocumentId!, m.Kind ?? "", m.Title ?? "", new DateTime(m.SavedUtcTicks, DateTimeKind.Utc), m.Sha256 ?? "",
+                m.Length, TryReadVerified(m, out _), owner, mine, recoverable, otherAlive);
+        }
+
+        private static RecoveryOwner OwnerOf(RecoveryManifest m) =>
+            m.OwnerProcessId > 0 && m.OwnerStartUtcTicks > 0 && m.OwnerStartUtcTicks <= DateTime.MaxValue.Ticks
+                ? new RecoveryOwner(m.OwnerProcessId, new DateTime(m.OwnerStartUtcTicks, DateTimeKind.Utc)) : RecoveryOwner.Unknown;
+
+        private string HeldKey(string documentId) => Options.Root + "|" + Owner.ProcessId + "|" + Owner.StartUtc.Ticks + "|" + documentId;
 
         /// <summary>Returns the newest recovered text, or throws <see cref="InvalidDataException"/> when missing or the hash does not match.</summary>
         public string Read(string documentId)
@@ -151,6 +335,7 @@ namespace PbiBench.Core.Documents
         public bool Delete(string documentId)
         {
             if (!IsValidDocumentId(documentId)) throw new ArgumentException("Invalid document id.", nameof(documentId));
+            Release(documentId);
             if (!Directory.Exists(Options.Root)) return false;
             lock (_gate) return DeleteDocumentLocked(documentId);
         }
@@ -335,6 +520,9 @@ namespace PbiBench.Core.Documents
             [DataMember(Order = 5)] public long SavedUtcTicks { get; set; }
             [DataMember(Order = 6)] public string? Sha256 { get; set; }
             [DataMember(Order = 7)] public int Length { get; set; }
+            // Added with multi-instance safety; manifests without them load as 0 (unknown owner = orphan, recoverable).
+            [DataMember(Order = 8, IsRequired = false)] public int OwnerProcessId { get; set; }
+            [DataMember(Order = 9, IsRequired = false)] public long OwnerStartUtcTicks { get; set; }
         }
     }
 }

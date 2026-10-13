@@ -58,25 +58,54 @@ namespace TabularEditor.PbiBench.Project
         private readonly ListView _preview = new ListView { Dock = DockStyle.Fill, View = View.Details, FullRowSelect = true };
         private readonly Button _restore = new Button { Text = "Restore selected…", AutoSize = true, Enabled = false };
         private readonly Label _status = new Label { Dock = DockStyle.Bottom, Height = 36 };
+        private readonly Button _deleteOld = new Button { Text = "Delete old journals…", AutoSize = true };
         private readonly string _root;
         private readonly Func<string, DialogResult> _confirm;
+        private readonly Func<string, DialogResult> _confirmDelete;
 
-        internal PbiBenchJournalRestoreForm(string journalRoot, Func<string, DialogResult> confirm = null)
+        internal PbiBenchJournalRestoreForm(string journalRoot, Func<string, DialogResult> confirm = null, Func<string, DialogResult> confirmDelete = null)
         {
             _root = journalRoot;
             _confirm = confirm ?? (text => MessageBox.Show(this, text, "Restore files", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning));
+            _confirmDelete = confirmDelete ?? (text => MessageBox.Show(this, text, "Delete old journals", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2));
             Text = "TE2 Enhanced · Restore reviewed file plan";
             Size = new Size(960, 520); MinimumSize = new Size(620, 340);
             StartPosition = FormStartPosition.CenterParent; ShowInTaskbar = false; AutoScaleMode = AutoScaleMode.Dpi;
             _preview.Columns.Add("Path", 360); _preview.Columns.Add("Plan action", 90); _preview.Columns.Add("Restore", 260);
             var buttons = new FlowLayoutPanel { Dock = DockStyle.Bottom, Height = 40, FlowDirection = FlowDirection.RightToLeft };
             var close = new Button { Text = "Close", AutoSize = true, DialogResult = DialogResult.Cancel };
-            buttons.Controls.Add(close); buttons.Controls.Add(_restore);
+            buttons.Controls.Add(close); buttons.Controls.Add(_restore); buttons.Controls.Add(_deleteOld);
             CancelButton = close;
             Controls.Add(_preview); Controls.Add(_journals); Controls.Add(_status); Controls.Add(buttons);
             _journals.SelectedIndexChanged += (s, e) => ShowPreview();
             _restore.Click += (s, e) => RestoreSelected();
+            _deleteOld.Click += (s, e) => DeleteOldJournals(ReviewedFilePlan.DefaultJournalRetentionDays);
             Reload();
+        }
+
+        /// <summary>
+        /// Deletes completed journals (Applied, RolledBack, Restored) older than <paramref name="days"/> days after confirmation.
+        /// Applying, incomplete and unreadable journals are kept: they may hold the only copy of the original files.
+        /// </summary>
+        internal int DeleteOldJournals(int days)
+        {
+            System.Collections.Generic.IReadOnlyList<ReviewedFileJournalInfo> prunable;
+            try { prunable = ReviewedFilePlan.SelectPrunableJournals(_root, DateTime.UtcNow, days); }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { _status.Text = "Journal folder could not be read: " + ex.Message; return 0; }
+            if (prunable.Count == 0) { _status.Text = "No completed journals older than " + days + " days in " + _root + "."; return 0; }
+            var megabytes = prunable.Sum(j => j.TotalBytes) / (1024.0 * 1024.0);
+            if (_confirmDelete("Delete " + prunable.Count + " completed journal(s) older than " + days + " days (" + megabytes.ToString("0.0") + " MB) from " + _root +
+                "?\r\n\r\nTheir backups are removed and those applies can no longer be restored. Interrupted or incomplete journals are kept.") != DialogResult.OK)
+            { _status.Text = "No journals deleted."; return 0; }
+            var removed = 0;
+            foreach (var journal in prunable)
+            {
+                try { ReviewedFilePlan.DeleteJournal(_root, journal.JournalPath); removed++; }
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is InvalidOperationException || ex is ArgumentException) { }
+            }
+            Reload();
+            _status.Text = "Deleted " + removed + " of " + prunable.Count + " old journal(s)" + (removed < prunable.Count ? "; the rest could not be removed and were kept." : ".");
+            return removed;
         }
 
         internal int JournalCount => _journals.Items.Count;

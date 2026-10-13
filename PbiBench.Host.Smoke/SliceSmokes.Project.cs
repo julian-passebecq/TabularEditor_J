@@ -115,29 +115,77 @@ internal static class ProjectWatcherSmoke
             {
                 watcher.Settled += s => { signals.Enqueue(s); arrived.Release(); };
                 watcher.Start();
-                // Ignored folders only: no signal.
+                if (watcher.State != ProjectWatcherState.Watching) throw new Exception("Watcher not watching after Start.");
+                // Ignored folders only: no signal may name an ignored path. Windows can still deliver a late echo for the
+                // fixture's own folders, so the check is on signal content, not on whether a signal arrived (review #6).
                 Directory.CreateDirectory(Path.Combine(root, ".git"));
                 File.WriteAllText(Path.Combine(root, ".git", "index"), "x");
                 File.WriteAllText(Path.Combine(root, ".Sales.tmdl.te2tmp-1234abcd"), "temp");
-                if (arrived.Wait(900)) throw new Exception("Ignored paths raised a signal: " + string.Join(",", signals.SelectMany(s => s.Paths)));
-                // A burst of 20 writes collapses into one settled signal.
+                arrived.Wait(900);
+                var ignored = Drain(signals, arrived).SelectMany(s => s.Paths).Where(p => FileManifest.IsIgnoredPath(p) || p.Contains(".te2tmp-")).ToArray();
+                if (ignored.Length > 0) throw new Exception("Ignored paths raised a signal: " + string.Join(",", ignored));
+                // A burst of 20 writes collapses into one settled signal that carries every path.
                 for (var i = 0; i < 20; i++)
                     File.WriteAllText(Path.Combine(root, "Model.SemanticModel", "definition", "tables", "T" + i + ".tmdl"), "table T" + i);
-                if (!arrived.Wait(5000)) throw new Exception("Watcher did not signal.");
-                if (arrived.Wait(900)) throw new Exception("Burst was not debounced into one signal.");
-                ProjectWatchSignal burst;
-                signals.TryDequeue(out burst);
-                if (burst.Overflow || burst.EventCount < 20 || Enumerable.Range(0, 20).Any(i => !burst.Paths.Contains("Model.SemanticModel/definition/tables/T" + i + ".tmdl"))) throw new Exception("Burst signal content wrong: " + burst.EventCount + "/" + burst.Paths.Count);
+                // The first signal naming any burst file must name all of them (a stray late echo before it is tolerated).
+                var burst = WaitFor(signals, arrived, s => s.Paths.Any(p => p.StartsWith("Model.SemanticModel/definition/tables/T", StringComparison.Ordinal)), 5000);
+                if (burst == null) throw new Exception("Watcher did not signal.");
+                if (burst.Overflow || burst.EventCount < 20 || Enumerable.Range(0, 20).Any(i => !burst.Paths.Contains("Model.SemanticModel/definition/tables/T" + i + ".tmdl")))
+                    throw new Exception("Burst was not debounced into one signal: " + burst.EventCount + "/" + burst.Paths.Count);
+                arrived.Wait(900);
+                Drain(signals, arrived);
                 // Overflow is reported as a rescan signal.
                 watcher.InjectOverflow();
-                if (!arrived.Wait(5000) || !signals.TryDequeue(out var overflow) || !overflow.Overflow) throw new Exception("Overflow not surfaced.");
+                if (WaitFor(signals, arrived, s => s.Overflow, 5000) == null) throw new Exception("Overflow not surfaced.");
+                // Review #6: a non-overflow error recreates the FileSystemWatcher (rescan signal) and watching continues.
+                watcher.InjectError(new IOException("synthetic watcher error"));
+                var errored = WaitFor(signals, arrived, s => s.Overflow, 5000);
+                if (errored == null || errored.RootMissing) throw new Exception("Watcher error not surfaced as a rescan.");
+                if (watcher.Restarts != 1 || watcher.State != ProjectWatcherState.Watching) throw new Exception("Watcher not recreated after an error: " + watcher.State + "/" + watcher.Restarts);
+                File.WriteAllText(Path.Combine(root, "Model.SemanticModel", "definition", "tables", "AfterError.tmdl"), "table AfterError");
+                if (WaitFor(signals, arrived, s => s.Paths.Contains("Model.SemanticModel/definition/tables/AfterError.tmdl"), 5000) == null) throw new Exception("Recreated watcher missed a write.");
+                Drain(signals, arrived);
                 watcher.Dispose();
+                if (watcher.State != ProjectWatcherState.Disposed) throw new Exception("Disposed state not reported.");
                 File.WriteAllText(Path.Combine(root, "after-dispose.txt"), "x");
                 if (arrived.Wait(700)) throw new Exception("Disposed watcher still signalled.");
             }
-            Console.WriteLine("ProjectWatcherSmoke: ignored paths, burst debounced to one signal, overflow rescan, dispose PASS");
+            // Review #6: the root is deleted or moved: an error then signals RootMissing and the watcher stops with a clear state.
+            var gone = S5Fixture.Create("te2-watch-gone-");
+            using (var arrived = new SemaphoreSlim(0))
+            using (var watcher = new PbiBenchProjectWatcher(gone, TimeSpan.FromMilliseconds(100)))
+            {
+                ProjectWatchSignal last = null;
+                watcher.Settled += s => { last = s; arrived.Release(); };
+                S5Fixture.Delete(gone);
+                if (Directory.Exists(gone)) throw new Exception("Fixture root could not be removed.");
+                watcher.InjectError(new IOException("synthetic: root deleted"));
+                if (!arrived.Wait(5000) || last == null || !last.RootMissing) throw new Exception("Missing root not signalled.");
+                if (watcher.State != ProjectWatcherState.RootMissing || watcher.Restarts != 0) throw new Exception("Missing root must stop the watcher: " + watcher.State);
+            }
+            Console.WriteLine("ProjectWatcherSmoke: no ignored path in any signal, burst debounced to one signal, overflow rescan, error recreates watcher, missing root stops, dispose PASS");
         }
         finally { S5Fixture.Delete(root); }
+    }
+
+    /// <summary>Waits (bounded) until a signal matching <paramref name="match"/> arrives; earlier non-matching signals are discarded.</summary>
+    private static ProjectWatchSignal WaitFor(System.Collections.Concurrent.ConcurrentQueue<ProjectWatchSignal> signals, SemaphoreSlim arrived, Func<ProjectWatchSignal, bool> match, int timeoutMs)
+    {
+        var clock = Stopwatch.StartNew();
+        while (true)
+        {
+            while (signals.TryDequeue(out var s)) if (match(s)) return s;
+            var left = timeoutMs - (int)clock.ElapsedMilliseconds;
+            if (left <= 0 || !arrived.Wait(left)) return signals.Where(match).FirstOrDefault();
+        }
+    }
+
+    private static ProjectWatchSignal[] Drain(System.Collections.Concurrent.ConcurrentQueue<ProjectWatchSignal> signals, SemaphoreSlim arrived)
+    {
+        var list = new System.Collections.Generic.List<ProjectWatchSignal>();
+        while (signals.TryDequeue(out var s)) list.Add(s);
+        while (arrived.Wait(0)) { }
+        return list.ToArray();
     }
 }
 
@@ -202,8 +250,35 @@ internal static class ProjectWindowSmoke
                 restore.Select(0);
                 if (restore.CanRestore) throw new Exception("Restored journal must not restore twice.");
             }
-            Console.WriteLine("ProjectWindowSmoke: identity, stamps, registry, watcher banner, journal restore window PASS");
+            // V1 gap 3: "Delete old journals…" in the restore window: confirmation, completed journals older than 30 days only.
+            File.WriteAllText(Path.Combine(root, "interrupted.json"), "before");
+            var interrupted = new ReviewedFilePlan(root, "smoke interrupted");
+            interrupted.AddFromCurrent("interrupted.json", System.Text.Encoding.UTF8.GetBytes("after"));
+            interrupted.Apply(journalDir, new ReviewedFilePlanOptions { BeforeMark = s => throw new IOException("synthetic marker failure") });
+            var asked = 0;
+            var answer = DialogResult.Cancel;
+            using (var restore = new PbiBenchJournalRestoreForm(journalDir, text => DialogResult.OK, text => { asked++; return answer; }))
+            {
+                var handle = restore.Handle;
+                if (restore.JournalCount != 2 || restore.DeleteOldJournals(30) != 0 || asked != 0 || !restore.StatusText.Contains("No completed journals"))
+                    throw new Exception("Recent journals must not be offered for deletion: " + restore.StatusText);
+                foreach (var dir in Directory.GetDirectories(journalDir)) AgeJournal(dir, new DateTime(2020, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+                if (restore.DeleteOldJournals(30) != 0 || asked != 1 || restore.JournalCount != 2) throw new Exception("Declined confirmation must delete nothing.");
+                answer = DialogResult.OK;
+                if (restore.DeleteOldJournals(30) != 1 || asked != 2 || restore.JournalCount != 1 || !restore.StatusText.StartsWith("Deleted 1 of 1"))
+                    throw new Exception("Old completed journal not deleted (interrupted one must stay): " + restore.StatusText);
+            }
+            Console.WriteLine("ProjectWindowSmoke: identity, stamps, registry, watcher banner, journal restore window, delete old journals PASS");
         }
         finally { S5Fixture.Delete(root); S5Fixture.Delete(registryDir); S5Fixture.Delete(journalDir); }
+    }
+
+    /// <summary>Makes a journal look old: its createdUtc and state marker times move to <paramref name="utc"/>.</summary>
+    private static void AgeJournal(string directory, DateTime utc)
+    {
+        var json = Path.Combine(directory, "journal.json");
+        var text = System.Text.RegularExpressions.Regex.Replace(File.ReadAllText(json), "\"createdUtc\":\"[^\"]*\"", "\"createdUtc\":\"" + utc.ToString("o") + "\"");
+        File.WriteAllText(json, text);
+        foreach (var marker in Directory.GetFiles(directory, "*.marker")) File.SetLastWriteTimeUtc(marker, utc);
     }
 }

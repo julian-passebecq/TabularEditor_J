@@ -55,7 +55,7 @@ namespace TabularEditor.PbiBench.Dax
             _fileMenu.DropDownItems.Add(new ToolStripSeparator());
             _fileMenu.DropDownItems.Add(menu);
             _recoveryTimer.Tick += (s, e) => { _recoveryTimer.Stop(); SaveRecoveryNow(); };
-            Disposed += (s, e) => _recoveryTimer.Dispose();
+            Disposed += (s, e) => { _recoveryTimer.Dispose(); ReleaseRecoveryIds(); };
             // The prompt needs a visible owner, so it waits for Load; without opt-in nothing is read from disk.
             Load += (s, e) => { if (_recoveryEnabled) OfferRecovery(); };
         }
@@ -66,7 +66,21 @@ namespace TabularEditor.PbiBench.Dax
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is ArgumentException) { return false; }
         }
 
-        private RecoveryStore CreateRecoveryStore(bool enabled) => new RecoveryStore(new RecoveryStoreOptions(_recoveryRoot, enabled));
+        /// <summary>Liveness probe for copy owners (null = real process check); smokes model other TE2 instances with it.</summary>
+        internal Func<RecoveryOwner, bool> RecoveryOwnerProbe { get; set; }
+
+        private RecoveryStore CreateRecoveryStore(bool enabled) => new RecoveryStore(new RecoveryStoreOptions(_recoveryRoot, enabled), null, RecoveryOwnerProbe);
+
+        /// <summary>The window is gone: its copies stay on disk and become recoverable for the next Workbench of this process.</summary>
+        private void ReleaseRecoveryIds()
+        {
+            try
+            {
+                var store = CreateRecoveryStore(false);
+                foreach (var tab in Tabs) store.Release(tab.RecoveryId);
+            }
+            catch (Exception) { } // disposal path: releasing is best effort and never throws out of Dispose
+        }
 
         private void ScheduleRecovery()
         {
@@ -91,7 +105,7 @@ namespace TabularEditor.PbiBench.Dax
                     }
                     else if (tab.HasRecoveryCopy)
                     {
-                        store.Delete(tab.RecoveryId);
+                        store.DeleteOwn(tab.RecoveryId);
                         tab.HasRecoveryCopy = false;
                     }
                 }
@@ -112,7 +126,8 @@ namespace TabularEditor.PbiBench.Dax
             try
             {
                 var open = Tabs.Select(t => t.RecoveryId).ToArray();
-                entries = CreateRecoveryStore(true).List().Where(e => e.Kind == RecoveryKind && !open.Contains(e.DocumentId)).ToArray();
+                // Only orphaned copies: another running TE2 instance's live drafts are never offered (multi-instance safety).
+                entries = CreateRecoveryStore(true).ListRecoverable().Where(e => e.Kind == RecoveryKind && !open.Contains(e.DocumentId)).ToArray();
             }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { SetStatus("Recovery folder could not be read: " + ex.Message); return 0; }
             var intact = entries.Where(e => e.IsIntact).Take(Math.Max(0, _documents.MaxDocuments - _documents.Count)).ToArray();
@@ -131,15 +146,19 @@ namespace TabularEditor.PbiBench.Dax
             WorkbenchTab first = null;
             foreach (var entry in intact)
             {
-                string text;
-                try { text = CreateRecoveryStore(true).Read(entry.DocumentId); }
-                catch (Exception ex) when (ex is InvalidDataException || ex is IOException || ex is UnauthorizedAccessException) { damaged++; continue; }
+                if (_documents.Count >= _documents.MaxDocuments) break;
+                // The restored tab gets a NEW id: the copy is rewritten under it (owned by this process) before the source
+                // copy is removed, so a crash in between leaves two copies, never none.
                 var document = new DaxDocument();
+                string text;
+                try { CreateRecoveryStore(true).Adopt(entry.DocumentId, document.Id, DateTime.UtcNow, out text); }
+                catch (Exception ex) when (ex is InvalidDataException || ex is IOException || ex is UnauthorizedAccessException) { damaged++; continue; }
+                catch (InvalidOperationException) { continue; } // claimed meanwhile by a running instance
                 document.New(text, unsaved: true);
                 var label = entry.Title.Length > 0 ? entry.Title.Replace(" (recovered)", "") : "draft";
                 var tab = AddTab(document, false, " · recovered (" + label + ")");
-                if (tab == null) break;
-                tab.RecoveryId = entry.DocumentId;
+                if (tab == null) { try { CreateRecoveryStore(false).Release(document.Id); } catch (ArgumentException) { } break; }
+                tab.RecoveryId = document.Id;
                 tab.HasRecoveryCopy = true;
                 first = first ?? tab;
                 restored++;
@@ -182,7 +201,7 @@ namespace TabularEditor.PbiBench.Dax
         {
             try
             {
-                var count = DeleteAllRecoveryCopies(_recoveryRoot, Tabs.Select(t => t.RecoveryId));
+                var count = DeleteAllRecoveryCopies(_recoveryRoot, Tabs.Select(t => t.RecoveryId), RecoveryOwnerProbe);
                 foreach (var tab in Tabs) tab.HasRecoveryCopy = false;
                 SetStatus("Deleted " + count + " DAX recovery cop" + (count == 1 ? "y" : "ies") + " from " + _recoveryRoot + ".");
                 return count;
@@ -190,19 +209,22 @@ namespace TabularEditor.PbiBench.Dax
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { SetStatus("Recovery copies not deleted: " + ex.Message); return 0; }
         }
 
-        /// <summary>Deletes kind "dax" copies (plus the given ids). Usable without an open Workbench.</summary>
-        internal static int DeleteAllRecoveryCopies(string root, System.Collections.Generic.IEnumerable<string> extraIds = null)
+        /// <summary>
+        /// Deletes kind "dax" copies (plus this process's copies of the given ids). Usable without an open Workbench.
+        /// Live drafts of another running TE2 instance are left alone.
+        /// </summary>
+        internal static int DeleteAllRecoveryCopies(string root, System.Collections.Generic.IEnumerable<string> extraIds = null, Func<RecoveryOwner, bool> ownerProbe = null)
         {
-            var store = new RecoveryStore(new RecoveryStoreOptions(root ?? RecoveryStoreOptions.DefaultRoot, true));
-            var ids = store.List().Where(e => e.Kind == RecoveryKind).Select(e => e.DocumentId)
-                .Concat(extraIds ?? Enumerable.Empty<string>()).Distinct(StringComparer.Ordinal).ToArray();
-            return ids.Count(store.Delete);
+            var store = new RecoveryStore(new RecoveryStoreOptions(root ?? RecoveryStoreOptions.DefaultRoot, true), null, ownerProbe);
+            var listed = store.List().Where(e => e.Kind == RecoveryKind && !e.IsHeldByOtherInstance).Select(e => e.DocumentId).ToArray();
+            var own = (extraIds ?? Enumerable.Empty<string>()).Where(id => !listed.Contains(id, StringComparer.Ordinal)).Distinct(StringComparer.Ordinal).ToArray();
+            return listed.Count(store.Delete) + own.Count(store.DeleteOwn);
         }
 
         private void DiscardRecoveryCopy(WorkbenchTab tab)
         {
             if (tab == null || (!tab.HasRecoveryCopy && !_recoveryEnabled)) return;
-            try { CreateRecoveryStore(false).Delete(tab.RecoveryId); tab.HasRecoveryCopy = false; }
+            try { CreateRecoveryStore(false).DeleteOwn(tab.RecoveryId); tab.HasRecoveryCopy = false; }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { SetStatus("Recovery copy not deleted: " + ex.Message); }
         }
 
