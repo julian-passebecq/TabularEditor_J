@@ -60,6 +60,51 @@ internal static partial class SliceSmokes
         AutoThrows<ArgumentException>(() => store.Save("ok", "csharp", "x", "x", DateTime.Now), "Local timestamps must be rejected.");
         AutoThrows<ArgumentException>(() => new RecoveryStore(new RecoveryStoreOptions(root, true, maxContentChars: 4)).Save("big", "c", "t", "12345", t0), "Oversized content must be rejected.");
         Console.WriteLine("RecoveryStoreSmoke: opt-in, atomic write, hash manifest, retention, explicit delete PASS");
+        RecoveryOwnershipSmoke(fixtureRoot);
+    }
+
+    // Review #1: two TE2 instances share the recovery folder; owners (pid + start time) decide what is offered and deleted.
+    private static void RecoveryOwnershipSmoke(string fixtureRoot)
+    {
+        var root = Path.Combine(fixtureRoot, "recovery-owners");
+        var t0 = DateTime.UtcNow;
+        var a = new RecoveryOwner(int.MaxValue - 1, new DateTime(2026, 10, 13, 8, 0, 0, DateTimeKind.Utc));
+        var b = new RecoveryOwner(int.MaxValue - 2, new DateTime(2026, 10, 13, 9, 0, 0, DateTimeKind.Utc));
+        var alive = new System.Collections.Generic.HashSet<int> { a.ProcessId, b.ProcessId };
+        Func<RecoveryOwner, bool> probe = o => alive.Contains(o.ProcessId);
+        var storeA = new RecoveryStore(new RecoveryStoreOptions(root, true), a, probe);
+        var storeB = new RecoveryStore(new RecoveryStoreOptions(root, true), b, probe);
+
+        storeA.Save("doc-a", "dax", "A draft", "EVALUATE {1}", t0);
+        var seenByB = storeB.List().Single();
+        AutoCheck(seenByB.IsHeldByOtherInstance && !seenByB.IsRecoverable && !seenByB.IsOwnedByThisProcess && seenByB.Owner.Equals(a), "B must see A's live draft as held by another instance.");
+        AutoCheck(storeB.ListRecoverable().Count == 0, "A live instance's draft must never be offered.");
+        AutoCheck(storeA.ListRecoverable().Count == 0, "A draft held by an open editor must not be offered in its own process.");
+        AutoThrows<InvalidOperationException>(() => storeB.Adopt("doc-a", "doc-b", t0, out _), "Adopting a live draft must be refused.");
+        AutoCheck(!storeB.DeleteOwn("doc-a") && storeA.Read("doc-a") == "EVALUATE {1}", "B's Save/Don't save must not delete A's copy.");
+        storeB.Save("doc-a", "dax", "B same id", "EVALUATE {2}", t0.AddSeconds(1));
+        AutoCheck(Directory.GetFiles(root, "doc-a.*").Length == 4, "B's save under the same id must not remove A's version.");
+        AutoCheck(storeB.DeleteOwn("doc-a") && Directory.GetFiles(root, "doc-a.*").Length == 2 && storeA.Read("doc-a") == "EVALUATE {1}", "DeleteOwn must remove only B's version.");
+
+        // A crashes: its copy becomes recoverable; restore writes a new id first, then removes the source.
+        alive.Remove(a.ProcessId);
+        AutoCheck(storeB.ListRecoverable().Single().DocumentId == "doc-a", "A gone: its copy must be offered.");
+        AutoThrows<ArgumentException>(() => storeB.Adopt("doc-a", "doc-a", t0, out _), "Restore must use a new id.");
+        var adopted = storeB.Adopt("doc-a", "doc-b", t0.AddSeconds(2), out var text);
+        var after = storeB.List().Single();
+        AutoCheck(text == "EVALUATE {1}" && adopted.DocumentId == "doc-b" && after.DocumentId == "doc-b" && after.IsOwnedByThisProcess && !after.IsRecoverable &&
+            Directory.GetFiles(root, "doc-a.*").Length == 0, "Adopt must move the copy to a new id owned by B and remove the source.");
+        storeB.Release("doc-b");
+        AutoCheck(storeB.ListRecoverable().Single().DocumentId == "doc-b", "A released copy of this process is recoverable again.");
+
+        // Pid reuse: same pid, other start time is a different process; unknown pid is gone.
+        var self = RecoveryOwner.Current;
+        AutoCheck(self.IsKnown && RecoveryOwner.IsRunning(self), "The current process must be running.");
+        AutoCheck(!RecoveryOwner.IsRunning(new RecoveryOwner(self.ProcessId, self.StartUtc.AddHours(-3))), "A reused pid with another start time must count as gone.");
+        AutoCheck(!RecoveryOwner.IsRunning(new RecoveryOwner(int.MaxValue - 3, self.StartUtc)) && !RecoveryOwner.IsRunning(RecoveryOwner.Unknown), "Missing/unknown owners must count as gone.");
+        AutoThrows<ArgumentException>(() => new RecoveryStore(new RecoveryStoreOptions(root, true), RecoveryOwner.Unknown, probe), "A store needs a known owner.");
+        storeB.DeleteAll();
+        Console.WriteLine("RecoveryOwnershipSmoke: owner pid+start, live drafts never offered/deleted, adopt to new id then remove source, pid reuse PASS");
     }
 
     private static void ScriptDocumentSmoke()

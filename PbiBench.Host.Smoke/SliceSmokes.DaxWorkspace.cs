@@ -288,13 +288,22 @@ internal static class DaxRecoverySmoke
         }
         S3.Check(store.List().Any(e => e.DocumentId == firstId && e.Kind == "dax"), "copies survive a crash");
 
-        // Damaged copy is never offered.
-        store.Save("damaged0001", "dax", "damaged.dax", "EVALUATE 1", DateTime.UtcNow);
+        // Review #1 multi-instance: copies carry their owner. "dead" is a crashed instance, "live" another running TE2.
+        var live = new RecoveryOwner(int.MaxValue - 5, new DateTime(2026, 10, 13, 7, 0, 0, DateTimeKind.Utc));
+        var dead = new RecoveryOwner(int.MaxValue - 6, new DateTime(2026, 10, 12, 7, 0, 0, DateTimeKind.Utc));
+        Func<RecoveryOwner, bool> probe = o => o.Equals(live);
+        var liveStore = new RecoveryStore(new RecoveryStoreOptions(root, true), live, probe);
+        liveStore.Save("otherlive01", "dax", "live.dax", "EVALUATE ROW(\"live in A\", 1)", DateTime.UtcNow);
+        S3.Check(store.List().Single(e => e.DocumentId == firstId).IsRecoverable, "a disposed window releases its copies");
+
+        // Damaged copy (of a crashed instance) is never offered.
+        new RecoveryStore(new RecoveryStoreOptions(root, true), dead, probe).Save("damaged0001", "dax", "damaged.dax", "EVALUATE 1", DateTime.UtcNow);
         var damaged = Directory.GetFiles(root, "damaged0001.*" + RecoveryStore.ContentExtension).Single();
         File.WriteAllText(damaged, "EVALUATE 2");
 
         using (var reopened = S3.NewForm(dialogs, workspace, root))
         {
+            reopened.RecoveryOwnerProbe = probe;
             S3.Check(reopened.RecoveryEnabled, "opt-in remembered by the marker file");
             workspace.Restore = false;
             S3.Check(reopened.OfferRecovery() == 0 && store.List().Any(e => e.DocumentId == firstId) && reopened.Tabs.Count == 1, "declined restore keeps copies, opens nothing");
@@ -302,14 +311,22 @@ internal static class DaxRecoverySmoke
             S3.Check(reopened.OfferRecovery() == 1, "intact copy restored (damaged one skipped): " + reopened.StatusText);
             var restored = reopened.ActiveTab;
             S3.Check(restored.Editor.Text == "EVALUATE ROW(\"draft\", 1)" && restored.Document.IsDirty && restored.Document.FilePath == null &&
-                restored.RecoveryId == firstId && restored.Page.Text.Contains("recovered"), "restored as an unsaved tab bound to its copy");
+                restored.Page.Text.Contains("recovered"), "restored as an unsaved tab");
+            var restoredId = restored.RecoveryId;
+            S3.Check(restoredId != firstId && store.List().All(e => e.DocumentId != firstId) &&
+                store.List().Any(e => e.DocumentId == restoredId && e.IsOwnedByThisProcess && !e.IsRecoverable) && store.Read(restoredId) == "EVALUATE ROW(\"draft\", 1)",
+                "restore writes a new copy under a new id, then removes the source copy");
             S3.Check(reopened.StatusText.Contains("hash check"), "damaged copy reported: " + reopened.StatusText);
-            S3.Check(reopened.OfferRecovery() == 0, "already restored copies are not offered twice");
+            S3.Check(reopened.OfferRecovery() == 0, "already restored copies (and the other instance's live draft) are not offered");
             dialogs.Answers.Enqueue(DialogResult.No);
-            S3.Check(reopened.CloseTab(restored) && store.List().All(e => e.DocumentId != firstId), "closing a restored tab without saving deletes its copy");
+            S3.Check(reopened.CloseTab(restored) && store.List().All(e => e.DocumentId != restoredId), "closing a restored tab without saving deletes its copy");
+            S3.Check(new RecoveryStore(new RecoveryStoreOptions(root, true), null, probe).List().Any(e => e.DocumentId == "otherlive01" && e.IsHeldByOtherInstance),
+                "Don't save never deletes another instance's copy");
             reopened.ActiveTab.Editor.Text = "EVALUATE ROW(\"x\", 9)";
             reopened.SaveRecoveryNow();
-            S3.Check(reopened.DeleteRecoveryCopies() >= 2 && store.List().All(e => e.Kind != "dax"), "delete removes every dax copy (incl. damaged)");
+            S3.Check(reopened.DeleteRecoveryCopies() >= 2 && store.List().Where(e => e.Kind == "dax").Select(e => e.DocumentId).SequenceEqual(new[] { "otherlive01" }),
+                "delete removes every dax copy (incl. damaged) except a running instance's live draft");
+            liveStore.Delete("otherlive01");
             S3.Check(store.List().Any(e => e.Kind == "csharp"), "script copies are never touched");
             S3.Check(reopened.SetRecoveryOptIn(false) && !reopened.RecoveryEnabled && !File.Exists(marker), "opt-out removes the marker");
             reopened.ActiveTab.Editor.Text += " ";

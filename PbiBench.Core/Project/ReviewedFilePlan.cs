@@ -62,11 +62,22 @@ namespace PbiBench.Core.Project
         public string JournalPath { get; }
     }
 
+    /// <summary>A target changed on disk between the stale check and its own commit (an external save during apply).</summary>
+    public sealed class ReviewedFileChangedExternallyException : IOException
+    {
+        public ReviewedFileChangedExternallyException(string relativePath)
+            : base("'" + relativePath + "' was changed by another program while the plan was being applied.")
+        { RelativePath = relativePath; }
+        public string RelativePath { get; }
+    }
+
     public sealed class ReviewedFilePlanResult
     {
         public string JournalPath { get; internal set; } = "";
         public int FilesWritten { get; internal set; }
         public string State { get; internal set; } = "";
+        /// <summary>Non-fatal problem after every file was written (e.g. the journal state marker could not be written). Empty when none.</summary>
+        public string Warning { get; internal set; } = "";
     }
 
     /// <summary>Test/diagnostic hooks. Never used to retry: a failed apply rolls back once and reports.</summary>
@@ -76,6 +87,8 @@ namespace PbiBench.Core.Project
         public Action<int, string>? BeforeCommit { get; set; }
         /// <summary>Called before restore step N (0-based) during an explicit journal restore.</summary>
         public Action<int, string>? BeforeRestore { get; set; }
+        /// <summary>Called before the final state marker of an apply is written (a throw simulates a failed marker write).</summary>
+        public Action<string>? BeforeMark { get; set; }
     }
 
     public static class ReviewedFileJournalState
@@ -122,7 +135,7 @@ namespace PbiBench.Core.Project
     /// rolls every committed file back from the journal. Restore replays the journal later and
     /// refuses files changed since apply. No retries and no waits: IO failures surface once.
     /// </summary>
-    public sealed class ReviewedFilePlan
+    public sealed partial class ReviewedFilePlan
     {
         public const int MaxFiles = 256;
         public const long MaxFileBytes = 16L * 1024 * 1024;
@@ -223,23 +236,49 @@ namespace PbiBench.Core.Project
                     var change = _changes[index];
                     var target = ResolveTarget(Root, change.RelativePath);
                     options?.BeforeCommit?.Invoke(index, change.RelativePath);
+                    // Re-check this target right before its own commit: an external save during a long apply must not be overwritten.
+                    EnsureUnchangedSinceReview(change, target);
                     if (change.Kind == ReviewedFileChangeKind.Delete) File.Delete(target);
                     else CommitContent(target, change.NewContent!);
                 }
             }
             catch (Exception error)
             {
-                var rolledBack = TryRollBack(journal, journalDirectory, index);
+                // A target changed externally was not touched by this plan: roll back the files before it only, so the
+                // external edit is kept rather than replaced by the pre-review backup.
+                var external = error as ReviewedFileChangedExternallyException;
+                var rolledBack = TryRollBack(journal, journalDirectory, external != null ? index - 1 : index);
                 TryMark(journalDirectory, rolledBack ? ReviewedFileJournalState.RolledBack : ReviewedFileJournalState.RollbackIncomplete);
+                var what = external != null ? external.Message + " Its new content was kept;" : "Writing '" + _changes[index].RelativePath + "' failed;";
                 throw new ReviewedFilePlanApplyException(
-                    rolledBack ? "Writing '" + _changes[index].RelativePath + "' failed; all files were restored from the journal."
-                               : "Writing failed and some files could not be restored; recover them from the journal at " + journalDirectory + ".",
+                    rolledBack ? what + " all files written before it were restored from the journal."
+                               : what + " some files could not be restored; recover them from the journal at " + journalDirectory + ".",
                     rolledBack, journalPath, error);
             }
-            Mark(journalDirectory, ReviewedFileJournalState.Applied);
-            return new ReviewedFilePlanResult { JournalPath = journalPath, FilesWritten = _changes.Count, State = ReviewedFileJournalState.Applied };
+            var result = new ReviewedFilePlanResult { JournalPath = journalPath, FilesWritten = _changes.Count, State = ReviewedFileJournalState.Applied };
+            // Every file is committed: a missing state marker must not turn a successful apply into a failure. Without the
+            // marker the journal reads as interrupted ("Applying"), which Restore still accepts.
+            try
+            {
+                options?.BeforeMark?.Invoke(ReviewedFileJournalState.Applied);
+                Mark(journalDirectory, ReviewedFileJournalState.Applied);
+            }
+            catch (Exception error) when (error is IOException || error is UnauthorizedAccessException)
+            {
+                result.Warning = "All files were written, but the journal state could not be recorded (" + error.Message +
+                    "). The journal still restores this apply; it is listed as interrupted.";
+            }
+            return result;
         }
 
+        private static void EnsureUnchangedSinceReview(ReviewedFileChange change, string target)
+        {
+            if (Directory.Exists(target)) throw new ReviewedFileChangedExternallyException(change.RelativePath);
+            var exists = File.Exists(target);
+            if (change.Kind == ReviewedFileChangeKind.Create) { if (exists) throw new ReviewedFileChangedExternallyException(change.RelativePath); return; }
+            if (!exists || !string.Equals(HashFile(target), change.ExpectedBeforeHash, StringComparison.Ordinal))
+                throw new ReviewedFileChangedExternallyException(change.RelativePath);
+        }
         /// <summary>Lists journals newest first (bounded), for an explicit restore UI.</summary>
         public static IReadOnlyList<string> ListJournals(string journalRoot, int max = 50)
         {

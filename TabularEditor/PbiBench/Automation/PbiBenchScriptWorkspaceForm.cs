@@ -77,7 +77,12 @@ namespace TabularEditor.PbiBench.Automation
             _recoveryOptIn.CheckedChanged += (s, e) => SetRecoveryOptIn(_recoveryOptIn.Checked);
             _recoveryTimer.Tick += (s, e) => { _recoveryTimer.Stop(); SaveRecoveryNow(); };
             FormClosing += OnClosingWorkspace;
-            Disposed += (s, e) => _recoveryTimer.Dispose();
+            Disposed += (s, e) =>
+            {
+                _recoveryTimer.Dispose();
+                // Copies kept at close become recoverable for the next workspace of this process; other instances never see them as orphans while TE2 runs.
+                try { var store = OwnStore(false); foreach (var doc in Workspace.Documents) store.Release(doc.Id); } catch (Exception) { }
+            };
 
             const string starter = "// C# script. Model and Selected are available, as in TE2 Advanced Scripting.\r\n";
             // The recovery prompt needs a visible owner, so it waits for Load; without opt-in nothing is read from disk.
@@ -89,7 +94,10 @@ namespace TabularEditor.PbiBench.Automation
         internal ScriptDocument ActiveDocument => _tabs.SelectedTab?.Tag as ScriptDocument;
         internal ListView Problems => _problems;
         internal string StatusText => _status.Text;
-        internal RecoveryStore Recovery => new RecoveryStore(new RecoveryStoreOptions(_recoveryRoot, _recoveryOptIn.Checked));
+        internal RecoveryStore Recovery => OwnStore(_recoveryOptIn.Checked);
+        /// <summary>Liveness probe for copy owners (null = real process check); smokes model other TE2 instances with it.</summary>
+        internal Func<RecoveryOwner, bool> RecoveryOwnerProbe { get; set; }
+        private RecoveryStore OwnStore(bool enabled) => new RecoveryStore(new RecoveryStoreOptions(_recoveryRoot, enabled), null, RecoveryOwnerProbe);
         private string OptInMarkerPath => _recoveryRoot.TrimEnd(Path.DirectorySeparatorChar) + ".optin";
 
         internal ScriptDocument NewDocument(string text) => AddTab(Workspace.New(text));
@@ -170,26 +178,35 @@ namespace TabularEditor.PbiBench.Automation
             { SetStatus("Recovery copy not written: " + ex.Message); return false; }
         }
 
-        private bool OfferRecovery()
+        /// <summary>Restore prompt (count → yes/no); replaceable by smokes. Default asks with a message box.</summary>
+        internal Func<int, bool> RestorePrompt { get; set; }
+
+        internal bool OfferRecovery()
         {
             if (!_recoveryOptIn.Checked) return false;
             IReadOnlyList<RecoveryEntry> entries;
-            try { entries = Recovery.List().Where(e => e.Kind == RecoveryKind).Take(ScriptWorkspace.MaxDocuments).ToArray(); }
+            // Only orphaned copies: another running TE2 instance's live drafts are never offered (multi-instance safety).
+            try { entries = Recovery.ListRecoverable().Where(e => e.Kind == RecoveryKind && e.IsIntact).Take(ScriptWorkspace.MaxDocuments).ToArray(); }
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { return false; }
             if (entries.Count == 0) return false;
-            var answer = MessageBox.Show(this, entries.Count + " unsaved script(s) were found in local recovery (" + _recoveryRoot + ").\r\n\r\nRestore them as tabs? " +
-                "Restored scripts are untrusted until you confirm them again.", "Script recovery", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
-            if (answer != DialogResult.Yes) return false;
+            var yes = RestorePrompt != null ? RestorePrompt(entries.Count) :
+                MessageBox.Show(this, entries.Count + " unsaved script(s) were found in local recovery (" + _recoveryRoot + ").\r\n\r\nRestore them as tabs? " +
+                "Restored scripts are untrusted until you confirm them again.", "Script recovery", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes;
+            if (!yes) return false;
             var restored = 0;
             foreach (var entry in entries)
             {
                 try
                 {
-                    var text = Recovery.Read(entry.DocumentId);
-                    AddTab(Workspace.Add(new ScriptDocument(entry.DocumentId, entry.Title.EndsWith(" (recovered)") ? entry.Title : entry.Title + " (recovered)", text)));
+                    // New id: the copy is rewritten under it (owned by this process) before the source copy is removed.
+                    var newId = Guid.NewGuid().ToString("N");
+                    Recovery.Adopt(entry.DocumentId, newId, DateTime.UtcNow, out var text);
+                    AddTab(Workspace.Add(new ScriptDocument(newId, entry.Title.EndsWith(" (recovered)") ? entry.Title : entry.Title + " (recovered)", text)));
                     restored++;
                 }
                 catch (InvalidDataException) { SetStatus("A recovery copy failed its hash check and was not restored."); }
+                catch (InvalidOperationException) { } // claimed meanwhile by a running instance
+                catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { SetStatus("A recovery copy could not be restored: " + ex.Message); }
             }
             return restored > 0;
         }
@@ -201,7 +218,7 @@ namespace TabularEditor.PbiBench.Automation
             {
                 if (enabled)
                 {
-                    var store = new RecoveryStore(new RecoveryStoreOptions(_recoveryRoot, true));
+                    var store = OwnStore(true);
                     if (MessageBox.Show(this, store.Disclosure + "\r\n\r\nKeep recovery copies of unsaved scripts?", "Local recovery copies",
                         MessageBoxButtons.YesNo, MessageBoxIcon.Information) != DialogResult.Yes)
                     { _loading = true; _recoveryOptIn.Checked = false; _loading = false; return; }
@@ -214,17 +231,19 @@ namespace TabularEditor.PbiBench.Automation
             catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { SetStatus("Recovery setting not changed: " + ex.Message); }
         }
 
-        private void DeleteRecoveryCopies()
+        internal int DeleteRecoveryCopies()
         {
             try
             {
-                // Only script copies: the store is shared with other document kinds (DAX documents later).
-                var store = new RecoveryStore(new RecoveryStoreOptions(_recoveryRoot, true));
-                var ids = store.List().Where(e => e.Kind == RecoveryKind).Select(e => e.DocumentId).Concat(Workspace.Documents.Select(d => d.Id)).Distinct();
-                var count = ids.Count(store.Delete);
+                // Only script copies (the store is shared with DAX documents), and never a running TE2 instance's live drafts.
+                var store = OwnStore(true);
+                var listed = store.List().Where(e => e.Kind == RecoveryKind && !e.IsHeldByOtherInstance).Select(e => e.DocumentId).ToArray();
+                var own = Workspace.Documents.Select(d => d.Id).Where(id => !listed.Contains(id)).Distinct().ToArray();
+                var count = listed.Count(store.Delete) + own.Count(store.DeleteOwn);
                 SetStatus("Deleted " + count + " script recovery cop" + (count == 1 ? "y" : "ies") + " from " + _recoveryRoot + ".");
+                return count;
             }
-            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { SetStatus("Recovery copies not deleted: " + ex.Message); }
+            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { SetStatus("Recovery copies not deleted: " + ex.Message); return 0; }
         }
 
         private ScriptDocument AddTab(ScriptDocument doc)
@@ -332,7 +351,7 @@ namespace TabularEditor.PbiBench.Automation
                 doc.MarkSaved(path);
                 doc.Rename(Path.GetFileName(path));
                 if (_tabs.SelectedTab != null) _tabs.SelectedTab.Text = TabTitle(doc);
-                try { new RecoveryStore(new RecoveryStoreOptions(_recoveryRoot, false)).Delete(doc.Id); } catch (IOException) { }
+                try { OwnStore(false).DeleteOwn(doc.Id); } catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { }
                 SetStatus("Saved script to " + path + ".");
                 return true;
             }
@@ -346,7 +365,7 @@ namespace TabularEditor.PbiBench.Automation
             if (doc.IsDirty && MessageBox.Show(this, "Discard unsaved changes to '" + doc.Title + "'?", "Close script", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) != DialogResult.Yes) return;
             Workspace.Close(doc.Id, true);
             _compiled.Remove(doc.Id);
-            try { new RecoveryStore(new RecoveryStoreOptions(_recoveryRoot, false)).Delete(doc.Id); } catch (IOException) { }
+            try { OwnStore(false).DeleteOwn(doc.Id); } catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException) { }
             _tabs.TabPages.Remove(_tabs.SelectedTab);
             ShowProblems(ActiveDocument);
         }

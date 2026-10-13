@@ -80,6 +80,10 @@ namespace TabularEditor.PbiBench.Report
         internal int ChangeRowCount => _changes.Items.Count;
         internal string AfterText => _after.Text;
         internal string JournalPath => _journal;
+        /// <summary>Non-fatal warning of the last successful apply (e.g. journal state marker not written); empty when none.</summary>
+        internal string ApplyWarning { get; private set; } = "";
+        /// <summary>Diagnostic hooks passed to ReviewedFilePlan.Apply (smokes only; never used to retry).</summary>
+        internal ReviewedFilePlanOptions ApplyOptions { get; set; }
 
         internal void LoadThemeFile(string path)
         {
@@ -123,12 +127,15 @@ namespace TabularEditor.PbiBench.Report
                 " so the previous bytes can be restored exactly. Power BI Desktop must reopen the report to show the theme.") != DialogResult.OK) return;
             try
             {
-                var result = _plan.Plan.Apply(_journalRoot);
+                var result = _plan.Plan.Apply(_journalRoot, ApplyOptions);
+                // Files are committed from here on: whatever follows is reported as applied (with a warning), never as refused.
                 _journal = result.JournalPath;
                 Applied = true;
+                ApplyWarning = result.Warning;
                 _apply.Enabled = false;
                 _restore.Enabled = true;
-                _status.Text = "Applied: " + result.FilesWritten + " file(s) written. Journal " + result.JournalPath + ".";
+                _status.Text = "Applied: " + result.FilesWritten + " file(s) written. Journal " + result.JournalPath + "." +
+                    (result.Warning.Length > 0 ? " Warning: " + result.Warning : "");
             }
             catch (ReviewedFilePlanStaleException ex)
             {
@@ -160,7 +167,12 @@ namespace TabularEditor.PbiBench.Report
                 _status.Text = "Restored " + count + " file(s) to their state before the theme apply.";
             }
             catch (ReviewedFilePlanStaleException ex) { _status.Text = "Restore refused: " + ex.Message; }
-            catch (Exception ex) when (ex is IOException || ex is UnauthorizedAccessException || ex is InvalidOperationException) { _status.Text = "Restore failed; journal kept: " + ex.Message; }
+            catch (InvalidDataException ex) { _status.Text = "Restore failed: the journal or a backup is damaged (" + ex.Message + "). The journal was kept; nothing else was changed after the damaged file."; }
+            catch (Exception ex) when (IsNonFatal(ex)) { _status.Text = "Restore failed; journal kept: " + ex.Message; }
         }
+
+        // Anything a damaged journal, a locked file or a parse error can throw is shown in the form instead of TE2's crash dialog.
+        private static bool IsNonFatal(Exception ex) =>
+            !(ex is OutOfMemoryException || ex is StackOverflowException || ex is AccessViolationException || ex is System.Threading.ThreadAbortException);
     }
 }

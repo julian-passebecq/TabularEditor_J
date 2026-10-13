@@ -6,10 +6,14 @@ using PbiBench.Core.Project;
 
 namespace TabularEditor.PbiBench.Project
 {
+    internal enum ProjectWatcherState { NotStarted, Watching, RootMissing, Disposed }
+
     internal sealed class ProjectWatchSignal
     {
-        internal ProjectWatchSignal(IReadOnlyList<string> paths, int eventCount, bool overflow, bool pathsTruncated)
-        { Paths = paths; EventCount = eventCount; Overflow = overflow; PathsTruncated = pathsTruncated; }
+        internal ProjectWatchSignal(IReadOnlyList<string> paths, int eventCount, bool overflow, bool pathsTruncated, bool rootMissing = false)
+        { Paths = paths; EventCount = eventCount; Overflow = overflow; PathsTruncated = pathsTruncated; RootMissing = rootMissing; }
+        /// <summary>The watched folder was deleted or moved: the watcher stopped (state <see cref="ProjectWatcherState.RootMissing"/>).</summary>
+        internal bool RootMissing { get; }
         /// <summary>Relative paths seen (bounded); a hint only. Consumers always rescan the manifest.</summary>
         internal IReadOnlyList<string> Paths { get; }
         internal int EventCount { get; }
@@ -37,7 +41,10 @@ namespace TabularEditor.PbiBench.Project
         private int _events;
         private bool _overflow;
         private bool _truncated;
+        private bool _rootMissing;
         private bool _disposed;
+        private ProjectWatcherState _state = ProjectWatcherState.NotStarted;
+        private int _restarts;
 
         internal PbiBenchProjectWatcher(string root, TimeSpan debounce)
         {
@@ -49,6 +56,9 @@ namespace TabularEditor.PbiBench.Project
 
         internal event Action<ProjectWatchSignal> Settled;
         internal string Root => _root;
+        internal ProjectWatcherState State { get { lock (_gate) return _state; } }
+        /// <summary>How many times the underlying FileSystemWatcher was recreated after an error.</summary>
+        internal int Restarts { get { lock (_gate) return _restarts; } }
 
         internal void Start()
         {
@@ -56,14 +66,54 @@ namespace TabularEditor.PbiBench.Project
             {
                 if (_disposed) throw new ObjectDisposedException(nameof(PbiBenchProjectWatcher));
                 if (_watcher != null) return;
-                _watcher = new FileSystemWatcher(_root) {
-                    IncludeSubdirectories = true, InternalBufferSize = 64 * 1024,
-                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.Size
-                };
-                _watcher.Changed += OnEvent; _watcher.Created += OnEvent; _watcher.Deleted += OnEvent;
-                _watcher.Renamed += (s, e) => { Record(e.OldFullPath); OnEvent(s, e); };
-                _watcher.Error += (s, e) => InjectOverflow();
-                _watcher.EnableRaisingEvents = true;
+                _watcher = CreateWatcher();
+                _state = ProjectWatcherState.Watching;
+            }
+        }
+
+        private FileSystemWatcher CreateWatcher()
+        {
+            var watcher = new FileSystemWatcher(_root) {
+                IncludeSubdirectories = true, InternalBufferSize = 64 * 1024,
+                NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite | NotifyFilters.Size
+            };
+            watcher.Changed += OnEvent; watcher.Created += OnEvent; watcher.Deleted += OnEvent;
+            watcher.Renamed += (s, e) => { Record(e.OldFullPath); OnEvent(s, e); };
+            watcher.Error += (s, e) => OnError(s as FileSystemWatcher, e.GetException());
+            watcher.EnableRaisingEvents = true;
+            return watcher;
+        }
+
+        /// <summary>Same path as a real watcher error (used by the host smoke): non-overflow errors recreate the watcher.</summary>
+        internal void InjectError(Exception error) => OnError(null, error);
+
+        /// <summary>
+        /// Overflow: events were lost, signal a rescan and keep watching. Any other error (network drop, root deleted or moved,
+        /// handle invalidated) leaves the FileSystemWatcher dead, so it is recreated once per error when the root still
+        /// exists; when the root is gone the watcher stops with <see cref="ProjectWatcherState.RootMissing"/> and says so.
+        /// </summary>
+        private void OnError(FileSystemWatcher source, Exception error)
+        {
+            if (error is InternalBufferOverflowException) { InjectOverflow(); return; }
+            lock (_gate)
+            {
+                if (_disposed) return;
+                if (source != null && !ReferenceEquals(source, _watcher)) return; // a late error from a watcher already replaced
+                if (_watcher != null) { try { _watcher.EnableRaisingEvents = false; _watcher.Dispose(); } catch (Exception) { } _watcher = null; }
+                bool exists;
+                try { exists = Directory.Exists(_root); } catch (Exception) { exists = false; }
+                if (exists)
+                {
+                    try { _watcher = CreateWatcher(); _restarts++; _state = ProjectWatcherState.Watching; }
+                    catch (Exception)
+                    {
+                        // Runs on a watcher thread: never throw. A root pending deletion cannot be watched again: report it as missing.
+                        _rootMissing = true; _state = ProjectWatcherState.RootMissing;
+                    }
+                }
+                else { _rootMissing = true; _state = ProjectWatcherState.RootMissing; }
+                _overflow = true; _events++;
+                _timer.Change(_debounce, Timeout.InfiniteTimeSpan);
             }
         }
 
@@ -111,8 +161,8 @@ namespace TabularEditor.PbiBench.Project
             lock (_gate)
             {
                 if (_disposed || _events == 0) return;
-                signal = new ProjectWatchSignal(new List<string>(_paths), _events, _overflow, _truncated);
-                _paths.Clear(); _events = 0; _overflow = false; _truncated = false;
+                signal = new ProjectWatchSignal(new List<string>(_paths), _events, _overflow, _truncated, _rootMissing);
+                _paths.Clear(); _events = 0; _overflow = false; _truncated = false; _rootMissing = false;
                 handler = Settled;
             }
             try { handler?.Invoke(signal); }
@@ -125,6 +175,7 @@ namespace TabularEditor.PbiBench.Project
             {
                 if (_disposed) return;
                 _disposed = true;
+                _state = ProjectWatcherState.Disposed;
                 if (_watcher != null) { _watcher.EnableRaisingEvents = false; _watcher.Dispose(); _watcher = null; }
                 _timer.Dispose();
                 Settled = null;

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 using PbiBench.Core.Automation;
+using PbiBench.Core.Documents;
 using TabularEditor;
 using TabularEditor.PbiBench.Automation;
 using TabularEditor.TOMWrapper;
@@ -147,6 +148,23 @@ internal static partial class SliceSmokes
             {
                 var doc = form.NewDocument("// synthetic recovery text");
                 AutoHostCheck(form.SaveRecoveryNow() && form.Recovery.Read(doc.Id) == "// synthetic recovery text", "Opted-in recovery copy missing.");
+
+                // Review #1 multi-instance: a running instance's live draft is never offered or deleted; an orphan is restored under a new id.
+                var live = new RecoveryOwner(int.MaxValue - 7, new DateTime(2026, 10, 13, 6, 0, 0, DateTimeKind.Utc));
+                var dead = new RecoveryOwner(int.MaxValue - 8, new DateTime(2026, 10, 12, 6, 0, 0, DateTimeKind.Utc));
+                Func<RecoveryOwner, bool> probe = o => o.Equals(live);
+                new RecoveryStore(new RecoveryStoreOptions(root, true), live, probe).Save("otherlive01", "csharp", "Other", "// live in instance A", DateTime.UtcNow);
+                new RecoveryStore(new RecoveryStoreOptions(root, true), dead, probe).Save("orphan0001", "csharp", "Orphan", "// orphan of a crashed instance", DateTime.UtcNow);
+                form.RecoveryOwnerProbe = probe;
+                var asked = 0;
+                form.RestorePrompt = n => { asked = n; return true; };
+                AutoHostCheck(form.OfferRecovery() && asked == 1, "Only the orphaned script copy may be offered (asked " + asked + ").");
+                var restored = form.ActiveDocument;
+                var copies = form.Recovery.List();
+                AutoHostCheck(restored.Id != "orphan0001" && restored.Text == "// orphan of a crashed instance" && copies.All(e => e.DocumentId != "orphan0001") &&
+                    copies.Any(e => e.DocumentId == restored.Id && e.IsOwnedByThisProcess), "Restore must move the copy to a new id owned by this process.");
+                AutoHostCheck(form.DeleteRecoveryCopies() == 2 && form.Recovery.List().Single().DocumentId == "otherlive01",
+                    "Delete must keep a running instance's live draft and remove this process's copies.");
             }
         }
         finally

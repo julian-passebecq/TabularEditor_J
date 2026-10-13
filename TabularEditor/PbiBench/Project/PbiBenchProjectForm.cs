@@ -230,6 +230,15 @@ namespace TabularEditor.PbiBench.Project
         {
             if (IsDisposed || generation != _generation || _context == null) return;
             WatchSignals++;
+            if (signal.RootMissing)
+            {
+                // The watcher stopped itself: say so instead of going quiet.
+                StopWatcher();
+                _bannerText.Text = "The project folder was deleted or moved (" + _context.ProjectRoot + "). Change watching stopped; choose the project again or press Refresh.";
+                _banner.Visible = true;
+                _status.Text = "Project folder missing; change watcher stopped.";
+                return;
+            }
             var _ = RescanAsync(generation, signal.Overflow);
         }
 
