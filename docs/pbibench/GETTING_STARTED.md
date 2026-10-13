@@ -23,19 +23,19 @@ To uninstall, delete the folder. Per-user data lives in `%LOCALAPPDATA%\TE2Enhan
 1. **Model.** Open a `.bim`, a TMDL folder or a PBIP semantic model with *File > Open*. To work against a live model, connect to Power BI Desktop or an XMLA endpoint.
 2. **DAX.** In *Tools > PbiBench > DAX Workbench*:
    - open several tabs;
-   - `Ctrl+Space` gives completion and `Ctrl+Shift+Space` gives signatures;
-   - `F8` runs advisory checks;
+   - `Ctrl+Space` gives completion and `Ctrl+Shift+Space` shows parameter help;
+   - `F8` jumps to the next advisory issue, re-checking first if the checks are stale;
    - `F5` runs the query, but only with a live connection.
 
    *Semantic View* shows where each object is used and which references are unresolved.
-3. **Save and reopen.** Save the model. Then edit a `.tmdl` file outside TE2: the Project window (*Tools > PbiBench > Project*) shows a banner. TE2's own *Save* does not detect that conflict, so check *Review save target…* before you save.
-4. **Report.** Open the PBIR report folder of a **copy** of a PBIP in *Tools > PbiBench > Report*. From there you can:
+3. **Save and reopen.** Save the model. Then edit a `.tmdl` file outside TE2: the Project window (*Tools > PbiBench > Project…*) shows a banner. TE2's own *Save* does not detect that conflict, so check *Review save target for external changes…* before you save.
+4. **Report.** Open the PBIR report folder of a **copy** of a PBIP in *Tools > PbiBench > Report (PBIR) index and lineage…*. From there you can:
    - index the report and follow lineage to model fields;
    - apply a theme through the reviewed plan, which shows a diff and rejects files that changed meanwhile;
    - use *Restore journal* to go back byte for byte.
 5. **Scripts and recipes.** C# scripts run only after you trust that exact text, and each run is one undo transaction. Recipes (rename with dependents, format strings) show a preview first and undo in one step.
 6. **Checks.** Run curated BPA, assertions and profiling drafts. Profiling drafts open unsaved and never run before `F5`.
-7. **MCP (read-only).** *Tools > PbiBench > Publish read-only snapshot* writes `%LOCALAPPDATA%\TE2Enhanced\mcp\snapshot-v1.json`. Expressions are left out unless you opt in. Then register the companion in an MCP client:
+7. **MCP (read-only).** *Tools > PbiBench > Publish read-only snapshot for MCP…* writes `%LOCALAPPDATA%\TE2Enhanced\mcp\snapshot-v1.json`. Expressions are left out unless you opt in. Then register the companion in an MCP client:
    ```json
    { "mcpServers": { "te2-enhanced": { "command": "C:\\path\\to\\TE2Enhanced\\mcp\\TE2Enhanced.Mcp.exe" } } }
    ```
