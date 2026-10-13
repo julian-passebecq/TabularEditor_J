@@ -109,3 +109,18 @@ Verify-PbiBench: exit 0, 8/8 stages PASS (evidence `.tools/verify-qafix/`, local
 - **CI on `0c3368f`:** GitHub `PbiBench TE2 integration` (run 38420299376) and `PbiBench foundation` (run 38420299195) are both **success**. The GitLab runner is **red**: pipeline 2943085778, D17 focus check, "box False, tree True". This is the second red run in a row on that check, so it was stopped and handed to the owner. A TextBox never gets focus in session 0, and the check passes locally and on windows-latest. Proposed next step: gate that assertion on `Environment.UserInteractive`, or run the runner in an interactive session.
 - Local Verify passes all 8 stages. The host smoke was repeated and passed 8/8.
 - OBS-001 policy is unchanged and remains an owner decision.
+
+## Lead decisions applied (2026-10-13, after the retest)
+- **D17 focus check:** gated on `Environment.UserInteractive`. On a service-hosted runner it logs `NOT_RUN` with the observed values. Locally and on windows-latest it still asserts. The runner config was not touched.
+- **OBS-001 (D4):** added `PbiBench.Core.IO.SafeFileReplace`, which all 6 `File.Replace` sites now use.
+  - By default nothing changes: the policy is still to fail visibly.
+  - Setting `TE2ENHANCED_REPLACE_RETRY=1` enables exactly one retry after 250 ms, and only on error 1175. A process counter records how many retries were used.
+  - Smoke: `SafeFileReplaceSmoke`.
+- **TE2 Save conflict hook:** not added (safest option, no upstream edit). It remains a disclosed limit, with the Project banner and "Review save target…".
+- **MCP V2 writes:** not built. The companion stays read-only, which is the safest option and keeps V2 proposals open.
+- **Live Desktop/XMLA fixtures:** still BLOCKED_ENV.
+  - Power BI Desktop is not installed.
+  - Local SSAS services exist on this PC, including `MSOLAP$MSSQLSERVERTABU`. Under the handoff rule they were not attached ("never attach to unknown local servers").
+  - A throwaway database deployed to one of them needs owner approval.
+- **DPI:** added an automated proxy, `QaFixHostSmokes.ProjectDpiScale`. The Project window is scaled ×1.5 and ×2, and every command must stay inside the client area: PASS. A real-monitor check at 150/200 % and across monitors remains a manual check for the owner.
+- Local Verify passes all 8 stages.

@@ -105,3 +105,6 @@ All fixes stay under `TabularEditor/PbiBench`, `PbiBench.Core`, `TE2Enhanced.Mcp
 `Scripts/ci` and `.gitlab-ci.yml` (D12 tool pins only). No upstream-owned TE2/TOMWrapper production file,
 `TabularEditor.csproj`, `PbiBenchShortcutFilter.cs` or package pin was changed. Dialog focus return uses
 the existing `UIElements.TreeView`; keyboard handling is per PbiBench form (`ProcessCmdKey`).
+
+# 2026-10-13 lead decisions
+`PbiBench.Core/IO/SafeFileReplace.cs` (opt-in OBS-001 retry), smoke-only D17/DPI changes. No upstream-owned file touched; TE2 Save is still not hooked.

@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using PbiBench.Core.IO;
 
 namespace PbiBench.Core.Dax
 {
@@ -26,7 +27,7 @@ namespace PbiBench.Core.Dax
                     writer.NewLine = "\r\n";
                     (write ?? Write)(writer, result);
                 }
-                if (File.Exists(fullPath)) File.Replace(temporary, fullPath, null);
+                if (File.Exists(fullPath)) SafeFileReplace.Replace(temporary, fullPath, null);
                 else File.Move(temporary, fullPath);
             }
             finally { try { if (File.Exists(temporary)) File.Delete(temporary); } catch { } }

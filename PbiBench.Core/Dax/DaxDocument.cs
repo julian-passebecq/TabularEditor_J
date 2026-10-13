@@ -3,6 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 using PbiBench.Core.Documents;
+using PbiBench.Core.IO;
 
 namespace PbiBench.Core.Dax
 {
@@ -76,7 +77,7 @@ namespace PbiBench.Core.Dax
             try
             {
                 File.WriteAllBytes(temporary, bytes);
-                if (File.Exists(fullPath)) File.Replace(temporary, fullPath, null);
+                if (File.Exists(fullPath)) SafeFileReplace.Replace(temporary, fullPath, null);
                 else File.Move(temporary, fullPath);
             }
             finally

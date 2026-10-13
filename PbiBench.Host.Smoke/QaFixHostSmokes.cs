@@ -40,6 +40,28 @@ internal static class QaFixHostSmokes
         Console.WriteLine("QA fixes D2/D14 Project window: layout at minimum and 1400 px, Esc PASS");
     }
 
+    /// <summary>DPI proxy: WinForms rescales a form by the DPI ratio on a 150/200 % monitor; scaling the Project window the
+    /// same way must keep every command inside the client area. Does not replace a real-screen DPI check.</summary>
+    internal static void ProjectDpiScale()
+    {
+        foreach (var factor in new[] { 1.5f, 2f })
+            using (var form = new PbiBenchProjectForm("Synthetic", false) { CheckSaveTarget = () => null })
+            {
+                form.Show(); Application.DoEvents();
+                form.Scale(new SizeF(factor, factor));
+                form.Size = new Size((int)(form.MinimumSize.Width * factor), (int)(form.MinimumSize.Height * factor));
+                form.PerformLayout(); Application.DoEvents();
+                var client = form.ClientRectangle;
+                foreach (var control in form.CommandBar.Controls.Cast<Control>().Where(c => c.Visible))
+                {
+                    var bounds = form.RectangleToClient(control.RectangleToScreen(control.ClientRectangle));
+                    Check(client.Contains(bounds), "DPI x" + factor + " '" + control.Text + "' inside the Project window (" + bounds + " in " + client + ")");
+                }
+                form.Close();
+            }
+        Console.WriteLine("DPI proxy: Project window commands inside the client area at x1.5 and x2 scale PASS");
+    }
+
     /// <summary>D14 Esc in Recipes / Table preview / Profile draft; D14 Ctrl+M editor exit; D15 offline F5; D17 starter text and focus return.</summary>
     internal static void Dialogs(TabularModelHandler handler)
     {
@@ -119,7 +141,9 @@ internal static class QaFixHostSmokes
             PbiBenchDialogKeys.RestoreFocus(menu, tree); Application.DoEvents();
             var treeFocused = tree.Focused;
             PbiBenchDialogKeys.RestoreFocus(null, tree); Application.DoEvents();
-            Check(boxFocused && treeFocused && tree.Focused, "D17 focus returns to the previous control or the model tree (box " + boxFocused + ", tree " + treeFocused + ")");
+            if (!Environment.UserInteractive)
+                Console.WriteLine("D17 focus return NOT_RUN: no interactive desktop (service-hosted runner); box " + boxFocused + ", tree " + treeFocused);
+            else Check(boxFocused && treeFocused && tree.Focused, "D17 focus returns to the previous control or the model tree (box " + boxFocused + ", tree " + treeFocused + ")");
         }
         Console.WriteLine("QA fixes D14/D15/D17: Esc in 3 dialogs, Ctrl+M editor exit, offline F5 status, clean starters, focus return PASS");
     }

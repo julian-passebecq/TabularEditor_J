@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.Text;
+using PbiBench.Core.IO;
 
 namespace PbiBench.Core.Project
 {
@@ -440,7 +441,7 @@ namespace PbiBench.Core.Project
             {
                 WriteNew(temp, content);
                 if (!File.Exists(target)) { File.Move(temp, target); return; }
-                try { File.Replace(temp, target, null, true); }
+                try { SafeFileReplace.Replace(temp, target, null, true); }
                 catch (IOException) when (recovery && File.Exists(target))
                 {
                     using (var stream = new FileStream(target, FileMode.Open, FileAccess.Write, FileShare.None))

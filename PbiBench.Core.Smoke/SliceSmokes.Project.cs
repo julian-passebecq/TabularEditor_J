@@ -13,6 +13,7 @@ internal static partial class SliceSmokes
         var fixes = ReviewFixFixture.Prepare();
         try
         {
+            SafeFileReplaceSmoke.Run();
             ReviewedFilePlanSmoke.Run();
             ProjectIdentitySmoke.Run(fixtureRoot);
             ExternalChangeSmoke.Run();

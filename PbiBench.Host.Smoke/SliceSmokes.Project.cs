@@ -26,6 +26,7 @@ internal static partial class SliceSmokes
         VsCodeLauncherSmoke.Run();
         ProjectWindowSmoke.Run();
         QaFixHostSmokes.ProjectLayout();
+        QaFixHostSmokes.ProjectDpiScale();
     }
 }
 

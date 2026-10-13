@@ -6,6 +6,7 @@ using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Security.Cryptography;
 using System.Text;
+using PbiBench.Core.IO;
 
 namespace PbiBench.Core.Project
 {
@@ -124,7 +125,7 @@ namespace PbiBench.Core.Project
             try
             {
                 File.WriteAllBytes(temp, bytes);
-                if (File.Exists(FilePath)) File.Replace(temp, FilePath, null, true); else File.Move(temp, FilePath);
+                if (File.Exists(FilePath)) SafeFileReplace.Replace(temp, FilePath, null, true); else File.Move(temp, FilePath);
             }
             finally { if (File.Exists(temp)) File.Delete(temp); }
         }

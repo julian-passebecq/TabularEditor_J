@@ -7,6 +7,7 @@ using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
+using PbiBench.Core.IO;
 
 namespace PbiBench.Core.Snapshot
 {
@@ -171,7 +172,7 @@ namespace PbiBench.Core.Snapshot
             try
             {
                 File.WriteAllText(temp, json, new UTF8Encoding(false));
-                if (File.Exists(destination)) File.Replace(temp, destination, null);
+                if (File.Exists(destination)) SafeFileReplace.Replace(temp, destination, null);
                 else File.Move(temp, destination);
             }
             finally { try { if (File.Exists(temp)) File.Delete(temp); } catch { } }
