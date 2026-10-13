@@ -111,6 +111,9 @@ internal static class QaFixHostSmokes
             var box = new TextBox { Dock = DockStyle.Top };
             owner.Controls.Add(tree); owner.Controls.Add(box); owner.Controls.Add(menu); owner.MainMenuStrip = menu;
             owner.Show(); owner.Activate(); Application.DoEvents();
+            // A service-hosted runner (no interactive desktop) drops the first SetFocus on a fresh window: start from the tree so
+            // the check measures a real move tree -> box instead of window activation.
+            tree.Focus(); Application.DoEvents();
             PbiBenchDialogKeys.RestoreFocus(box, tree); Application.DoEvents();
             var boxFocused = box.Focused;
             PbiBenchDialogKeys.RestoreFocus(menu, tree); Application.DoEvents();
