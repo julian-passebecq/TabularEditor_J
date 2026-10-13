@@ -30,7 +30,7 @@ namespace TE2Enhanced.Mcp
                 var missing = CallTool(server, 3, "get_model_summary", null);
                 Check(missing["isError"]!.GetValue<bool>() && Text(missing).Contains("No snapshot published"), "missing snapshot message");
 
-                ModelSnapshotSerializer.WriteFile(path, Sample(includeExpressions: false));
+                Publish(path, Sample(includeExpressions: false));
                 var summary = CallTool(server, 4, "get_model_summary", null)["structuredContent"]!;
                 Check(summary["tables"]!.GetValue<int>() == 2 && summary["measures"]!.GetValue<int>() == 3, "summary counts");
                 Check(summary["ageSeconds"]!.GetValue<double>() == 3600, "staleness age");
@@ -52,7 +52,7 @@ namespace TE2Enhanced.Mcp
                 Check(hidden["tables"]!.AsArray().Count == 1, "hidden table filter");
 
                 // Opt-in expressions, and reload when the snapshot file changes.
-                ModelSnapshotSerializer.WriteFile(path, Sample(includeExpressions: true));
+                Publish(path, Sample(includeExpressions: true));
                 var withExpr = CallTool(server, 13, "get_measure", new JsonObject { ["table"] = "Sales", ["name"] = "Total ''Sales''" })["structuredContent"]!;
                 Check(withExpr["expression"]!.GetValue<string>() == "SUM('Sales'[Amount])", "expression after opt-in and reload");
 
@@ -85,7 +85,7 @@ namespace TE2Enhanced.Mcp
         /// <summary>Runs the real executable over stdio, as an MCP client would.</summary>
         private static void StdioRoundTrip(string path)
         {
-            ModelSnapshotSerializer.WriteFile(path, Sample(false));
+            Publish(path, Sample(false));
             var exe = Environment.ProcessPath ?? throw new InvalidOperationException("No process path.");
             var start = new ProcessStartInfo(exe) { RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true, UseShellExecute = false };
             start.ArgumentList.Add("--snapshot"); start.ArgumentList.Add(path);
@@ -99,6 +99,23 @@ namespace TE2Enhanced.Mcp
             if (!process.WaitForExit(15000)) { process.Kill(); throw new Exception("stdio server did not exit on EOF"); }
             Check(first["id"]!.GetValue<int>() == 1 && second["id"]!.GetValue<int>() == 2, "stdio ordering, no response to notification");
             Check(second["result"]!["structuredContent"]!["tables"]!.AsArray().Count == 2, "stdio tool call");
+        }
+
+        private static int _obs001;
+
+        /// <summary>
+        /// The product writer is atomic (File.Replace) and never retries. On this machine a fresh file
+        /// under %TEMP% is occasionally held by another process (OBS-001, ERROR_UNABLE_TO_REMOVE_REPLACED);
+        /// the test tolerates exactly one such observation per run, reports it, and fails on a second.
+        /// </summary>
+        private static void Publish(string path, ModelSnapshotV1 snapshot)
+        {
+            try { ModelSnapshotSerializer.WriteFile(path, snapshot); }
+            catch (IOException error) when ((error.HResult & 0xFFFF) == 1175 && _obs001++ == 0)
+            {
+                Console.WriteLine("OBS-001 observed once (File.Replace refused, previous snapshot intact): " + error.Message);
+                ModelSnapshotSerializer.WriteFile(path, snapshot);
+            }
         }
 
         private static ModelSnapshotV1 Sample(bool includeExpressions)
