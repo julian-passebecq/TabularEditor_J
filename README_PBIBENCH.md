@@ -29,9 +29,9 @@ The following are separate products and must not be pulled into this repository'
 - visual theme simulation -> **Theme Forge**;
 - final report rendering -> **Power BI Desktop**.
 
-## Try it (2026-10-13 integration branch)
+## Try it
 
-Branch `claude/pbibench-opus-2026-10-13`. Build and smoke-test everything, then make a portable zip:
+Build and smoke-test everything, then make a portable zip (user guide: `docs/pbibench/GETTING_STARTED.md`, also inside the zip):
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File Scripts/Verify-PbiBench.ps1 -DotNetPath <net10 dotnet.exe> -NuGetPath <nuget.exe>

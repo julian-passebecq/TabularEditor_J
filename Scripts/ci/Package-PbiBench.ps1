@@ -48,13 +48,41 @@ if (!$SkipMcp) {
 }
 
 Copy-Item (Join-Path $root 'LICENSE') (Join-Path $stage 'LICENSE.txt')
+Copy-Item (Join-Path $root 'docs/pbibench/GETTING_STARTED.md') (Join-Path $stage 'GETTING-STARTED.md')
+New-Item -ItemType Directory -Force (Join-Path $stage 'docs') | Out-Null
+Copy-Item (Join-Path $root 'docs/pbibench/MCP_COMPANION_V1.md') (Join-Path $stage 'docs/MCP_COMPANION_V1.md')
+
+# Third-party notices generated from the shipped binaries themselves (product, company, copyright, version),
+# so the list cannot drift from the zip content. TE2 itself is MIT (LICENSE.txt).
+$notices = @(
+    'TE2 Enhanced - third-party components shipped in this portable build.'
+    'Generated from file version resources at package time. TE2 Enhanced and Tabular Editor 2 are MIT licensed (LICENSE.txt).'
+    'Microsoft.AnalysisServices* client libraries are redistributed as in upstream Tabular Editor 2 under their Microsoft license terms.'
+    'Localized <culture>\*.resources.dll satellites belong to the components listed below; runtimes\*\msalruntime*.dll belong to the Microsoft Authentication Library broker.'
+    ''
+)
+Get-ChildItem $stage -Recurse -File -Include *.dll, *.exe |
+    Where-Object { $_.Name -notmatch '^(TabularEditor|TOMWrapper|PbiBench\.|TE2Enhanced\.)' -and $_.Name -notlike '*.resources.dll' } |
+    ForEach-Object {
+        $v = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($_.FullName)
+        $relative = $_.FullName.Substring($stage.Length).TrimStart('\', '/')
+        $notices += '{0} | {1} | {2} | {3} | {4}' -f $relative, $v.ProductName, $v.CompanyName, $v.LegalCopyright, $v.FileVersion
+    }
+$notices | Set-Content (Join-Path $stage 'THIRD-PARTY-NOTICES.txt') -Encoding UTF8
 @"
 TE2 Enhanced (Tabular Editor 2 fork) - portable build $short
 Source: https://github.com/julian-passebecq/TabularEditor_J commit $sha
 Run TabularEditor.exe (requires .NET Framework 4.8). PbiBench features are under Tools > PbiBench.
 mcp\TE2Enhanced.Mcp.exe is an optional read-only MCP companion (requires any .NET 8+ runtime);
-see docs/pbibench/MCP_COMPANION_V1.md. Not signed; qualification build, not a release.
+see docs/MCP_COMPANION_V1.md. Start with GETTING-STARTED.md. Not signed; qualification build, not a release.
 "@ | Set-Content (Join-Path $stage 'README-TE2Enhanced.txt') -Encoding UTF8
+
+# Per-file manifest (inside the zip and next to it) so an extracted folder can be checked file by file.
+$manifest = Get-ChildItem $stage -Recurse -File | Sort-Object FullName | ForEach-Object {
+    '{0}  {1}' -f (Get-Sha256 $_.FullName), $_.FullName.Substring($stage.Length).TrimStart('\', '/').Replace('\', '/')
+}
+$manifest | Set-Content (Join-Path $OutDirectory 'MANIFEST.txt') -Encoding ASCII
+$manifest | Set-Content (Join-Path $stage 'MANIFEST.txt') -Encoding ASCII
 
 $zip = Join-Path $OutDirectory "TE2Enhanced-$short-portable.zip"
 if (Test-Path $zip) { Remove-Item -Force $zip }
@@ -67,6 +95,7 @@ $hashes = @($zip, $exe, (Join-Path $stage 'mcp/TE2Enhanced.Mcp.dll'), (Join-Path
 $hashes | Set-Content (Join-Path $OutDirectory 'SHA256SUMS.txt') -Encoding ASCII
 
 [pscustomobject]@{
+    hostFileVersion = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exe).FileVersion
     sourceCommit = $sha; dirtyTrackedFiles = $dirty; zip = (Split-Path $zip -Leaf)
     zipBytes = (Get-Item $zip).Length; mcpIncluded = -not $SkipMcp
     note = 'Build timestamps make binaries non-reproducible; hashes identify this build only.'
