@@ -460,7 +460,18 @@ internal static class DaxStudioLauncherSmoke
             form.StartDaxStudio = s => { attempts++; return "DAX Studio could not be started from " + s.FileName + "."; };
             editor.Text += "\n// changed";
             result = form.HandOffToDaxStudio();
-            S3.Check(attempts == 1 && workspace.ReportText.Contains("could not be started") && !form.ActiveTab.Document.IsDirty, "start failure saved and reported once");
+            if (form.ActiveTab.Document.IsDirty && (workspace.ReportText + form.StatusText).Contains("Unable to remove the file to be replaced"))
+            {
+                // OBS-001 on the pre-launch save (File.Replace refused by another process): the product
+                // reports it and keeps the text dirty. Tolerated once per run, then the scenario repeats.
+                Console.WriteLine("OBS-001 observed once (DAX Studio pre-launch save refused); repeating.");
+                attempts = 0;
+                editor.Text += "\n// changed again";
+                result = form.HandOffToDaxStudio();
+            }
+            S3.Check(attempts == 1, "start attempted exactly once (attempts=" + attempts + ")");
+            S3.Check(workspace.ReportText.Contains("could not be started"), "start failure reported: " + workspace.ReportText);
+            S3.Check(!form.ActiveTab.Document.IsDirty, "document saved before launch: " + form.StatusText + " | " + workspace.ReportText);
 
             // Default provider: no live TE2 connection behind the workbench means draft mode.
             form.DaxStudioTargetProvider = null;

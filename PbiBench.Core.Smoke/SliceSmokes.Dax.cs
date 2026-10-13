@@ -11,6 +11,10 @@ internal static partial class SliceSmokes
         DaxDiagnosticsCorpusSmoke.Run();
         SemanticUsageSmoke.Run();
         QaFixSmokes.Dax();
+        // Oversized text: one DAX000 "skipped" advisory instead of an exception.
+        var huge = DaxDiagnostics.Analyze("EVALUATE ROW(\"x\", 1)" + new string(' ', DaxAuthoring.MaxTextLength));
+        if (huge.Count != 1 || huge[0].Code != "DAX000") throw new Exception("Oversized DAX must yield DAX000 only.");
+        Console.WriteLine("DAX diagnostics size cap: DAX000 advisory, no exception PASS");
     }
 
     /// <summary>Synthetic model shared by the S2 Core smokes.</summary>

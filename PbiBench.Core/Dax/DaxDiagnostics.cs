@@ -61,6 +61,10 @@ namespace PbiBench.Core.Dax
             text ??= "";
             names ??= DaxModelNameSet.Empty;
             catalog ??= DaxSignatureCatalog.Default;
+            // Beyond the local-assistance size cap, report that checks were skipped instead of throwing.
+            if (text.Length > DaxAuthoring.MaxTextLength)
+                return new[] { new DaxDiagnostic { Code = "DAX000", Start = 0, Length = 0,
+                    Message = $"Text exceeds {DaxAuthoring.MaxTextLength / 1024} Ki characters; local advisory checks were skipped (advisory)." } };
             var tokens = DaxLexicalScanner.Scan(text);
             var code = tokens.Where(t => !t.IsTrivia).ToList();
             var result = new List<DaxDiagnostic>();

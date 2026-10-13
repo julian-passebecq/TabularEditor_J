@@ -54,10 +54,11 @@ namespace TabularEditor.PbiBench.Report
             _filter.SelectedIndex = 0;
 
             var lineagePanel = new Panel { Dock = DockStyle.Fill };
-            var filterBar = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 32 };
+            // AutoSize so the wrapped note never overlaps the lineage list at minimum width.
+            var filterBar = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true };
             filterBar.Controls.Add(new Label { Text = "Show:", AutoSize = true, Padding = new Padding(0, 6, 0, 0) });
             filterBar.Controls.Add(_filter);
-            filterBar.Controls.Add(new Label { AutoSize = true, Padding = new Padding(8, 6, 0, 0),
+            filterBar.Controls.Add(new Label { AutoSize = true, MaximumSize = new System.Drawing.Size(640, 0), Padding = new Padding(8, 6, 0, 0),
                 Text = "Names only (case-insensitive) against the loaded model; no engine query. Ambiguous = cannot be decided from names." });
             lineagePanel.Controls.Add(_lineage); lineagePanel.Controls.Add(filterBar);
 
