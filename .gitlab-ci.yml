@@ -35,14 +35,14 @@ stages: [verify]
         New-Item -ItemType Directory -Force $env:PBIBENCH_TOOL_CACHE | Out-Null
         $installer = Join-Path $env:PBIBENCH_TOOL_CACHE 'dotnet-install.ps1'
         Invoke-WebRequest https://dot.net/v1/dotnet-install.ps1 -OutFile $installer
-        & $installer -Channel 10.0 -InstallDir (Join-Path $env:PBIBENCH_TOOL_CACHE 'dotnet') -NoPath
+        & $installer -Version 10.0.401 -InstallDir (Join-Path $env:PBIBENCH_TOOL_CACHE 'dotnet') -NoPath
       }
     }
     if (!(Test-Path $env:PBIBENCH_NUGET)) {
       $env:PBIBENCH_NUGET = Join-Path $env:PBIBENCH_TOOL_CACHE 'nuget.exe'
       if (!(Test-Path $env:PBIBENCH_NUGET)) {
         New-Item -ItemType Directory -Force $env:PBIBENCH_TOOL_CACHE | Out-Null
-        Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile $env:PBIBENCH_NUGET
+        Invoke-WebRequest https://dist.nuget.org/win-x86-commandline/v6.11.1/nuget.exe -OutFile $env:PBIBENCH_NUGET
       }
     }
     & $env:PBIBENCH_DOTNET --version

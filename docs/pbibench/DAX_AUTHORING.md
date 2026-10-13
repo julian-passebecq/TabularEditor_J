@@ -24,3 +24,14 @@ DAX-010/011 are partial: query assistance is implemented; inline completion,
 expression-editor integration, comprehensive signatures and richer diagnostics
 remain deferred. The host smoke corpus exercises quotes/escaped names, nested
 comments, variables, UDF syntax, malformed delimiters and metadata freshness.
+
+## Keyboard and close behaviour (Light QA 2026-10-13)
+
+- DAX Workbench: F5 / Ctrl+Enter execute; without a live connection the status bar says why nothing ran.
+  Ctrl+Tab / Ctrl+Shift+Tab switch document tabs. **Ctrl+M** toggles "Tab moves focus" (as in VS Code): while
+  on, Tab / Shift+Tab leave the editor for the next / previous control instead of inserting a tab. Esc cancels a
+  running query, otherwise closes the Workbench.
+- Untouched starter text (the sample query, a generated table-preview or profile draft) is not unsaved work:
+  closing right away does not prompt. Any edit makes the tab dirty as before.
+- Project, Recipes, Table preview and Profile draft dialogs close with Esc. After a PbiBench dialog closes,
+  focus returns to the control that had it, or to the model tree when that was the menu.

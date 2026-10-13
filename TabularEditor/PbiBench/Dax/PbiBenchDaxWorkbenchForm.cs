@@ -220,6 +220,12 @@ namespace TabularEditor.PbiBench.Dax
                 return true;
             }
 
+            if (keyData == (Keys.Control | Keys.M))
+            {
+                ToggleTabMovesFocus();
+                return true;
+            }
+
             if (keyData == (Keys.Control | Keys.Shift | Keys.Tab) || keyData == (Keys.Control | Keys.PageUp))
             {
                 SelectNeighbourTab(-1);
@@ -239,6 +245,21 @@ namespace TabularEditor.PbiBench.Dax
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        /// <summary>
+        /// Keyboard exit from the editor (Light QA D14): Ctrl+M toggles "Tab moves focus", as in VS Code. While it is
+        /// on, Tab / Shift+Tab leave the editor for the next / previous control instead of inserting a tab;
+        /// Ctrl+Tab keeps switching document tabs.
+        /// </summary>
+        internal bool TabMovesFocus { get; private set; }
+
+        internal void ToggleTabMovesFocus()
+        {
+            TabMovesFocus = !TabMovesFocus;
+            foreach (var tab in Tabs) if (tab.Editor != null) tab.Editor.AcceptsTab = !TabMovesFocus;
+            SetStatus(TabMovesFocus ? "Tab moves focus: on · Tab / Shift+Tab leave the editor · Ctrl+M to turn off."
+                                    : "Tab moves focus: off · Tab inserts a tab in the editor · Ctrl+M to leave the editor with Tab.");
         }
 
         private static Label CreateInlineLabel(string text)
@@ -270,7 +291,14 @@ namespace TabularEditor.PbiBench.Dax
 
         private async void ExecuteQuery()
         {
-            if (_executor == null || _runCts != null || _formatting || _closing) return;
+            if (_executor == null)
+            {
+                // F5 / Ctrl+Enter / Execute never fail silently (Light QA D15).
+                SetStatus("Not executed: running a query needs a live connection to the model (open TE2 connected to Power BI Desktop or an XMLA endpoint). " +
+                          (string.IsNullOrWhiteSpace(_unavailableReason) ? "" : _unavailableReason + " ") + "The draft can still be edited, checked and saved.");
+                return;
+            }
+            if (_runCts != null || _formatting || _closing) return;
             if (ExecutionContextIsCurrent != null && !ExecutionContextIsCurrent())
             { SetStatus("Preview model/table/column changed. Create a new table preview before executing."); return; }
 

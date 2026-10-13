@@ -48,7 +48,8 @@ namespace TabularEditor.PbiBench.Dax
 
         internal void LoadPreviewDraft(string query, int rowLimit)
         {
-            _document.New(query, unsaved: true);
+            // A generated draft is starter text: untouched, it is not unsaved work and closing must not prompt (Light QA D17).
+            _document.New(query);
             _maxRows.Value = rowLimit;
             DisplayDocument();
             SetStatus("Table preview draft · F5 executes. TOPN ties may exceed rows; retention limits do not bound server work.");

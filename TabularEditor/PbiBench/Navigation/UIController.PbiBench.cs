@@ -10,13 +10,13 @@ namespace TabularEditor.UI
         public void PbiBench_ShowProject()
         {
             using (var dialog = new TabularEditor.PbiBench.Project.PbiBenchProjectForm(Handler?.Model?.Name ?? "No model", Handler?.IsConnected == true))
-                dialog.ShowDialog(UI.FormMain);
+                PbiBench_ShowDialog(dialog);
         }
         public void PbiBench_ShowRecipes()
         {
             if (Handler?.Model == null) return;
             using (var dialog = new TabularEditor.PbiBench.Automation.PbiBenchRecipeForm(() => Handler))
-                dialog.ShowDialog(UI.FormMain);
+                PbiBench_ShowDialog(dialog);
         }
         public void PbiBench_ShowTablePreview()
         {
@@ -24,7 +24,7 @@ namespace TabularEditor.UI
             var handler = Handler;
             using (var builder = new PbiBenchTablePreviewForm(Handler.Model))
             {
-                if (builder.ShowDialog(UI.FormMain) != DialogResult.OK) return;
+                if (PbiBench_ShowDialog(builder) != DialogResult.OK) return;
                 if (!ReferenceEquals(handler, Handler) || !builder.IsCurrent()) return;
                 PbiBenchAmoDaxQueryExecutor.TryCreate(Handler, out var executor, out var reason);
                 using (var dialog = new PbiBenchDaxWorkbenchForm(executor, executor?.ConnectionLabel ?? "", reason))
@@ -33,10 +33,21 @@ namespace TabularEditor.UI
                     dialog.NavigateToObject = obj => Goto(obj);
                     dialog.LoadPreviewDraft(builder.Query, builder.RowLimit);
                     dialog.ExecutionContextIsCurrent = () => ReferenceEquals(handler, Handler) && builder.IsCurrent();
-                    dialog.ShowDialog(UI.FormMain);
+                    PbiBench_ShowDialog(dialog);
                 }
             }
         }
+        /// <summary>
+        /// Shows a PbiBench dialog over the main window and afterwards returns keyboard focus to the control
+        /// that had it, or to the model tree when that was the menu strip (Light QA D17).
+        /// </summary>
+        internal DialogResult PbiBench_ShowDialog(Form dialog)
+        {
+            var previous = PbiBenchDialogKeys.FocusedControl();
+            try { return dialog.ShowDialog(UI.FormMain); }
+            finally { PbiBenchDialogKeys.RestoreFocus(previous, UI.TreeView); }
+        }
+
         // Installing the host from this partial keeps PbiBench commands out of FormMain.cs and
         // the legacy WinForms designer. It registers shortcuts and a small Tools > PbiBench menu.
         private static readonly PbiBenchShortcutFilter PbiBenchShortcutFilterRegistration =
@@ -60,7 +71,7 @@ namespace TabularEditor.UI
 
             using (var dialog = new PbiBenchQuickOpenForm(index.Descriptors))
             {
-                if (dialog.ShowDialog(UI.FormMain) != DialogResult.OK) return;
+                if (PbiBench_ShowDialog(dialog) != DialogResult.OK) return;
 
                 var selected = index.Resolve(dialog.SelectedId);
                 if (selected == null || selected.IsRemoved)
@@ -92,7 +103,7 @@ namespace TabularEditor.UI
 
             using (var dialog = new PbiBenchSemanticViewForm(snapshot))
             {
-                if (dialog.ShowDialog(UI.FormMain) != DialogResult.OK) return;
+                if (PbiBench_ShowDialog(dialog) != DialogResult.OK) return;
 
                 var selected = snapshot.Index.Resolve(dialog.SelectedId);
                 if (selected == null || selected.IsRemoved)
@@ -126,7 +137,7 @@ namespace TabularEditor.UI
             {
                 dialog.AuthoringModel = () => Handler?.Model;
                 dialog.NavigateToObject = obj => Goto(obj);
-                dialog.ShowDialog(UI.FormMain);
+                PbiBench_ShowDialog(dialog);
             }
         }
     }

@@ -13,7 +13,7 @@ namespace TabularEditor.PbiBench.Navigation
             {
                 using (var dialog = new TabularEditor.PbiBench.Mcp.PbiBenchSnapshotPublishForm(
                     () => c.Handler?.Model, () => c.Selection?.OfType<ITabularNamedObject>().ToList()))
-                    dialog.ShowDialog(FormMain.Singleton);
+                    c.PbiBench_ShowDialog(dialog);
             }));
         }
     }
