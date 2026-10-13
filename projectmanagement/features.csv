@@ -7,7 +7,7 @@ DAX-002,Safe diagnostics without secrets,V1,IMPLEMENTED,host smoke,NOT_RUN,n/a,
 DAX-003,Bounded retained results,V1,IMPLEMENTED,DaxRetentionSmoke,NOT_RUN,n/a,application bounds only
 DAX-004,Explicit formatter consent; no telemetry,V1,IMPLEMENTED,FormatterExportSmoke,NOT_RUN,n/a,
 DAX-005,CSV export failure handling and fidelity,V1,IMPLEMENTED,FormatterExportSmoke; T14,NOT_RUN,n/a,OBS-001 open
-DAX-006,Live Desktop/XMLA acceptance,V1 gate,BLOCKED_ENV,none,BLOCKED_ENV,approved disposable fixture required,owner must supply endpoint outside Git
+DAX-006,Live Desktop/XMLA acceptance,V1 gate,PARTIAL,LiveGateSmoke (local SSAS 2022 throwaway db; opt-in),NOT_RUN,local SSAS PASS 2026-10-13; Desktop/remote XMLA/auth BLOCKED_ENV,cancel does not interrupt FE-bound queries (best effort); XMLA error now Failed - see handover/2026-10-13/LIVE_GATE.md
 DAX-010,Language-service ownership map and corpus,V1,IMPLEMENTED,DaxDiagnosticsCorpusSmoke (20 valid/20 invalid),NOT_RUN,n/a,lexical only; no DAX grammar (S2)
 DAX-011,Completion/signatures/navigation/advisory diagnostics,V1,IMPLEMENTED,DaxCompletionContextSmoke; DaxSignatureCatalogSmoke; ExpressionAuthoringSmoke,NOT_RUN,native expression-editor keyboard,224 signatures; expression-editor assist opt-in
 DAX-012,Multiple result sets per-set selection/export,V1,IMPLEMENTED,MultipleResultsSmoke,NOT_RUN,BLOCKED_ENV live multi-rowset,2026-09-14

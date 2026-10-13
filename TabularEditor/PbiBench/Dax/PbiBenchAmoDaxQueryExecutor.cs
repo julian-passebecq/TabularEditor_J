@@ -270,6 +270,12 @@ namespace TabularEditor.PbiBench.Dax
         void Disconnect();
     }
 
+    /// <summary>The endpoint reported a query error; the provider text is deliberately not carried.</summary>
+    internal sealed class DaxProviderQueryException : Exception
+    {
+        internal DaxProviderQueryException() : base("The endpoint reported a query error.") { }
+    }
+
     internal sealed class AmoDaxQuerySession : IDaxQuerySession
     {
         private readonly Server _server = new Server();
@@ -283,9 +289,26 @@ namespace TabularEditor.PbiBench.Dax
         public IDataReader Execute(string query, string catalog)
         {
             XmlaResultCollection results;
-            return _server.ExecuteReader("<Statement>" + SecurityElement.Escape(query.Trim()) + "</Statement>",
+            var reader = _server.ExecuteReader("<Statement>" + SecurityElement.Escape(query.Trim()) + "</Statement>",
                 out results, new Dictionary<string, string> { { "Catalog", catalog }, { "Format", "Tabular" } });
+            // A DAX error comes back in the XMLA result messages with no reader, not as an exception (seen live on
+            // SSAS 2022, DAX-006 gate): without this check a failed query looked like an empty, completed one.
+            if (HasError(results)) { try { reader?.Dispose(); } catch { } throw new DaxProviderQueryException(); }
+            return reader;
         }
+        internal static bool HasError(XmlaResultCollection results)
+        {
+            if (results == null) return false;
+            foreach (XmlaResult result in results)
+                foreach (XmlaMessage message in result.Messages)
+                    if (message is XmlaError) return true;
+            return false;
+        }
+        /// <summary>
+        /// Best effort only. Live DAX-006 gate (SSAS 2022, 2026-10-13): neither this call nor an XMLA Cancel by SessionID
+        /// from a second connection stopped a formula-engine-bound query; the engine ran it to completion and the
+        /// executor then reported Cancelled. See handover/2026-10-13/LIVE_GATE.md.
+        /// </summary>
         public void Cancel() => _server.CancelCommand();
         public void Disconnect() { if (_server.Connected) _server.Disconnect(); }
         public void Dispose() => _server.Dispose();
