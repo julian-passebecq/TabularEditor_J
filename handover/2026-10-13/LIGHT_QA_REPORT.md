@@ -97,3 +97,15 @@ Verify-PbiBench: exit 0, 8/8 stages PASS (evidence `.tools/verify-qafix/`, local
 | D15 | Fixed | Workbench Execute/F5 without a live connection sets a status message naming the reason. | Host `QaFixHostSmokes.Dialogs`: offline F5 status contains "live connection". |
 | D16 | Fixed | Publish dialog shows the destination in a text box with Save As; default path unchanged. | Host `SnapshotPublisherSmoke`: default shown, changed to a temp path, published there; never the per-user path. |
 | D17 | Fixed | Generated table-preview/profile drafts open clean (starter text); the sample query and script starter were already clean and are now checked. All PbiBench dialogs opened from the host return focus to the previous control, or to the model tree when that was the menu strip. | Host `QaFixHostSmokes.Dialogs`: no dirty document after show/draft, both close without prompt; focus-return check. |
+
+## Retest and integration (2026-10-13, branch `claude/pbibench-opus-2026-10-13`)
+
+- `claude/pbibench-qa-fixes` merged into the branch (`9c118e0`). The independent retest gave 16/16 PASS on D1-D3 and D5-D17.
+- Three retest leftovers were fixed in `95c6a38`:
+  - DAX diagnostics above 256 Ki characters now return a single advisory `DAX000` instead of throwing.
+  - The Report filter bar auto-sizes and wraps, so it no longer overlaps the grid.
+  - The DAX Studio start-failure smoke records an OBS-001 save failure, repeats once, and reports three separate checks.
+- The GitLab service runner (LocalSystem, no interactive desktop) failed the D17 focus check, because the first SetFocus on a new window is dropped there. The smoke now starts from the model tree (`0c3368f`). The product is unchanged.
+- **CI on `0c3368f`:** GitHub `PbiBench TE2 integration` (run 38420299376) and `PbiBench foundation` (run 38420299195) are both **success**. The GitLab runner is **red**: pipeline 2943085778, D17 focus check, "box False, tree True". This is the second red run in a row on that check, so it was stopped and handed to the owner. A TextBox never gets focus in session 0, and the check passes locally and on windows-latest. Proposed next step: gate that assertion on `Environment.UserInteractive`, or run the runner in an interactive session.
+- Local Verify passes all 8 stages. The host smoke was repeated and passed 8/8.
+- OBS-001 policy is unchanged and remains an owner decision.

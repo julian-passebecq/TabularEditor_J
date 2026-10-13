@@ -22,6 +22,10 @@ f0830bc16c920eb22f996077b6ec08b38672da44e915ff9bd0c2565cada09109  TE2Enhanced.Mc
 ```
 The zip is a GitLab job artifact (30 days, private project).
 
+## Update after Light QA (tip `0c3368f` + docs)
+- Light QA YELLOW → 17 defects; D1-D3, D5-D17 fixed and retested (16/16 PASS), leftovers fixed. Details: `LIGHT_QA_REPORT.md` (Pro response, Retest and integration).
+- GitHub CI green on `0c3368f`; GitLab local runner red on the D17 focus smoke only (session-0 focus, see report). QA evidence archived locally in `D:/PROJ/TabularEditor_J/.tools/qa-evidence-2026-10-13` (unpublished).
+
 ## Done
 - **P0:** S001 was already closed (`0b2ef50`). Nothing was reimplemented; OBS-001 is now characterized (see `OBS-001-PROBE.md`).
 - **P1:** GitHub CI repaired and covering this branch; GitLab local-runner lane (LocalSystem/WOW64 NuGet fix); 8-stage Verify; portable package; reconciled upstream ledger.
