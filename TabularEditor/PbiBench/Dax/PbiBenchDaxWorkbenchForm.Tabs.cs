@@ -135,7 +135,7 @@ namespace TabularEditor.PbiBench.Dax
             var editor = new RichTextBox
             {
                 Dock = DockStyle.Fill,
-                AcceptsTab = true,
+                AcceptsTab = !TabMovesFocus,
                 DetectUrls = false,
                 Font = new Font(FontFamily.GenericMonospace, 10.0f),
                 WordWrap = false,

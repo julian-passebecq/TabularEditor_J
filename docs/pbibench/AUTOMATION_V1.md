@@ -17,6 +17,9 @@ Tools > PbiBench > *C# script workspace (trusted, not sandboxed)…*
   processes, network, DAX formatter calls made by the script) cannot be undone. No model save or deploy.
 - Guards: compile result must match the document generation and hash; the loaded model must be the one the
   workspace was opened on; TE2 must not be inside another batch.
+- Keyboard: Tab inserts a tab in the editor. **Ctrl+M** toggles "Tab moves focus" (as in VS Code and the DAX
+  Workbench): while on, Tab / Shift+Tab leave the editor for the next / previous control. The untouched starter
+  comment is not unsaved work: closing right away does not prompt.
 
 ## Reviewed recipes (AUTO-002)
 Tools > PbiBench > *Reviewed metadata recipes…* now uses the fixed `RecipeCatalog`:

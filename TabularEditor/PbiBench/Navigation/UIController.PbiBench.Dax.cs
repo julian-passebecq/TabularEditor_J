@@ -44,7 +44,7 @@ namespace TabularEditor.UI
             using (var dialog = new PbiBenchSemanticViewForm(snapshot))
             {
                 dialog.SelectUsageTab();
-                if (dialog.ShowDialog(UI.FormMain) != DialogResult.OK) return;
+                if (PbiBench_ShowDialog(dialog) != DialogResult.OK) return;
                 var selected = snapshot.Index.Resolve(dialog.SelectedId);
                 if (selected == null || selected.IsRemoved)
                 {

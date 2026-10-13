@@ -10,6 +10,10 @@ namespace TabularEditor.PbiBench.Dax
 {
     internal sealed class PbiBenchTablePreviewForm : Form
     {
+        /// <summary>Esc closes the dialog (Light QA D14).</summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) =>
+            TabularEditor.PbiBench.Navigation.PbiBenchDialogKeys.CloseOnEscape(this, keyData) || base.ProcessCmdKey(ref msg, keyData);
+
         internal string Query { get; private set; }
         internal int RowLimit { get; private set; }
         internal Func<bool> IsCurrent { get; private set; }

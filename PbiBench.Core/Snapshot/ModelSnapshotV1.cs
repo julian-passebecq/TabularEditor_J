@@ -5,6 +5,8 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace PbiBench.Core.Snapshot
 {
@@ -87,7 +89,37 @@ namespace PbiBench.Core.Snapshot
         public const string FileName = "snapshot-v1.json";
         public const int MaxBytes = 32 * 1024 * 1024;
         private static readonly DataContractJsonSerializer Serializer = new DataContractJsonSerializer(typeof(ModelSnapshotV1));
-        private static readonly string[] CredentialMarkers = { "password=", "pwd=", "accountkey=", "client_secret", "sharedaccesssignature=" };
+        /// <summary>
+        /// Heuristic credential patterns (case-insensitive, optional spaces around = or :). Applied to
+        /// every string in the snapshot. A heuristic, not a guarantee: it refuses common secret shapes.
+        /// </summary>
+        private static readonly Regex[] CredentialPatterns =
+        {
+            Pattern(@"(password|passwd|pwd)\s*[=:]\s*\S"),
+            Pattern(@"\b(user\s*id|uid)\s*[=:]\s*[^\s;]"),
+            Pattern(@"account\s*key\s*[=:]\s*\S"),
+            Pattern(@"client[\s_-]?secret"),
+            Pattern(@"\bshared\s*access\s*signature\s*[=:]"),
+            Pattern(@"\bbearer\s+[A-Za-z0-9\-._~+/]{8,}"),
+            Pattern(@"\bauthorization\s*:\s*\S"),
+            Pattern(@"[?&]sig\s*=\s*[^\s&]"),
+            Pattern(@"\b(data\s*source|server|address|addr)\s*=\s*[^;=]+;")
+        };
+
+        private static Regex Pattern(string pattern) =>
+            new Regex(pattern, RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+
+        /// <summary>True when the text matches one of the credential heuristics.</summary>
+        public static bool LooksLikeCredential(string? text)
+        {
+            if (string.IsNullOrEmpty(text)) return false;
+            foreach (var pattern in CredentialPatterns)
+            {
+                try { if (pattern.IsMatch(text)) return true; }
+                catch (RegexMatchTimeoutException) { return true; }
+            }
+            return false;
+        }
 
         /// <summary>Default per-user location; never inside a repository.</summary>
         public static string DefaultPath(string localAppData) =>
@@ -108,8 +140,15 @@ namespace PbiBench.Core.Snapshot
             if (string.IsNullOrWhiteSpace(json)) throw new InvalidDataException("Snapshot is empty.");
             if (Encoding.UTF8.GetByteCount(json) > MaxBytes) throw new InvalidDataException("Snapshot exceeds the 32 MiB limit.");
             ModelSnapshotV1 snapshot;
-            using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(json)))
-                snapshot = Serializer.ReadObject(stream) as ModelSnapshotV1 ?? throw new InvalidDataException("Snapshot JSON could not be read.");
+            try
+            {
+                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(json)))
+                    snapshot = Serializer.ReadObject(stream) as ModelSnapshotV1 ?? throw new InvalidDataException("Snapshot JSON could not be read.");
+            }
+            catch (Exception error) when (error is SerializationException || error is XmlException || error is InvalidCastException || error is FormatException || error is ArgumentException || error is OverflowException)
+            {
+                throw new InvalidDataException("Snapshot JSON could not be read (malformed or not a snapshot).", error);
+            }
             Validate(snapshot);
             return snapshot;
         }
@@ -146,30 +185,41 @@ namespace PbiBench.Core.Snapshot
             snapshot.Tables ??= new List<SnapshotTable>();
             snapshot.Relationships ??= new List<SnapshotRelationship>();
             snapshot.Selection ??= new List<SnapshotSelection>();
+            if (snapshot.Tables.Any(t => t == null) || snapshot.Relationships.Any(r => r == null) || snapshot.Selection.Any(s => s == null))
+                throw new InvalidDataException("Snapshot contains a null list element.");
             foreach (var table in snapshot.Tables)
             {
                 table.Columns ??= new List<SnapshotColumn>();
                 table.Measures ??= new List<SnapshotMeasure>();
+                if (table.Columns.Any(c => c == null) || table.Measures.Any(m => m == null))
+                    throw new InvalidDataException("Snapshot contains a null list element.");
                 if (!snapshot.IncludesExpressions && table.Measures.Any(m => m.Expression != null))
                     throw new InvalidDataException("Snapshot carries expressions without the IncludesExpressions opt-in.");
             }
             foreach (var text in Strings(snapshot))
             {
-                var lower = text.ToLowerInvariant();
-                if (CredentialMarkers.Any(lower.Contains))
+                if (text == null) throw new InvalidDataException("Snapshot contains a null string where text is required.");
+                if (LooksLikeCredential(text))
                     throw new InvalidDataException("Snapshot text looks like it contains a credential; refusing to exchange it.");
             }
+            foreach (var table in snapshot.Tables)
+                foreach (var measure in table.Measures)
+                    if (measure.Expression != null && LooksLikeCredential(measure.Expression))
+                        throw new InvalidDataException("Snapshot text looks like it contains a credential; refusing to exchange it.");
         }
 
-        private static IEnumerable<string> Strings(ModelSnapshotV1 s)
+        /// <summary>Every required string of the snapshot (expressions are optional and checked separately).</summary>
+        private static IEnumerable<string?> Strings(ModelSnapshotV1 s)
         {
-            yield return s.ModelName;
+            yield return s.Producer; yield return s.PublishedAtUtc; yield return s.ModelName; yield return s.ModelRevision;
             foreach (var t in s.Tables)
             {
                 yield return t.Name; yield return t.Description;
-                foreach (var c in t.Columns) { yield return c.Name; yield return c.DisplayFolder; }
-                foreach (var m in t.Measures) { yield return m.Name; yield return m.Description; yield return m.FormatString; if (m.Expression != null) yield return m.Expression; }
+                foreach (var c in t.Columns) { yield return c.Name; yield return c.DataType; yield return c.DisplayFolder; }
+                foreach (var m in t.Measures) { yield return m.Name; yield return m.DisplayFolder; yield return m.Description; yield return m.FormatString; }
             }
+            foreach (var r in s.Relationships) { yield return r.FromTable; yield return r.FromColumn; yield return r.ToTable; yield return r.ToColumn; yield return r.CrossFilter; }
+            foreach (var sel in s.Selection) { yield return sel.Kind; yield return sel.Table; yield return sel.Name; }
         }
     }
 }

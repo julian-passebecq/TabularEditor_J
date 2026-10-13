@@ -41,9 +41,13 @@ namespace TE2Enhanced.Mcp
             if (request is not JsonObject obj) return Error(null, -32600, "Invalid Request");
 
             var id = obj["id"]?.DeepClone();
-            var method = obj["method"]?.GetValue<string>();
-            if (method == null) return id == null ? null : Error(id, -32600, "Invalid Request");
             var isNotification = !obj.ContainsKey("id");
+            if (id != null && !(id is JsonValue)) return Error(null, -32600, "Invalid Request: id must be a string or number.");
+            if (!(obj["method"] is JsonValue methodNode) || !methodNode.TryGetValue<string>(out var method) || method == null)
+                return isNotification ? null : Error(id, -32600, "Invalid Request: method must be a string.");
+            var parameters = obj["params"];
+            if (parameters != null && !(parameters is JsonObject))
+                return isNotification ? null : Error(id, -32602, "Invalid params: params must be an object.");
             try
             {
                 JsonNode? result = method switch
@@ -62,11 +66,21 @@ namespace TE2Enhanced.Mcp
             {
                 return isNotification ? null : Error(id, error.Code, error.Message);
             }
+            catch (Exception error) when (error is InvalidOperationException || error is FormatException || error is OverflowException || error is ArgumentException || error is KeyNotFoundException)
+            {
+                // Type mismatch in params/arguments: a client error, never a reason to stop serving.
+                return isNotification ? null : Error(id, -32602, "Invalid params: an argument has the wrong type.");
+            }
+            catch (Exception)
+            {
+                // Any other failure is reported without details (no stack traces on stdout).
+                return isNotification ? null : Error(id, -32603, "Internal error");
+            }
         }
 
         private static JsonObject Initialize(JsonObject? parameters)
         {
-            var requested = parameters?["protocolVersion"]?.GetValue<string>();
+            var requested = parameters == null ? null : OptionalString(parameters, "protocolVersion");
             var version = requested != null && SupportedProtocols.Contains(requested) ? requested : SupportedProtocols[0];
             return new JsonObject
             {
@@ -126,8 +140,10 @@ namespace TE2Enhanced.Mcp
 
         private JsonObject ToolsCall(JsonObject? parameters)
         {
-            var name = parameters?["name"]?.GetValue<string>() ?? throw new RpcException(-32602, "Tool name is required.");
-            var args = parameters["arguments"] as JsonObject ?? new JsonObject();
+            var name = (parameters == null ? null : OptionalString(parameters, "name")) ?? throw new RpcException(-32602, "Tool name is required.");
+            var argumentsNode = parameters!["arguments"];
+            if (argumentsNode != null && !(argumentsNode is JsonObject)) throw new RpcException(-32602, "arguments must be an object.");
+            var args = argumentsNode as JsonObject ?? new JsonObject();
             ModelSnapshotV1 snapshot;
             try { snapshot = Load(); }
             catch (Exception error) when (error is IOException || error is InvalidDataException || error is UnauthorizedAccessException || error is System.Runtime.Serialization.SerializationException)
@@ -179,7 +195,7 @@ namespace TE2Enhanced.Mcp
         private static JsonObject ListTables(ModelSnapshotV1 s, JsonObject args)
         {
             var filter = OptionalString(args, "filter");
-            var includeHidden = args["includeHidden"]?.GetValue<bool>() ?? true;
+            var includeHidden = OptionalBool(args, "includeHidden") ?? true;
             var tables = s.Tables.Where(t => (includeHidden || !t.IsHidden) && Matches(t.Name, filter));
             return new JsonObject
             {
@@ -194,7 +210,7 @@ namespace TE2Enhanced.Mcp
         {
             var table = OptionalString(args, "table");
             var filter = OptionalString(args, "filter");
-            var limit = args["limit"]?.GetValue<int>() ?? 100;
+            var limit = OptionalInt(args, "limit") ?? 100;
             if (limit < 1 || limit > MaxListLimit) return new JsonObject { ["error"] = $"limit must be 1-{MaxListLimit}." };
             if (table != null && s.Tables.All(t => t.Name != table)) return new JsonObject { ["error"] = "Unknown table: " + table };
             var all = s.Tables.Where(t => table == null || t.Name == table)
@@ -260,6 +276,22 @@ namespace TE2Enhanced.Mcp
             if (node == null) return null;
             if (node is JsonValue v && v.TryGetValue<string>(out var text)) return string.IsNullOrEmpty(text) ? null : text;
             throw new RpcException(-32602, name + " must be a string.");
+        }
+
+        private static bool? OptionalBool(JsonObject args, string name)
+        {
+            var node = args[name];
+            if (node == null) return null;
+            if (node is JsonValue v && v.GetValueKind() is JsonValueKind.True or JsonValueKind.False) return v.GetValue<bool>();
+            throw new RpcException(-32602, name + " must be a boolean.");
+        }
+
+        private static int? OptionalInt(JsonObject args, string name)
+        {
+            var node = args[name];
+            if (node == null) return null;
+            if (node is JsonValue v && v.GetValueKind() == JsonValueKind.Number && v.TryGetValue<int>(out var number)) return number;
+            throw new RpcException(-32602, name + " must be an integer.");
         }
 
         private static bool Matches(string value, string? filter) =>

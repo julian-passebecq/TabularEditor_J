@@ -19,7 +19,7 @@ namespace TabularEditor.UI
             var handler = Handler;
             using (var builder = new PbiBenchProfileForm(Handler.Model))
             {
-                if (builder.ShowDialog(UI.FormMain) != DialogResult.OK) return;
+                if (PbiBench_ShowDialog(builder) != DialogResult.OK) return;
                 if (!ReferenceEquals(handler, Handler) || !builder.IsCurrent()) return;
                 PbiBenchAmoDaxQueryExecutor.TryCreate(Handler, out var executor, out var reason);
                 using (var dialog = new PbiBenchDaxWorkbenchForm(executor, executor?.ConnectionLabel ?? "", reason))
@@ -28,7 +28,7 @@ namespace TabularEditor.UI
                     dialog.NavigateToObject = obj => Goto(obj);
                     dialog.LoadPreviewDraft(builder.Query, builder.RowLimit);
                     dialog.ExecutionContextIsCurrent = () => ReferenceEquals(handler, Handler) && builder.IsCurrent();
-                    dialog.ShowDialog(UI.FormMain);
+                    PbiBench_ShowDialog(dialog);
                 }
             }
         }
@@ -48,7 +48,7 @@ namespace TabularEditor.UI
                 obj => { if (ReferenceEquals(handler, Handler) && !obj.IsRemoved) Goto(obj); },
                 PbiBenchModelChecks.ReadAllowlistAnnotation(Handler.Model)))
             {
-                dialog.ShowDialog(UI.FormMain);
+                PbiBench_ShowDialog(dialog);
             }
         }
     }

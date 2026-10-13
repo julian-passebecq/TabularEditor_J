@@ -49,6 +49,7 @@ internal static partial class SliceSmokes
             if (!sales.IsRemoved) sales.Delete();
             if (!customer.IsRemoved) customer.Delete();
         }
+        QaFixHostSmokes.Dialogs(handler);
     }
 
     private static void ExploreCheck(bool condition, string message) { if (!condition) throw new Exception("S7: " + message); }

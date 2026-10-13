@@ -102,6 +102,27 @@ namespace TabularEditor.PbiBench.Automation
 
         internal ScriptDocument NewDocument(string text) => AddTab(Workspace.New(text));
 
+        /// <summary>
+        /// Keyboard exit from the editor (Light QA D14): Ctrl+M toggles "Tab moves focus", as in VS Code and the DAX
+        /// Workbench. While it is on, Tab / Shift+Tab leave the editor instead of inserting a tab.
+        /// </summary>
+        internal bool TabMovesFocus { get; private set; }
+
+        internal void ToggleTabMovesFocus()
+        {
+            TabMovesFocus = !TabMovesFocus;
+            foreach (TabPage page in _tabs.TabPages)
+                foreach (var editor in page.Controls.OfType<TextBox>()) editor.AcceptsTab = !TabMovesFocus;
+            SetStatus(TabMovesFocus ? "Tab moves focus: on · Tab / Shift+Tab leave the editor · Ctrl+M to turn off."
+                                    : "Tab moves focus: off · Tab inserts a tab in the editor · Ctrl+M to leave the editor with Tab.");
+        }
+
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (keyData == (Keys.Control | Keys.M)) { ToggleTabMovesFocus(); return true; }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
         // The untouched starter comment is not "unsaved work": closing without edits must not prompt.
         private void NewStarter(string text)
         {
@@ -250,7 +271,7 @@ namespace TabularEditor.PbiBench.Automation
         {
             var editor = new TextBox
             {
-                Dock = DockStyle.Fill, Multiline = true, AcceptsTab = true, AcceptsReturn = true, WordWrap = false,
+                Dock = DockStyle.Fill, Multiline = true, AcceptsTab = !TabMovesFocus, AcceptsReturn = true, WordWrap = false,
                 ScrollBars = ScrollBars.Both, Font = new Font(FontFamily.GenericMonospace, 10f), MaxLength = ScriptDocument.MaxChars, Text = doc.Text
             };
             var page = new TabPage(TabTitle(doc)) { Tag = doc };

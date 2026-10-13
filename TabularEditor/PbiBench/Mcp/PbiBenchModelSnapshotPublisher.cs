@@ -81,11 +81,12 @@ namespace TabularEditor.PbiBench.Mcp
         private readonly Func<IEnumerable<ITabularNamedObject>> _selection;
         private readonly CheckBox _expressions = new CheckBox { Text = "Include measure DAX expressions (off by default)", AutoSize = true };
         private readonly Label _status = new Label { AutoSize = true, MaximumSize = new Size(560, 0) };
+        private readonly TextBox _destination = new TextBox { ReadOnly = true, Width = 460, TabStop = true, AccessibleName = "Destination" };
+        private string _path;
 
         public PbiBenchSnapshotPublishForm(Func<TabularEditor.TOMWrapper.Model> model, Func<IEnumerable<ITabularNamedObject>> selection, string path = null)
         {
             _model = model; _selection = selection;
-            Path = path ?? PbiBenchModelSnapshotPublisher.DefaultPath();
             Text = "Publish read-only snapshot for MCP";
             FormBorderStyle = FormBorderStyle.FixedDialog; MaximizeBox = MinimizeBox = false;
             StartPosition = FormStartPosition.CenterParent; AutoSize = true; AutoSizeMode = AutoSizeMode.GrowAndShrink;
@@ -95,9 +96,16 @@ namespace TabularEditor.PbiBench.Mcp
             {
                 AutoSize = true, MaximumSize = new Size(560, 0),
                 Text = "Writes model metadata (tables, columns, measures, relationships, current selection) for the separate " +
-                       "TE2 Enhanced MCP companion. No connection details, credentials or data rows. The file is a point-in-time " +
-                       "copy: publish again after changes.\n\nDestination: " + Path
+                       "TE2 Enhanced MCP companion. No connection details or data rows; text that looks like a credential " +
+                       "is refused (heuristic check). The file is a point-in-time copy: publish again after changes."
             });
+            layout.Controls.Add(new Label { AutoSize = true, Text = "&Destination (the MCP companion reads the default path unless configured):" });
+            var destinationRow = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.LeftToRight, WrapContents = false, Margin = Padding.Empty };
+            var saveAs = new Button { Text = "Save &As…", AutoSize = true };
+            saveAs.Click += (s, e) => ChooseDestination();
+            destinationRow.Controls.Add(_destination); destinationRow.Controls.Add(saveAs);
+            layout.Controls.Add(destinationRow);
+            Path = path ?? PbiBenchModelSnapshotPublisher.DefaultPath();
             layout.Controls.Add(_expressions);
             var buttons = new FlowLayoutPanel { AutoSize = true, FlowDirection = FlowDirection.LeftToRight };
             var publish = new Button { Text = "&Publish", AutoSize = true };
@@ -110,7 +118,32 @@ namespace TabularEditor.PbiBench.Mcp
             AcceptButton = publish; CancelButton = close;
         }
 
-        public string Path { get; }
+        /// <summary>Destination file. Defaults to the per-user path; changeable with Save As.</summary>
+        public string Path
+        {
+            get => _path;
+            set
+            {
+                if (string.IsNullOrWhiteSpace(value)) throw new ArgumentException("A destination path is required.", nameof(value));
+                _path = System.IO.Path.GetFullPath(value);
+                _destination.Text = _path;
+            }
+        }
+
+        public bool IsDefaultPath => string.Equals(_path, System.IO.Path.GetFullPath(PbiBenchModelSnapshotPublisher.DefaultPath()), StringComparison.OrdinalIgnoreCase);
+
+        private void ChooseDestination()
+        {
+            using (var dialog = new SaveFileDialog
+            {
+                Title = "Snapshot destination", Filter = "Snapshot JSON (*.json)|*.json|All files (*.*)|*.*",
+                FileName = System.IO.Path.GetFileName(_path), OverwritePrompt = true, AddExtension = true, DefaultExt = "json"
+            })
+            {
+                try { var dir = System.IO.Path.GetDirectoryName(_path); if (System.IO.Directory.Exists(dir)) dialog.InitialDirectory = dir; } catch { }
+                if (dialog.ShowDialog(this) == DialogResult.OK) Path = dialog.FileName;
+            }
+        }
         public bool IncludeExpressions { get => _expressions.Checked; set => _expressions.Checked = value; }
         public ModelSnapshotV1 LastPublished { get; private set; }
 

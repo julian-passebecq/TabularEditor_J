@@ -23,7 +23,7 @@ namespace TabularEditor.UI
                     dialog.CheckSaveTarget = () => PbiBenchSaveTargetTracker.Check(handler);
                     dialog.AcceptSaveTargetBaseline = () => PbiBenchSaveTargetTracker.Remember(handler, handler.SourceType, handler.Source, "accepted by user");
                 }
-                dialog.ShowDialog(UI.FormMain);
+                PbiBench_ShowDialog(dialog);
             }
         }
 
@@ -42,7 +42,7 @@ namespace TabularEditor.UI
             using (var dialog = new PbiBenchSyncReviewForm("Save target review", lines, check.Changes, check.Message,
                 check.State == SaveTargetCheckState.ExternalChanges || check.State == SaveTargetCheckState.NoBaseline))
             {
-                if (dialog.ShowDialog(UI.FormMain) != DialogResult.Yes) return;
+                if (PbiBench_ShowDialog(dialog) != DialogResult.Yes) return;
                 PbiBenchSaveTargetTracker.Remember(handler, handler.SourceType, handler.Source, "accepted by user");
                 UI.StatusLabel.Text = "TE2 Enhanced: save target baseline accepted (model not reloaded or saved).";
             }

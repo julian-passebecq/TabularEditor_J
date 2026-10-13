@@ -98,3 +98,10 @@ remain under `TabularEditor/PbiBench`, Core and smoke projects. No additional
 upstream-owned TE2/TOMWrapper production files or package pins were changed in
 this pass. TE2 lexer/TOM identifiers/navigation/setters/undo are reused directly.
 The historical upstream edits below remain required and preserved.
+
+# 2026-10-13 Light QA fixes (D1-D17)
+
+All fixes stay under `TabularEditor/PbiBench`, `PbiBench.Core`, `TE2Enhanced.Mcp`, the smoke projects,
+`Scripts/ci` and `.gitlab-ci.yml` (D12 tool pins only). No upstream-owned TE2/TOMWrapper production file,
+`TabularEditor.csproj`, `PbiBenchShortcutFilter.cs` or package pin was changed. Dialog focus return uses
+the existing `UIElements.TreeView`; keyboard handling is per PbiBench form (`ProcessCmdKey`).

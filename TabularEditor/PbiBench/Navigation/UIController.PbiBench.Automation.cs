@@ -10,7 +10,7 @@ namespace TabularEditor.UI
         {
             if (Handler?.Model == null) return;
             using (var dialog = new TabularEditor.PbiBench.Automation.PbiBenchScriptWorkspaceForm(() => Handler, () => Selection))
-                dialog.ShowDialog(UI.FormMain);
+                PbiBench_ShowDialog(dialog);
         }
     }
 }

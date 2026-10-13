@@ -36,7 +36,14 @@ namespace TE2Enhanced.Mcp
             while ((line = input.ReadLine()) != null)
             {
                 if (line.Length == 0) continue;
-                var response = server.Handle(line);
+                string? response;
+                try { response = server.Handle(line); }
+                catch (Exception)
+                {
+                    // Never let one request stop the server; no details or stack traces on stdout.
+                    Console.Error.WriteLine("TE2Enhanced.Mcp: request failed internally.");
+                    response = "{\"jsonrpc\":\"2.0\",\"id\":null,\"error\":{\"code\":-32603,\"message\":\"Internal error\"}}";
+                }
                 if (response != null) output.WriteLine(response);
             }
             return 0;

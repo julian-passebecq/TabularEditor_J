@@ -7,6 +7,16 @@ param(
 # first). Produces a zip, SHA256SUMS.txt and source-identity.json. This is a build artifact for
 # qualification, not a signed release.
 $ErrorActionPreference = 'Stop'
+# .NET SHA256 instead of Get-FileHash: a powershell.exe started from PowerShell 7 can inherit a PSModulePath
+# where Microsoft.PowerShell.Utility (Get-FileHash) does not load (Light QA D12).
+function Get-Sha256([string]$Path) {
+    $stream = [System.IO.File]::OpenRead($Path)
+    try {
+        $sha = [System.Security.Cryptography.SHA256]::Create()
+        try { return ([System.BitConverter]::ToString($sha.ComputeHash($stream)) -replace '-', '').ToLowerInvariant() }
+        finally { $sha.Dispose() }
+    } finally { $stream.Dispose() }
+}
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $release = Join-Path $root 'TabularEditor/bin/Release'
 $exe = Join-Path $release 'TabularEditor.exe'
@@ -53,7 +63,7 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 $hashes = @($zip, $exe, (Join-Path $stage 'mcp/TE2Enhanced.Mcp.dll'), (Join-Path $stage 'PbiBench.Core.dll')) |
     Where-Object { Test-Path $_ } |
-    ForEach-Object { $h = Get-FileHash $_ -Algorithm SHA256; '{0}  {1}' -f $h.Hash.ToLowerInvariant(), (Split-Path $_ -Leaf) }
+    ForEach-Object { '{0}  {1}' -f (Get-Sha256 $_), (Split-Path $_ -Leaf) }
 $hashes | Set-Content (Join-Path $OutDirectory 'SHA256SUMS.txt') -Encoding ASCII
 
 [pscustomobject]@{

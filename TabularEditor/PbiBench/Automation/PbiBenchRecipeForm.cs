@@ -16,6 +16,10 @@ namespace TabularEditor.PbiBench.Automation
     {
         private const string AllMeasures = "(all measures in table)";
 
+        /// <summary>Esc closes the dialog (Light QA D14).</summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) =>
+            TabularEditor.PbiBench.Navigation.PbiBenchDialogKeys.CloseOnEscape(this, keyData) || base.ProcessCmdKey(ref msg, keyData);
+
         internal PbiBenchRecipeForm(Func<TabularModelHandler> currentHandler)
         {
             Text = "TE2 Enhanced · Reviewed metadata recipe";

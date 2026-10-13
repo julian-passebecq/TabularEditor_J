@@ -52,7 +52,9 @@ namespace TabularEditor.PbiBench.Project
             Text = "TE2 Enhanced · Project";
             Size = new Size(1000, 650); MinimumSize = new Size(650, 400);
             StartPosition = FormStartPosition.CenterParent; ShowInTaskbar = false; AutoScaleMode = AutoScaleMode.Dpi;
-            var commands = new FlowLayoutPanel { Dock = DockStyle.Top, Height = 38, AutoScroll = true, WrapContents = false };
+            // Commands wrap onto further rows instead of overflowing: every button stays inside the client
+            // area at the minimum size and at any width (Light QA D2).
+            var commands = new FlowLayoutPanel { Dock = DockStyle.Top, AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink, WrapContents = true };
             _commands = commands;
             var folder = new Button { Text = "Choose folder…", AutoSize = true };
             folder.Click += (s, e) => { using (var dialog = new FolderBrowserDialog())
@@ -90,6 +92,12 @@ namespace TabularEditor.PbiBench.Project
             FormClosing += (s, e) => { _scanCts?.Cancel(); StopWatcher(); };
             _status.Text = "Choose a folder or PBIP. Discovery never loads or changes the TE2 model.";
         }
+
+        /// <summary>Esc closes the window (Light QA D14), unless a drop-down list is open.</summary>
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData) =>
+            (!_projects.DroppedDown && TabularEditor.PbiBench.Navigation.PbiBenchDialogKeys.CloseOnEscape(this, keyData)) || base.ProcessCmdKey(ref msg, keyData);
+
+        internal Control CommandBar => _commands;
 
         /// <summary>Loaded-model stamp supplied by the host (TE2 in-memory state; never a disk hash).</summary>
         internal Func<LoadedStamp> LoadedState { get; set; }

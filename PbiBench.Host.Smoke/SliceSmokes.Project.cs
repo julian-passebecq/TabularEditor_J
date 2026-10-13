@@ -25,6 +25,7 @@ internal static partial class SliceSmokes
         ProjectWatcherSmoke.Run();
         VsCodeLauncherSmoke.Run();
         ProjectWindowSmoke.Run();
+        QaFixHostSmokes.ProjectLayout();
     }
 }
 
