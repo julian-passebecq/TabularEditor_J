@@ -381,7 +381,24 @@ namespace PbiBench.Core.Project
             return trimmed.Length == 0 || trimmed.EndsWith(":", StringComparison.Ordinal) ? full : trimmed;
         }
 
-        /// <summary>Resolves a plan-relative path, rejecting rooted paths, traversal and device-like names.</summary>
+        private static readonly char[] WildcardChars = { '?', '*' };
+        private static readonly HashSet<string> ReservedDeviceNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$",
+            "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM\u00B9", "COM\u00B2", "COM\u00B3",
+            "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "LPT\u00B9", "LPT\u00B2", "LPT\u00B3"
+        };
+
+        /// <summary>True for CON, PRN, AUX, NUL, COM1-9, LPT1-9 (with any extension, trailing spaces ignored).</summary>
+        public static bool IsReservedDeviceName(string segment)
+        {
+            if (string.IsNullOrEmpty(segment)) return false;
+            var dot = segment.IndexOf('.');
+            var stem = (dot < 0 ? segment : segment.Substring(0, dot)).TrimEnd(' ');
+            return ReservedDeviceNames.Contains(stem);
+        }
+
+        /// <summary>Resolves a plan-relative path, rejecting rooted paths, traversal, wildcards and reserved device names.</summary>
         public static string ResolveTarget(string root, string relativePath)
         {
             if (string.IsNullOrWhiteSpace(relativePath)) throw new ArgumentException("A relative path is required.");
@@ -390,6 +407,9 @@ namespace PbiBench.Core.Project
             var segments = relativePath.Split('/', '\\');
             if (segments.Any(s => s.Length == 0 || s == "." || s == ".." || s.EndsWith(".", StringComparison.Ordinal) || s.EndsWith(" ", StringComparison.Ordinal)))
                 throw new ArgumentException("Plan path segments must be plain names.");
+            if (relativePath.IndexOfAny(WildcardChars) >= 0) throw new ArgumentException("Plan path must not contain wildcard characters (? or *).");
+            var reserved = segments.FirstOrDefault(IsReservedDeviceName);
+            if (reserved != null) throw new ArgumentException("Plan path segment '" + reserved + "' is a reserved Windows device name.");
             var full = Path.GetFullPath(Path.Combine(root, Path.Combine(segments)));
             if (!full.StartsWith(root.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("Plan path escapes the project root.");

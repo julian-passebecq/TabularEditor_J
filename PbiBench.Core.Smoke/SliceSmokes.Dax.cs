@@ -10,6 +10,7 @@ internal static partial class SliceSmokes
         DaxCompletionContextSmoke.Run();
         DaxDiagnosticsCorpusSmoke.Run();
         SemanticUsageSmoke.Run();
+        QaFixSmokes.Dax();
     }
 
     /// <summary>Synthetic model shared by the S2 Core smokes.</summary>

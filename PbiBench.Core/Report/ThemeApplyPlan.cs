@@ -57,6 +57,9 @@ namespace PbiBench.Core.Report
 
             var fileName = FileNameFor(themeName!);
             var themePath = PbirReportIndex.RegisteredResourcesFolder + "/" + fileName;
+            if (ReviewedFilePlan.IsReservedDeviceName(fileName))
+                throw new ThemeApplyRefusedException("The theme name '" + themeName + "' gives the file name '" + fileName + "', a reserved Windows device name. Rename the theme (its \"name\") and try again.");
+            CheckPlainPath(index.ReportFolder, themePath, "theme file");
             var oldName = index.Theme.CustomThemeName;
             // The derived file name must not collide with another registered resource (an image, a different resource
             // type): replacing it would destroy that file and leave two items with the same name.
@@ -107,7 +110,13 @@ namespace PbiBench.Core.Report
                     var isOldTheme = item.GetString("type") == "CustomTheme" || (oldName != null && item.GetString("name") == oldName);
                     if (!isOldTheme) { items.Add(item.Raw(text)); continue; }
                     var path = item.GetString("path");
-                    if (path != null && !string.Equals(path, fileName, StringComparison.OrdinalIgnoreCase)) removedPath ??= PbirReportIndex.RegisteredResourcesFolder + "/" + path;
+                    if (path != null && !string.Equals(path, fileName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        var candidate = PbirReportIndex.RegisteredResourcesFolder + "/" + path;
+                        // The old file is deleted by the plan: its path must stay a plain file inside the report.
+                        CheckPlainPath(index.ReportFolder, candidate, "previously registered custom theme");
+                        removedPath ??= candidate;
+                    }
                 }
                 items.Add(newItem);
                 var itemsText = WriteArray(items, memberIndent + unit + unit, unit, newline);
@@ -130,20 +139,35 @@ namespace PbiBench.Core.Report
             var newText = sb.ToString();
             PbirJson.Parse(newText); // never write JSON this build cannot read back
 
-            var plan = new ReviewedFilePlan(index.ReportFolder, "Apply report theme '" + themeName + "'");
-            plan.Add(new ReviewedFileChange(PbirReportIndex.ReportJson, ReviewedFileChangeKind.Replace, index.ReportJsonHash, PbirJson.EncodeUtf8(newText, index.ReportJsonHadBom)));
-            plan.AddFromCurrent(themePath, themeBytes);
-            if (removedPath != null)
+            ReviewedFilePlan plan;
+            try
             {
-                var full = ReviewedFilePlan.ResolveTarget(index.ReportFolder, removedPath);
-                if (File.Exists(full)) plan.Add(new ReviewedFileChange(removedPath, ReviewedFileChangeKind.Delete, ReviewedFilePlan.HashFile(full), null));
-                else removedPath = null;
+                plan = new ReviewedFilePlan(index.ReportFolder, "Apply report theme '" + themeName + "'");
+                plan.Add(new ReviewedFileChange(PbirReportIndex.ReportJson, ReviewedFileChangeKind.Replace, index.ReportJsonHash, PbirJson.EncodeUtf8(newText, index.ReportJsonHadBom)));
+                plan.AddFromCurrent(themePath, themeBytes);
+                if (removedPath != null)
+                {
+                    var full = ReviewedFilePlan.ResolveTarget(index.ReportFolder, removedPath);
+                    if (File.Exists(full)) plan.Add(new ReviewedFileChange(removedPath, ReviewedFileChangeKind.Delete, ReviewedFilePlan.HashFile(full), null));
+                    else removedPath = null;
+                }
             }
+            catch (ArgumentException e) { throw new ThemeApplyRefusedException("The theme cannot be applied: " + e.Message + " Nothing was written."); }
             var after = PbirJson.Parse(newText).Get("themeCollection")!;
             return new ThemeApplyPlan(plan) {
                 ThemeName = themeName!, ThemeFileName = fileName, RemovedThemePath = removedPath,
                 BeforeSnippet = collection.Raw(text), AfterSnippet = after.Raw(newText), NewReportJson = newText
             };
+        }
+
+        private static void CheckPlainPath(string reportFolder, string relativePath, string what)
+        {
+            try { ReviewedFilePlan.ResolveTarget(reportFolder, relativePath); }
+            catch (ArgumentException e)
+            {
+                throw new ThemeApplyRefusedException("The " + what + " path '" + relativePath + "' is not a plain relative path inside the report (" +
+                    e.Message + "). Nothing was written; fix report.json resourcePackages by hand or in Power BI Desktop.");
+            }
         }
 
         /// <summary>Theme file name derived from the theme's name: letters, digits, '-', '_' only, at most 64 chars, plus .json.</summary>

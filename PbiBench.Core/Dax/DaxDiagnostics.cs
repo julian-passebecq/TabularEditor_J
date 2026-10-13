@@ -71,6 +71,7 @@ namespace PbiBench.Core.Dax
             if (lambda != null) foreach (var p in lambda.Parameters) q.Variables.Add(p.Name);
             var functions = catalog.With(q.Functions.Concat(names.Functions));
             CheckArity(code, functions, result);
+            CheckVariableOrder(code, names, q, result);
             if (names.HasModel) CheckReferences(code, names, functions, q, result);
             return result.OrderBy(d => d.Start).ThenBy(d => d.Code, StringComparer.Ordinal).Take(MaxDiagnostics).ToArray();
         }
@@ -144,6 +145,28 @@ namespace PbiBench.Core.Dax
 
         private static bool IsKeyword(string word) => BareWords.Contains(word);
 
+        /// <summary>
+        /// A VAR is in scope only after its declaration (following VARs and RETURN of the same block), so a
+        /// reference that precedes every declaration of that name can never resolve to it. Names that are
+        /// also model/query tables, UDF parameters or query-level DEFINE VARs are not reported.
+        /// </summary>
+        private static void CheckVariableOrder(List<DaxLexToken> code, DaxModelNameSet names, QueryDeclarations q, List<DaxDiagnostic> result)
+        {
+            if (q.FirstVariableDeclaration.Count == 0) return;
+            for (var i = 0; i < code.Count; i++)
+            {
+                var t = code[i];
+                if (t.Kind != DaxLexKind.Identifier || q.DeclarationTokens.Contains(t)) continue;
+                if (!q.FirstVariableDeclaration.TryGetValue(t.Text, out var declared) || declared <= t.Start) continue;
+                var prev = i > 0 ? code[i - 1] : null;
+                var next = i + 1 < code.Count ? code[i + 1] : null;
+                if (next != null && next.Text == "(") continue;
+                if (prev != null && (prev.Text == ":" || prev.Text == ".")) continue;
+                if (q.QueryScopeVariables.Contains(t.Text) || q.Tables.Contains(t.Text) || names.IsTable(t.Text) || BareWords.Contains(t.Text)) continue;
+                Add(result, DaxDiagnosticCodes.UndeclaredVariable, t, t.Text + " is used before its VAR declaration; a variable is only visible after it is declared.", t.Text);
+            }
+        }
+
         private static void CheckReferences(List<DaxLexToken> code, DaxModelNameSet names, DaxSignatureCatalog functions, QueryDeclarations q, List<DaxDiagnostic> result)
         {
             for (var i = 0; i < code.Count; i++)
@@ -208,14 +231,32 @@ namespace PbiBench.Core.Dax
             public readonly HashSet<string> MemberNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             public readonly HashSet<DaxLexToken> DeclarationTokens = new HashSet<DaxLexToken>();
             public readonly List<DaxFunctionSignature> Functions = new List<DaxFunctionSignature>();
+            /// <summary>Start offset of the earliest expression-level VAR declaration of each name.</summary>
+            public readonly Dictionary<string, int> FirstVariableDeclaration = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            public readonly HashSet<string> QueryScopeVariables = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             public static QueryDeclarations Collect(List<DaxLexToken> code)
             {
                 var q = new QueryDeclarations();
+                var nesting = 0;
+                bool defineSeen = false, evaluateSeen = false;
                 for (var i = 0; i < code.Count; i++)
                 {
                     var t = code[i];
                     var next = i + 1 < code.Count ? code[i + 1] : null;
+                    if (t.Kind == DaxLexKind.Punctuation && (t.Text == "(" || t.Text == "{")) nesting++;
+                    else if (t.Kind == DaxLexKind.Punctuation && (t.Text == ")" || t.Text == "}")) nesting = Math.Max(0, nesting - 1);
+                    if (t.Kind == DaxLexKind.Identifier && nesting == 0)
+                    {
+                        if (string.Equals(t.Text, "DEFINE", StringComparison.OrdinalIgnoreCase)) defineSeen = true;
+                        else if (string.Equals(t.Text, "EVALUATE", StringComparison.OrdinalIgnoreCase)) evaluateSeen = true;
+                    }
+                    if (t.Kind == DaxLexKind.Identifier && next != null && next.Kind == DaxLexKind.Identifier && string.Equals(t.Text, "VAR", StringComparison.OrdinalIgnoreCase))
+                    {
+                        // Query-level DEFINE VARs are visible to the whole query; expression VARs only after their declaration.
+                        if (defineSeen && !evaluateSeen && nesting == 0) q.QueryScopeVariables.Add(next.Text);
+                        else if (!q.FirstVariableDeclaration.TryGetValue(next.Text, out var start) || next.Start < start) q.FirstVariableDeclaration[next.Text] = next.Start;
+                    }
                     if (t.Kind == DaxLexKind.String)
                     {
                         // Extension columns named by strings (ADDCOLUMNS, ROW, SELECTCOLUMNS, DATATABLE …),

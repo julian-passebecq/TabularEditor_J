@@ -19,6 +19,8 @@ namespace PbiBench.Core.Navigation
         public SemanticObjectDescriptor Object { get; set; } = new SemanticObjectDescriptor();
         public int Score { get; set; }
         public QuickOpenMatchKind MatchKind { get; set; }
+        /// <summary>Whole-query match on the object name: 2 exact (case-insensitive), 1 prefix, 0 otherwise. Ranks before Score.</summary>
+        public int NameTier { get; set; }
     }
 
     /// <summary>
@@ -79,6 +81,7 @@ namespace PbiBench.Core.Navigation
 
             var parsed = ParseQuery(query ?? string.Empty);
             var results = new List<QuickOpenResult>();
+            var phrase = string.Join(" ", parsed.Tokens);
 
             foreach (var item in objects)
             {
@@ -87,17 +90,29 @@ namespace PbiBench.Core.Navigation
 
                 var match = Score(item, parsed.Tokens);
                 if (match == null) continue;
+                match.NameTier = NameTier(item.Name, phrase);
+                if (match.NameTier == 2) match.MatchKind = QuickOpenMatchKind.Exact;
 
                 results.Add(match);
             }
 
+            // An exact name match ranks first, then a name prefix, then token/fuzzy scoring.
             return results
-                .OrderByDescending(r => r.Score)
+                .OrderByDescending(r => r.NameTier)
+                .ThenByDescending(r => r.Score)
                 .ThenBy(r => r.Object.IsHidden)
                 .ThenBy(r => r.Object.Kind)
                 .ThenBy(r => r.Object.EffectivePath, StringComparer.OrdinalIgnoreCase)
                 .Take(limit)
                 .ToArray();
+        }
+
+        private static int NameTier(string name, string phrase)
+        {
+            if (string.IsNullOrWhiteSpace(name) || phrase.Length == 0) return 0;
+            var normalized = string.Join(" ", name.Split(new[] { ' ', '	' }, StringSplitOptions.RemoveEmptyEntries));
+            if (string.Equals(normalized, phrase, StringComparison.OrdinalIgnoreCase)) return 2;
+            return normalized.StartsWith(phrase, StringComparison.OrdinalIgnoreCase) ? 1 : 0;
         }
 
         private static QuickOpenResult? Score(SemanticObjectDescriptor item, string[] tokens)

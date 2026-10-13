@@ -17,6 +17,7 @@ internal static partial class SliceSmokes
             ProjectIdentitySmoke.Run(fixtureRoot);
             ExternalChangeSmoke.Run();
             VsCodeArgsSmoke.Run();
+            QaFixSmokes.Project();
             ReviewFixFixture.Twice(fixes, "ReviewedFilePlanReviewFixesSmoke", ReviewedFilePlanReviewFixesSmoke.Run);
             ReviewFixFixture.Twice(fixes, "JournalRetentionSmoke", JournalRetentionSmoke.Run);
         }

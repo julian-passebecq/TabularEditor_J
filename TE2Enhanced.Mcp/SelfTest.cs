@@ -69,6 +69,67 @@ namespace TE2Enhanced.Mcp
                 File.WriteAllText(path, "{\"ContractVersion\":2}");
                 Check(CallTool(server, 17, "get_model_summary", null)["isError"]!.GetValue<bool>(), "future contract refused");
 
+                // D3: every snapshot string is scanned, with broadened (heuristic) patterns.
+                Publish(path, Sample(false));
+                foreach (var secret in new[]
+                {
+                    "client_secret=zzz", "a;Password=hunter2", "Password = x", "password: x", "PWD=abc", "User ID = admin",
+                    "Authorization: Bearer abcdefghijkl", "Bearer abcdefghijklmnop", "https://x.blob.core.windows.net/c?sv=1&sig=abc",
+                    "Data Source=srv;Initial Catalog=db", "Server = tcp:x,1433;Database=y", "AccountKey=abc", "SharedAccessSignature=x"
+                })
+                {
+                    Check(ModelSnapshotSerializer.LooksLikeCredential(secret), "credential pattern: " + secret);
+                    foreach (var place in new Action<ModelSnapshotV1>[]
+                    {
+                        x => x.ModelRevision = secret, x => x.Producer = secret, x => x.PublishedAtUtc = secret,
+                        x => x.Relationships[0].FromTable = secret, x => x.Relationships[0].CrossFilter = secret,
+                        x => x.Selection[0].Name = secret, x => x.Tables[0].Columns[0].DataType = secret,
+                        x => x.Tables[0].Measures[0].DisplayFolder = secret, x => x.Tables[0].Measures[0].Description = secret
+                    })
+                    {
+                        var s = Sample(false); place(s);
+                        Check(Throws(() => ModelSnapshotSerializer.Serialize(s)), "credential guard on write: " + secret);
+                    }
+                }
+                foreach (var benign in new[] { "Total Sales", "#,0.00;(#,0.00)", "Sales Amount = SUM", "Server count", "Bearer bonds" })
+                    Check(!ModelSnapshotSerializer.LooksLikeCredential(benign), "no false positive: " + benign);
+                var leakyRel = ModelSnapshotSerializer.Serialize(Sample(false)).Replace("\"FromTable\":\"Sales\"", "\"FromTable\":\"a;Password=hunter2\"");
+                File.WriteAllText(path, leakyRel);
+                Check(CallTool(server, 18, "list_relationships", null)["isError"]!.GetValue<bool>(), "credential guard on read (relationship)");
+
+                // D5: garbage, null elements and null strings are tool errors, and the server keeps serving.
+                foreach (var bad in new[]
+                {
+                    new string('\0', 100), "{\"ContractVersion\":1,\"Tables\":[null]}", "{\"ContractVersion\":1,\"ModelName\":null}",
+                    "{\"ContractVersion\":1,\"Tables\":[{\"Name\":\"T\",\"Measures\":[null]}]}", "[1,2]", "{\"ContractVersion\":\"x\"}"
+                })
+                {
+                    File.WriteAllText(path, bad);
+                    Check(CallTool(server, 19, "get_model_summary", null)["isError"]!.GetValue<bool>(), "bad snapshot is a tool error: " + bad.Replace("\0", "\\0").Substring(0, Math.Min(bad.Length, 40)));
+                }
+                Check(Call(server, 20, "ping", null)["result"] != null, "alive after bad snapshots");
+
+                // D1: type mismatches are JSON-RPC errors; the next request is still answered.
+                Publish(path, Sample(false));
+                foreach (var mismatch in new[]
+                {
+                    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"list_measures\",\"arguments\":{\"limit\":\"5\"}}}",
+                    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"list_measures\",\"arguments\":{\"limit\":1.5}}}",
+                    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"list_tables\",\"arguments\":{\"includeHidden\":\"no\"}}}",
+                    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":5}}",
+                    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":{\"name\":\"list_tables\",\"arguments\":[1]}}",
+                    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"tools/call\",\"params\":[1]}",
+                    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":5}",
+                    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":{}}",
+                    "{\"jsonrpc\":\"2.0\",\"id\":{},\"method\":\"ping\"}",
+                    "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":5}}"
+                })
+                {
+                    var code = Parse(server.Handle(mismatch))["error"]!["code"]!.GetValue<int>();
+                    Check(code == -32602 || code == -32600, "type mismatch is -32602/-32600: " + mismatch);
+                }
+                Check(Call(server, 21, "ping", null)["result"] != null, "alive after type mismatches");
+
                 StdioRoundTrip(path);
                 Console.WriteLine("TE2Enhanced.Mcp self-test: PASS");
                 return 0;
@@ -92,9 +153,13 @@ namespace TE2Enhanced.Mcp
             using var process = Process.Start(start) ?? throw new InvalidOperationException("Could not start server.");
             process.StandardInput.WriteLine("{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"protocolVersion\":\"2025-06-18\"}}");
             process.StandardInput.WriteLine("{\"jsonrpc\":\"2.0\",\"method\":\"notifications/initialized\"}");
+            // A type-mismatched request must not kill the process (D1).
+            process.StandardInput.WriteLine("{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/call\",\"params\":{\"name\":\"list_measures\",\"arguments\":{\"limit\":\"5\"}}}");
             process.StandardInput.WriteLine("{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"list_tables\"}}");
             process.StandardInput.Close();
             var first = Parse(process.StandardOutput.ReadLine());
+            var mismatch = Parse(process.StandardOutput.ReadLine());
+            Check(mismatch["id"]!.GetValue<int>() == 3 && mismatch["error"]!["code"]!.GetValue<int>() == -32602, "stdio type mismatch answered");
             var second = Parse(process.StandardOutput.ReadLine());
             if (!process.WaitForExit(15000)) { process.Kill(); throw new Exception("stdio server did not exit on EOF"); }
             Check(first["id"]!.GetValue<int>() == 1 && second["id"]!.GetValue<int>() == 2, "stdio ordering, no response to notification");

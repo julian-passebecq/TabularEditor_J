@@ -140,6 +140,13 @@ namespace PbiBench.Core.Report
                 if (!File.Exists(full)) return false;
                 try
                 {
+                    var reparse = ReparseSegment(relative);
+                    if (reparse != null)
+                    {
+                        // As ExternalChangeDetector: junctions/symlinks may point outside the report; never follow them.
+                        _diagnostics.Add(relative + ": skipped, " + reparse + " is a reparse point (junction or symbolic link).");
+                        return false;
+                    }
                     var length = new FileInfo(full).Length;
                     if (length > _limits.MaxFileBytes) { _diagnostics.Add(relative + ": skipped, larger than " + _limits.MaxFileBytes + " bytes."); return false; }
                     if (_bytes + length > _limits.MaxTotalBytes) { _diagnostics.Add(relative + ": skipped, index byte budget reached."); _index.Truncated = true; return false; }
@@ -150,8 +157,23 @@ namespace PbiBench.Core.Report
                     return true;
                 }
                 catch (FormatException e) { _diagnostics.Add(relative + ": not valid JSON (" + e.Message + ")."); }
+                catch (System.Text.DecoderFallbackException) { _diagnostics.Add(relative + ": not valid UTF-8; file skipped."); }
                 catch (Exception e) when (e is IOException || e is UnauthorizedAccessException) { _diagnostics.Add(relative + ": could not be read (" + e.Message + ")."); }
                 root = null; return false;
+            }
+
+            /// <summary>The first path segment (relative to the report folder) that is a reparse point, or null.</summary>
+            private string? ReparseSegment(string relative)
+            {
+                var current = _index.ReportFolder;
+                var segments = relative.Split('/');
+                for (var i = 0; i < segments.Length; i++)
+                {
+                    current = Path.Combine(current, segments[i]);
+                    if ((File.GetAttributes(current) & FileAttributes.ReparsePoint) != 0)
+                        return string.Join("/", segments.Take(i + 1));
+                }
+                return null;
             }
 
             private PbirSchemaInfo Schema(string relative, PbirJsonNode? root)

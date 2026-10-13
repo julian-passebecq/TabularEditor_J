@@ -31,6 +31,18 @@ internal static class SnapshotPublisherSmoke
         try
         {
             var path = Path.Combine(dir, ModelSnapshotSerializer.FileName);
+            // D16: the destination defaults to the per-user path, is shown, and can be changed (Save As);
+            // the smoke never publishes to the real per-user location.
+            using (var defaultForm = new PbiBenchSnapshotPublishForm(() => model, () => null))
+            {
+                var handle = defaultForm.Handle;
+                Check(defaultForm.IsDefaultPath && defaultForm.Path == Path.GetFullPath(PbiBenchModelSnapshotPublisher.DefaultPath()), "default destination unchanged");
+                Check(Descendants(defaultForm).OfType<System.Windows.Forms.TextBox>().Any(t => t.Text == defaultForm.Path), "destination shown");
+                Check(Descendants(defaultForm).OfType<System.Windows.Forms.Button>().Any(b => b.Text.Replace("&", "").StartsWith("Save As")), "Save As button present");
+                defaultForm.Path = Path.Combine(dir, "custom", "chosen.json");
+                Check(!defaultForm.IsDefaultPath && Descendants(defaultForm).OfType<System.Windows.Forms.TextBox>().Any(t => t.Text == defaultForm.Path), "destination changeable and shown");
+                Check(defaultForm.Publish() && File.Exists(Path.Combine(dir, "custom", "chosen.json")), "publish to chosen destination");
+            }
             using (var form = new PbiBenchSnapshotPublishForm(() => model, () => new ITabularNamedObject[] { measure }, path))
             {
                 var handle = form.Handle;
@@ -51,6 +63,15 @@ internal static class SnapshotPublisherSmoke
         finally { try { Directory.Delete(dir, true); } catch { } }
         Check(handler.UndoManager.BatchDepth == 0 && measure.Description != "Server=x;Password=secret", "publisher opened no undo batch; test edit restored");
         Console.WriteLine("MCP snapshot publisher: projection/opt-in/revision/atomic/credential guard PASS");
+    }
+
+    private static System.Collections.Generic.IEnumerable<System.Windows.Forms.Control> Descendants(System.Windows.Forms.Control parent)
+    {
+        foreach (System.Windows.Forms.Control child in parent.Controls)
+        {
+            yield return child;
+            foreach (var d in Descendants(child)) yield return d;
+        }
     }
 
     private static void Check(bool condition, string what)

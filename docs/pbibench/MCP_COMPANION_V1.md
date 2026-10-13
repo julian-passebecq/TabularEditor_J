@@ -15,7 +15,8 @@ TE2 Enhanced (net48 host)                    TE2Enhanced.Mcp (net8.0 exe, roll-f
 ```
 - Contract: `PbiBench.Core/Snapshot/ModelSnapshotV1.cs`, `ContractVersion = 1`. Unknown versions are refused.
 - Contents: model name, opaque `modelRevision`, `publishedAtUtc`, compatibility level, tables/columns/measures (name, folder, format string, hidden, description), relationships, selection. **Measure expressions only when the user opts in** (`IncludesExpressions`); a snapshot carrying expressions without the flag is refused.
-- Never contained: connection strings, server names, credentials, data rows. The serializer refuses text containing credential markers (`password=`, `pwd=`, `accountkey=`, `client_secret`, `sharedaccesssignature=`). 32 MiB cap.
+- Not exported by design: connection strings, server names, credentials, data rows (the publisher never reads them). Text the user typed into the model (names, descriptions, folders, format strings, expressions) is copied as is, so a **heuristic credential guard** runs on write and on read: every string in the snapshot (model name, producer, revision, publication time, tables, columns incl. data types and folders, measures incl. opted-in expressions, relationships, selection) is checked case-insensitively, with optional spaces around `=` or `:`, against these shapes: `password`/`passwd`/`pwd` with a value; `User ID`/`uid` with a value; `AccountKey` with a value; `client_secret` (also `client secret`, `client-secret`); `SharedAccessSignature=`; `Bearer <token of 8+ characters>`; `Authorization:` with a value; a `?sig=`/`&sig=` query parameter; and the connection-string shape `Data Source=...;`, `Server=...;`, `Address=...;`. A match refuses the whole snapshot (publish fails, the companion returns a tool error). This is a heuristic, not a guarantee: secrets in other shapes are not detected. 32 MiB cap.
+- Malformed snapshots (garbage bytes, null list elements, null strings, wrong types) are refused as a tool error; the server keeps serving.
 - Staleness is explicit: `get_model_summary` returns `publishedAtUtc`, `ageSeconds` and `modelRevision`. The server reloads when the file changes.
 
 ## Protocol
@@ -30,7 +31,7 @@ Newline-delimited JSON-RPC 2.0 over stdio. Protocol versions `2025-06-18` (defau
 | `list_relationships` | `table?` | |
 | `get_selection` | — | selection at publication time |
 
-All tools carry `readOnlyHint: true`, `openWorldHint: false`. Unknown tools (for example any write) are JSON-RPC `-32602`.
+All tools carry `readOnlyHint: true`, `openWorldHint: false`. Unknown tools (for example any write) are JSON-RPC `-32602`. Arguments are type-checked: a wrong type (for example `"limit":"5"`, `"includeHidden":"no"`, a non-string `name` or `protocolVersion`, non-object `params`/`arguments`) is `-32602`; a non-string `method` or a structured `id` is `-32600`. Each request is handled in isolation: no request stops the server, and internal failures are `-32603` without details on stdout.
 
 ## Running
 ```powershell

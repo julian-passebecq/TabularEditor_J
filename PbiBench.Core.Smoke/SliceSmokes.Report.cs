@@ -17,6 +17,7 @@ internal static partial class SliceSmokes
         PbirIndexSmoke.Run();
         ReportLineageSmoke.Run();
         ThemeApplyPlanSmoke.Run(themes);
+        QaFixSmokes.Report();
     }
 }
 

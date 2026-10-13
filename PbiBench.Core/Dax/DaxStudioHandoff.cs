@@ -55,12 +55,27 @@ namespace PbiBench.Core.Dax
             var text = value!;
             if (text.Length > MaxLabelLength) return name + " is longer than " + MaxLabelLength + " characters.";
             if (text.Any(c => char.IsControl(c) || c == '"')) return name + " contains control characters or quotes.";
+            // Bidi/format controls (U+200E/F, U+202A-202E, U+2066-2069, ...) and line/paragraph separators
+            // (U+2028/2029) can disguise what is handed over; refuse them.
+            if (text.Any(IsFormatOrSeparator)) return name + " contains invisible formatting, bidirectional or line-separator characters.";
+            var first = text.TrimStart()[0];
+            if (first == '-' || first == '/' || first == '@')
+                return name + " starts with '" + first + "', which DAX Studio could read as an option or response file; only a plain label is handed over.";
             if (text.IndexOf('=') >= 0 || text.IndexOf(';') >= 0)
                 return name + " looks like a connection string; only a server or database label is handed over.";
             var lower = text.ToLowerInvariant();
             if (SecretMarkers.Any(m => lower.StartsWith(m + " ", StringComparison.Ordinal) || lower == m))
                 return name + " looks like a connection-string keyword.";
             return null;
+        }
+
+        private static bool IsFormatOrSeparator(char c)
+        {
+            int u = c;
+            if ((u >= 0x200E && u <= 0x200F) || (u >= 0x202A && u <= 0x202E) || (u >= 0x2066 && u <= 0x2069) || u == 0x2028 || u == 0x2029) return true;
+            var category = char.GetUnicodeCategory(c);
+            return category == System.Globalization.UnicodeCategory.Format || category == System.Globalization.UnicodeCategory.LineSeparator ||
+                   category == System.Globalization.UnicodeCategory.ParagraphSeparator;
         }
 
         /// <summary>Exactly two arguments: server label, database label. Throws ArgumentException when either is refused.</summary>
