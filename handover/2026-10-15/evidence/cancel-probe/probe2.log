@@ -1,0 +1,12 @@
+00:13:46.547 created tmp_te2_20261015
+00:13:46.692 method=none session=00D7392D-A114-44EE-B429-A73DDAC64ADC spid=2308
+00:14:18.678 RESULT method=none cancelAt=-1 clientReturned=13561 engineIdleAt=30985 outcome= row=4408408
+00:14:19.270 method=spidassoc session=7590D527-62BB-4BCE-81E4-FF3A784921A9 spid=2320
+00:14:20.781 status before cancel: 2320|1|1508
+00:14:20.783 cancel sent at 1508 ms (spidassoc)
+00:14:28.649 RESULT method=spidassoc cancelAt=1508 clientReturned=1518 engineIdleAt=8379 outcome=exception:ConnectionException:The connection either timed out or was lost.
+00:14:30.061 method=amo session=76C30489-D955-4A30-A2C1-2F41DDE50F6E spid=2327
+00:14:31.716 status before cancel: 2327|1|1527
+00:14:31.926 cancel sent at 1509 ms (amo)
+00:15:27.325 RESULT method=amo cancelAt=1509 clientReturned=56178 engineIdleAt=56263 outcome=exception:OperationException:The operation was cancelled by the user.  
+00:15:29.632 dropped tmp_te2_20261015 stillExists=False

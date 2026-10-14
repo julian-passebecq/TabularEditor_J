@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework><LangVersion>latest</LangVersion></PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.AnalysisServices.Core"><HintPath>..\amo\Microsoft.AnalysisServices.Core.dll</HintPath></Reference>
+    <Reference Include="Microsoft.AnalysisServices"><HintPath>..\amo\Microsoft.AnalysisServices.dll</HintPath></Reference>
+    <Reference Include="Microsoft.AnalysisServices.Tabular"><HintPath>..\amo\Microsoft.AnalysisServices.Tabular.dll</HintPath></Reference>
+    <Reference Include="Microsoft.AnalysisServices.Tabular.Json"><HintPath>..\amo\Microsoft.AnalysisServices.Tabular.Json.dll</HintPath></Reference>
+    <Reference Include="Microsoft.AnalysisServices.SPClient.Interfaces"><HintPath>..\amo\Microsoft.AnalysisServices.SPClient.Interfaces.dll</HintPath></Reference>
+    <Reference Include="System.Data" />
+  </ItemGroup>
+</Project>

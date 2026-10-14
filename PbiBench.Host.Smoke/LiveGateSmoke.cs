@@ -12,7 +12,7 @@ using Tom = Microsoft.AnalysisServices.Tabular;
 // No other database on the server is opened, read or changed (only Databases.ContainsName on the target name).
 internal static partial class SliceSmokes
 {
-    static partial void LateDax() => LiveGateSmoke.RunIfConfigured();
+    static partial void LateDax() { LiveGateSmoke.RunIfConfigured(); DesktopGateSmoke.RunIfConfigured(); }
 }
 
 internal static class LiveGateSmoke

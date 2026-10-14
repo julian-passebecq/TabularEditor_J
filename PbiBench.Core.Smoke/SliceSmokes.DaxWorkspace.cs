@@ -136,9 +136,9 @@ internal static class DaxStudioArgsSmoke
     {
         var check = (Action<bool, string>)SliceSmokes.WorkspaceCheck;
         var args = DaxStudioHandoff.BuildArguments(new DaxStudioTarget("localhost:51234", "0f1e2d3c-aaaa-bbbb-cccc-123456789abc"));
-        check(args.Count == 2 && args[0] == "localhost:51234" && VsCodeHandoff.ToWindowsCommandLine(args) == "localhost:51234 0f1e2d3c-aaaa-bbbb-cccc-123456789abc", "positional server/database");
+        check(args.Count == 2 && args[0] == "/server=localhost:51234" && VsCodeHandoff.ToWindowsCommandLine(args) == "/server=localhost:51234 /database=0f1e2d3c-aaaa-bbbb-cccc-123456789abc", "named /server= /database= arguments (DAX Studio registration shape)");
         args = DaxStudioHandoff.BuildArguments(new DaxStudioTarget(" powerbi://api.powerbi.com/v1.0/myorg/Sales Workspace ", "Sales Model"));
-        check(VsCodeHandoff.ToWindowsCommandLine(args) == "\"powerbi://api.powerbi.com/v1.0/myorg/Sales Workspace\" \"Sales Model\"", "XMLA label with spaces is quoted and trimmed");
+        check(VsCodeHandoff.ToWindowsCommandLine(args) == "\"/server=powerbi://api.powerbi.com/v1.0/myorg/Sales Workspace\" \"/database=Sales Model\"", "XMLA label with spaces is quoted and trimmed");
 
         var refused = new[]
         {
@@ -179,7 +179,7 @@ internal static class DaxStudioArgsSmoke
         var offline = DaxStudioHandoff.Plan(@"C:\Program Files\DAX Studio\DaxStudio.exe", null);
         check(offline.Kind == DaxStudioHandoffKind.SaveAndReport && offline.Reason.Contains("No live model connection"), "draft mode saves and reports");
         var launch = DaxStudioHandoff.Plan(@"C:\Program Files\DAX Studio\DaxStudio.exe", new DaxStudioTarget("localhost:51234", "Sales"));
-        check(launch.Kind == DaxStudioHandoffKind.LaunchConnected && launch.Arguments.SequenceEqual(new[] { "localhost:51234", "Sales" }) &&
+        check(launch.Kind == DaxStudioHandoffKind.LaunchConnected && launch.Arguments.SequenceEqual(new[] { "/server=localhost:51234", "/database=Sales" }) &&
             launch.Reason.Contains("no connection string"), "connected launch plan");
         Console.WriteLine("S3 DAX Studio handoff: labels only, connection strings refused, executable rules, fallback plans PASS");
     }

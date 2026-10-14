@@ -1,0 +1,32 @@
+<repo>\PbiBench.Core.Smoke\SemanticDependencySmoke.cs(55,42): warning CS8625: Cannot convert null literal to non-nullable reference type. [<repo>\PbiBench.Core.Smoke\PbiBench.Core.Smoke.csproj]
+Project discovery: ambiguity, explicit selection, worktree marker, cancellation, width/depth/root PASS
+Table preview: typed literals, adversarial escaping, sort and limits PASS
+DAX signature catalog: 224 functions, arity invariants, active parameter, UDF parse PASS
+DAX completion context: caret kinds, quoting, scope, replace ranges, signature help PASS
+DAX diagnostics corpus: 20 valid / 20 invalid, advisory labels, offline mode, caps PASS
+Semantic usage: referrers, unused measures, unresolved references, external counts PASS
+QA fixes D10/D11/D13: PASS
+DAX diagnostics size cap: DAX000 advisory, no exception PASS
+S3 DocumentSet: bounded tabs, unique ids/paths, active neighbour, close-all order PASS
+S3 DaxDocument: stable id, generation, external change/deletion/lock detection, explicit keep PASS
+S3 DAX Studio handoff: labels only, connection strings refused, executable rules, fallback plans PASS
+RecoveryStoreSmoke: opt-in, atomic write, hash manifest, retention, explicit delete PASS
+RecoveryOwnershipSmoke: owner pid+start, live drafts never offered/deleted, adopt to new id then remove source, pid reuse PASS
+ScriptDocumentSmoke: tabs, dirty guard, hash-bound trust, diagnostics mapping, advisory labelling PASS
+RecipeCatalogSmoke: typed validators, per-property diff, rename preview/stale/refusals PASS
+SafeFileReplace (OBS-001 opt-in retry, default off) PASS; retries used in this process: 0
+ReviewedFilePlanSmoke: stale reject, failure 2/3 + 3/3 rollback, journal restore PASS
+ProjectIdentitySmoke: stable id, per-user registry outside repo, distinct stamps PASS
+ExternalChangeSmoke: modify/add/remove, unique-hash rename, ignored folders PASS
+VsCodeArgsSmoke: argument list, injection refusal, Windows quoting, Code.exe candidates PASS
+QA fixes D8: PASS
+ReviewedFilePlanReviewFixesSmoke: re-hash before each commit (replace/delete/create), external edit kept + rollback, marker failure = applied with warning PASS
+JournalRetentionSmoke: list with states, prune completed > 30 days, never Applying/unreadable, explicit delete PASS
+PbirJsonSmoke: escapes, spans, malformed/depth refusals, BOM PASS
+PbirIndexSmoke: pages/visuals/filters/sort/aggregation, theme, bounds, malformed file, unknown + legacy read-only PASS
+ReportLineageSmoke: resolved/unresolved/ambiguous (kind mismatch, alias, other home table, hierarchies, auto date), measure uses, revision PASS
+ThemeApplyPlanSmoke: splice keeps other bytes/BOM/CRLF, apply, byte-exact restore, stale reject, unknown/invalid refusals, insert path PASS
+QA fixes D6/D7/D9: PASS
+DaxProfileQueryBuilder: bounded drafts, escaping, lexically clean, refusals PASS
+SemanticAssertions: format/ref/bidi allowlist/hidden keys/description, caps PASS
+PbiBench.Core smoke: PASS

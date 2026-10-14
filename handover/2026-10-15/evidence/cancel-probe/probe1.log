@@ -1,0 +1,20 @@
+00:09:51.770 created tmp_te2_20261015
+00:09:52.000 method=none session=99C36B92-4F22-427C-A4FA-8142CE7850AC spid=2186
+00:10:41.919 RESULT method=none cancelAt=-1 clientReturned=49812 engineIdleAt=2 outcome= row=4408408
+00:10:42.134 method=amo session=E3D4DFC1-210C-4657-9948-313C960C7F65 spid=2198
+00:10:43.766 status before cancel: 2198|1|1624
+00:10:43.934 cancel sent at 1515 ms (amo)
+00:11:06.738 RESULT method=amo cancelAt=1515 clientReturned=24564 engineIdleAt=24603 outcome=exception:OperationException:The operation was cancelled by the user.  
+00:11:06.862 method=spid session=7E5BA5D7-85DD-48E3-892D-7FC72D2C7780 spid=2207
+00:11:08.399 status before cancel: 2207|1|1533
+00:11:08.449 cancel sent at 1513 ms (spid)
+00:11:27.270 RESULT method=spid cancelAt=1513 clientReturned=16481 engineIdleAt=20408 outcome=exception:OperationException:The operation was cancelled by the user.  
+00:11:27.697 method=session session=01C75AF0-A1BD-4F20-9F05-F660AF749769 spid=2214
+00:11:29.212 status before cancel: 2214|1|1338
+00:11:29.215 cancel sent at 1509 ms (session)
+00:11:58.457 RESULT method=session cancelAt=1509 clientReturned=26829 engineIdleAt=30760 outcome=exception:OperationException:The operation was cancelled by the user.  
+00:11:59.064 method=spidassoc session=191E7383-439F-45BE-A4A9-1B7FCAA6CA6A spid=2226
+00:12:00.581 status before cancel: 2226|1|1409
+00:12:00.595 cancel sent at 1511 ms (spidassoc)
+00:12:05.651 RESULT method=spidassoc cancelAt=1511 clientReturned=1533 engineIdleAt=-1 outcome=exception:ConnectionException:The connection either timed out or was lost.
+00:12:15.112 dropped tmp_te2_20261015 stillExists=False

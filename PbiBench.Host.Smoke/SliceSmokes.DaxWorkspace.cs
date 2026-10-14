@@ -416,7 +416,7 @@ internal static class DaxStudioLauncherSmoke
 
         var plan = DaxStudioHandoff.Plan(located, new DaxStudioTarget("localhost:51234", "Sales Model"));
         var info = PbiBenchDaxStudioLauncher.BuildStartInfo(plan);
-        S3.Check(!info.UseShellExecute && info.FileName == located && info.Arguments == "localhost:51234 \"Sales Model\"", "direct start with two quoted labels: " + info.Arguments);
+        S3.Check(!info.UseShellExecute && info.FileName == located && info.Arguments == "/server=localhost:51234 \"/database=Sales Model\"", "direct start with /server= and /database=: " + info.Arguments);
         try { PbiBenchDaxStudioLauncher.BuildStartInfo(DaxStudioHandoff.Plan(null, null)); throw new Exception("S3 host: save plan started a process"); }
         catch (ArgumentException) { }
 
@@ -452,7 +452,7 @@ internal static class DaxStudioLauncherSmoke
             var editor = form.ActiveTab.Editor;
             editor.Select(0, "EVALUATE".Length);
             result = form.HandOffToDaxStudio();
-            S3.Check(result.Kind == DaxStudioHandoffKind.LaunchConnected && started != null && started.Arguments == "localhost:51234 \"Sales Model\"" &&
+            S3.Check(result.Kind == DaxStudioHandoffKind.LaunchConnected && started != null && started.Arguments == "/server=localhost:51234 \"/database=Sales Model\"" &&
                 !started.UseShellExecute && copied == "EVALUATE" && form.StatusText.Contains("clipboard"), "connected launch: " + form.StatusText);
 
             // Start failure falls back to save-and-report once (no retry).

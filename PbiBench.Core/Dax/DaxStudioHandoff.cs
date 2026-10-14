@@ -35,8 +35,10 @@ namespace PbiBench.Core.Dax
 
     /// <summary>
     /// DAX-014: neutral rules for handing a query over to DAX Studio. The only arguments ever produced are
-    /// the server label and database label, positionally, which is the argument shape Power BI Desktop's
-    /// External Tools registration uses for DAX Studio ("%server%" "%database%"). Anything that looks like a
+    /// /server=&lt;server label&gt; and /database=&lt;database label&gt;, the argument shape of DAX Studio's own
+    /// Power BI Desktop External Tools registration (daxstudio.pbitool.json of DAX Studio 3.0.11:
+    /// /server="%server%" /database="%database%"). Live gate 2026-10-15: DAX Studio 3.0.11 ignores two bare
+    /// positional arguments (it opens its Connect dialog) and connects with the named form. Anything that looks like a
     /// connection string (key=value pairs, ';', credentials) is refused, so secrets can never reach a command
     /// line. When no executable or no live target is available the plan is SaveAndReport: the host saves the
     /// query as a .dax file and states where it is and why DAX Studio was not started.
@@ -78,13 +80,13 @@ namespace PbiBench.Core.Dax
                    category == System.Globalization.UnicodeCategory.ParagraphSeparator;
         }
 
-        /// <summary>Exactly two arguments: server label, database label. Throws ArgumentException when either is refused.</summary>
+        /// <summary>Exactly two arguments: /server=label, /database=label. Throws ArgumentException when either label is refused.</summary>
         public static IReadOnlyList<string> BuildArguments(DaxStudioTarget target)
         {
             if (target == null) throw new ArgumentNullException(nameof(target));
             var reason = CheckLabel(target.Server, "Server") ?? CheckLabel(target.Database, "Database");
             if (reason != null) throw new ArgumentException(reason);
-            return new[] { target.Server.Trim(), target.Database.Trim() };
+            return new[] { "/server=" + target.Server.Trim(), "/database=" + target.Database.Trim() };
         }
 
         /// <summary>A DaxStudio.exe path the host may start: absolute local drive path, exact file name, no UNC.</summary>
