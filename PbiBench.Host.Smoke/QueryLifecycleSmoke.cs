@@ -103,10 +103,55 @@ internal static class QueryLifecycleSmoke
             Wait(() => entered.IsSet); user.Cancel(); Wait(() => task.IsCompleted);
             Assert(task.Result.Reason == DaxQueryReason.UserCancellation && session.Disposes == 1, "Cancel/cleanup error replaced original outcome.");
         }
+        AbortEscalation();
         ProductionClose();
         Bounds();
         Console.WriteLine("T05/T06/T07: production orchestration, cancellation/UI message, ownership, diagnostics and retained bounds PASS");
     }
+    /// <summary>
+    /// The engine ignores the command cancel (formula-engine-bound query, seen live): after the abort delay the
+    /// session is ended exactly once and the run ends as Cancelled. A cancel the engine honours never aborts.
+    /// </summary>
+    private static void AbortEscalation()
+    {
+        foreach (var timeout in new[] { false, true })
+        using (var released = new ManualResetEventSlim())
+        using (var entered = new ManualResetEventSlim())
+        using (var user = new CancellationTokenSource())
+        {
+            var session = new Session
+            {
+                OnExecute = () => { entered.Set(); Assert(released.Wait(10000), "Abort never released the blocked execute."); throw new Exception("connection lost sentinel"); },
+                OnAbort = () => released.Set()
+            };
+            var watch = Stopwatch.StartNew();
+            var task = new PbiBenchAmoDaxQueryExecutor(() => session, abortAfterMilliseconds: 300)
+                .ExecuteAsync(new DaxQueryRequest { QueryText = "fe bound", TimeoutSeconds = timeout ? 1 : 30 }, user.Token);
+            Wait(() => entered.IsSet);
+            if (!timeout) user.Cancel();
+            Wait(() => task.IsCompleted);
+            var result = task.Result;
+            Assert(result.State == DaxQueryExecutionState.Cancelled &&
+                result.Reason == (timeout ? DaxQueryReason.Timeout : DaxQueryReason.UserCancellation) &&
+                session.Aborts == 1 && session.Cancels >= 1 && session.Disconnects == 1 && session.Disposes == 1 &&
+                !result.ErrorMessage.Contains("sentinel") && watch.ElapsedMilliseconds < 8000,
+                "Abort escalation (" + (timeout ? "timeout" : "user") + "): " + result.State + "/" + result.Reason + ", aborts " + session.Aborts);
+        }
+        using (var released = new ManualResetEventSlim())
+        using (var entered = new ManualResetEventSlim())
+        using (var user = new CancellationTokenSource())
+        {
+            var session = new Session
+            {
+                OnExecute = () => { entered.Set(); Assert(released.Wait(10000), "Cancel never released the blocked execute."); },
+                OnCancel = () => released.Set()
+            };
+            var task = new PbiBenchAmoDaxQueryExecutor(() => session).ExecuteAsync(new DaxQueryRequest { QueryText = "honoured" }, user.Token);
+            Wait(() => entered.IsSet); user.Cancel(); Wait(() => task.IsCompleted);
+            Assert(task.Result.Reason == DaxQueryReason.UserCancellation && session.Aborts == 0, "An honoured cancel must not end the session.");
+        }
+    }
+
     private static void ProductionClose()
     {
         using (var entered = new ManualResetEventSlim())
@@ -182,13 +227,14 @@ internal static class QueryLifecycleSmoke
     internal sealed class Session : IDaxQuerySession
     {
         internal readonly Reader Reader;
-        internal Action OnConnect, OnExecute, OnCancel, OnDispose;
-        internal int Disconnects, Disposes, Cancels;
+        internal Action OnConnect, OnExecute, OnCancel, OnAbort, OnDispose;
+        internal int Disconnects, Disposes, Cancels, Aborts;
         internal string Query;
         internal Session(int rows = 1, int columns = 1) { Reader = new Reader(rows, columns); }
         public void Connect(string connectionString, int timeoutSeconds) => OnConnect?.Invoke();
         public IDataReader Execute(string query, string catalog) { Query = query; OnExecute?.Invoke(); return Reader; }
         public void Cancel() { Interlocked.Increment(ref Cancels); OnCancel?.Invoke(); }
+        public void Abort() { Interlocked.Increment(ref Aborts); OnAbort?.Invoke(); }
         public void Disconnect() { Disconnects++; }
         public void Dispose() { Disposes++; OnDispose?.Invoke(); }
     }

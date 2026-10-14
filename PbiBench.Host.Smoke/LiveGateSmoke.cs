@@ -7,7 +7,7 @@ using TabularEditor.TOMWrapper;
 using Tom = Microsoft.AnalysisServices.Tabular;
 
 // DAX-006 live gate (opt-in, never in CI). Runs only when PBIBENCH_LIVE_SERVER and PBIBENCH_LIVE_DATABASE are set.
-// The database name must match te2_tmp_yyyymmdd and must not exist yet: the gate creates it from synthetic
+// The database name must match tmp_te2_yyyymmdd (or the older te2_tmp_yyyymmdd) and must not exist yet: the gate creates it from synthetic
 // DATATABLE rows, runs the real TE2 connection + PbiBench AMO executor against it, and drops it in finally.
 // No other database on the server is opened, read or changed (only Databases.ContainsName on the target name).
 internal static partial class SliceSmokes
@@ -23,7 +23,7 @@ internal static class LiveGateSmoke
         var dbName = Environment.GetEnvironmentVariable("PBIBENCH_LIVE_DATABASE");
         if (string.IsNullOrWhiteSpace(serverName) || string.IsNullOrWhiteSpace(dbName))
         { Console.WriteLine("DAX-006 live gate NOT_RUN (PBIBENCH_LIVE_SERVER/PBIBENCH_LIVE_DATABASE not set)"); return; }
-        Check(Regex.IsMatch(dbName, @"^te2_tmp_\d{8}$"), "database name must match te2_tmp_yyyymmdd");
+        Check(Regex.IsMatch(dbName, @"^(tmp_te2|te2_tmp)_\d{8}$"), "database name must match tmp_te2_yyyymmdd");
 
         var admin = new Tom.Server();
         admin.Connect("Data Source=" + serverName);
@@ -63,16 +63,21 @@ internal static class LiveGateSmoke
                 var cancelled = executor.ExecuteAsync(new DaxQueryRequest { QueryText = slow }, cts.Token).GetAwaiter().GetResult();
                 Check(cancelled.State == DaxQueryExecutionState.Cancelled && cancelled.Reason == DaxQueryReason.UserCancellation,
                     "user cancel reports Cancelled, never results (" + cancelled.State + ", " + cancelled.DurationMilliseconds + " ms)");
-                Console.WriteLine("DAX-006 live cancel (engine not interrupted, best effort) returned after " + cancelled.DurationMilliseconds + " ms");
+                Check(cancelled.DurationMilliseconds < 10000, "user cancel returns within 10 s through the session abort (" + cancelled.DurationMilliseconds + " ms)");
+                Console.WriteLine("DAX-006 live cancel returned after " + cancelled.DurationMilliseconds + " ms");
             }
             var timedOut = Run(executor, slow, timeoutSeconds: 1);
             Check(timedOut.State == DaxQueryExecutionState.Cancelled && timedOut.Reason == DaxQueryReason.Timeout,
                 "timeout reports Cancelled/Timeout (" + timedOut.State + ", " + timedOut.Reason + ", " + timedOut.DurationMilliseconds + " ms)");
+            Check(timedOut.DurationMilliseconds < 10000, "timeout returns within 10 s through the session abort (" + timedOut.DurationMilliseconds + " ms)");
             Console.WriteLine("DAX-006 live timeout returned after " + timedOut.DurationMilliseconds + " ms");
+            // The abort ends only the dedicated query session: the TE2 editor connection must still work.
+            handler.Database.Refresh(true);
+            Check(handler.Database.Server.Connected && handler.Database.Model.Tables.Contains("Sales"), "TE2 editor connection survives the query-session abort");
 
             var after = Run(executor, "EVALUATE ROW(\"ok\", 1)");
             Check(after.State == DaxQueryExecutionState.Completed, "executor usable after cancel and timeout");
-            Console.WriteLine("DAX-006 live gate (multi-rowset, measure, row limit, query error, cancel, timeout, reuse) PASS");
+            Console.WriteLine("DAX-006 live gate (multi-rowset, measure, row limit, query error, cancel, timeout, abort, editor connection, reuse) PASS");
         }
         finally
         {
