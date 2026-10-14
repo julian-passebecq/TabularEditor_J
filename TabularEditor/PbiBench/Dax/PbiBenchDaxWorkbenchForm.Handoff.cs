@@ -8,7 +8,7 @@ namespace TabularEditor.PbiBench.Dax
 {
     /// <summary>
     /// DAX-014 DAX Studio handoff. Only the server label and database label of the live TE2 connection are
-    /// passed (positionally, never a connection string). The query itself is placed on the clipboard for
+    /// passed (as /server= and /database=, never a connection string). The query itself is placed on the clipboard for
     /// pasting. Without DAX Studio or without a live connection nothing is started: the tab is saved as .dax
     /// (existing Save / Save As flow) and the reason plus file path are reported.
     /// </summary>

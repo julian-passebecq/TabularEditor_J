@@ -29,7 +29,9 @@ Last run: PASS. Cancel returned after 11.3 s and timeout after 10.7 s, both on a
 ## Product defect found and fixed
 `AmoDaxQuerySession.Execute` ignored errors in `XmlaResultCollection`. On SSAS 2022 a DAX error comes back as an XMLA message with no reader, so the Workbench showed a failed query as **Completed with no rows**. Execute now throws when any `XmlaError` is present, and the executor maps it to `Failed / Query` without provider text.
 
-## Known limit confirmed live (not fixed)
+## Known limit confirmed live (client side fixed 2026-10-15)
+Update 2026-10-15: the executor now ends the query session after 2 s, so cancel and timeout return in about 3 s. The engine-side limit below still holds. See `handover/2026-10-15/DESKTOP_GATES.md`.
+
 Cancel and timeout do not interrupt a query that is bound by the formula engine.
 - Two methods were tried:
   - `Server.CancelCommand()`, the product code;

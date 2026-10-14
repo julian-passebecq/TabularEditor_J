@@ -24,6 +24,10 @@ namespace TabularEditor.PbiBench.Dax
         private int _active;
         private readonly string _connectionString;
         private readonly string _databaseName;
+        private readonly int _abortAfterMilliseconds = DefaultAbortAfterMilliseconds;
+
+        /// <summary>How long a cancel or timeout waits for the engine before the query session is ended.</summary>
+        internal const int DefaultAbortAfterMilliseconds = 2000;
 
         private PbiBenchAmoDaxQueryExecutor(string connectionString, string databaseName, string connectionLabel)
         {
@@ -78,9 +82,10 @@ namespace TabularEditor.PbiBench.Dax
             return true;
         }
 
-        internal PbiBenchAmoDaxQueryExecutor(Func<IDaxQuerySession> factory)
+        internal PbiBenchAmoDaxQueryExecutor(Func<IDaxQuerySession> factory, int abortAfterMilliseconds = DefaultAbortAfterMilliseconds)
         {
             _sessionFactory = factory;
+            _abortAfterMilliseconds = abortAfterMilliseconds;
             _connectionString = "";
             _databaseName = "";
             ConnectionLabel = "Controlled session";
@@ -114,11 +119,28 @@ namespace TabularEditor.PbiBench.Dax
             Task cancelWork = null;
             var finished = new ManualResetEventSlim();
             // Callback only enqueues work. Never runs blocking AMO on the cancelling/UI thread.
+            // Cancel first asks the engine to stop the command. When the command is still running after
+            // _abortAfterMilliseconds, the query session is ended once (Abort): the blocked call then returns
+            // at once. Measured live (SSAS 2022, 2026-10-15): a formula-engine-bound query ignored the command
+            // cancel for 16-56 s, while ending the session returned control in about 20-200 ms.
             System.Action signal = () =>
             {
                 lock (sync)
                     if (connected && !finishing && cancelWork == null)
-                        cancelWork = Task.Run(() => { do { try { session.Cancel(); } catch { } } while (!finished.Wait(100)); });
+                        cancelWork = Task.Run(() =>
+                        {
+                            var since = Stopwatch.StartNew();
+                            var aborted = false;
+                            do
+                            {
+                                try
+                                {
+                                    if (!aborted && since.ElapsedMilliseconds >= _abortAfterMilliseconds) { aborted = true; session.Abort(); }
+                                    else session.Cancel();
+                                }
+                                catch { }
+                            } while (!finished.Wait(100));
+                        });
             };
             var registration = token.Register(signal);
             DaxQueryResult result;
@@ -267,6 +289,8 @@ namespace TabularEditor.PbiBench.Dax
         void Connect(string connectionString, int timeoutSeconds);
         IDataReader Execute(string query, string catalog);
         void Cancel();
+        /// <summary>Ends this query session on the server so a blocked Execute/Read returns. Called at most once.</summary>
+        void Abort();
         void Disconnect();
     }
 
@@ -279,12 +303,17 @@ namespace TabularEditor.PbiBench.Dax
     internal sealed class AmoDaxQuerySession : IDaxQuerySession
     {
         private readonly Server _server = new Server();
+        private string _connectionString;
+        private string _sessionId;
         public void Connect(string connectionString, int timeoutSeconds)
         {
             var builder = new System.Data.Common.DbConnectionStringBuilder { ConnectionString = connectionString };
             builder["Connect Timeout"] = timeoutSeconds;
             builder["Timeout"] = timeoutSeconds;
             _server.Connect(builder.ConnectionString);
+            // Captured on the connecting thread: Abort runs on the cancel worker and must not touch _server.
+            _connectionString = connectionString;
+            _sessionId = _server.SessionID;
         }
         public IDataReader Execute(string query, string catalog)
         {
@@ -305,11 +334,41 @@ namespace TabularEditor.PbiBench.Dax
             return false;
         }
         /// <summary>
-        /// Best effort only. Live DAX-006 gate (SSAS 2022, 2026-10-13): neither this call nor an XMLA Cancel by SessionID
-        /// from a second connection stopped a formula-engine-bound query; the engine ran it to completion and the
-        /// executor then reported Cancelled. See handover/2026-10-13/LIVE_GATE.md.
+        /// First step of a cancel. Live gates (SSAS 2022, 2026-10-13 and 2026-10-15): a formula-engine-bound query
+        /// honours this only at its next check point (16-56 s on a loaded PC), so the executor escalates to Abort
+        /// after DefaultAbortAfterMilliseconds. See handover/2026-10-15/DESKTOP_GATES.md.
         /// </summary>
         public void Cancel() => _server.CancelCommand();
+
+        /// <summary>
+        /// Ends the dedicated query session from a second, short-lived connection with an XMLA Cancel on its
+        /// SessionID and CancelAssociated=true. The query connection drops, so the blocked ExecuteReader returns
+        /// at once (live gate, 2026-10-15). The editor connection is a different session and is not touched.
+        /// The engine may still finish the formula-engine step it is in before it notices; that work is not
+        /// waited for and no result from it is ever shown.
+        /// </summary>
+        public void Abort()
+        {
+            var sessionId = _sessionId;
+            if (string.IsNullOrEmpty(sessionId) || string.IsNullOrEmpty(_connectionString)) return;
+            Guid parsed;
+            // Only a well-formed id ever reaches the XMLA text (no markup can be injected through it).
+            if (!Guid.TryParseExact(sessionId.Trim(), "D", out parsed)) return;
+            var builder = new System.Data.Common.DbConnectionStringBuilder { ConnectionString = _connectionString };
+            builder["Connect Timeout"] = 10;
+            builder["Timeout"] = 10;
+            using (var control = new Server())
+            {
+                control.Connect(builder.ConnectionString);
+                try
+                {
+                    control.Execute("<Cancel xmlns=\"http://schemas.microsoft.com/analysisservices/2003/engine\"><SessionID>" +
+                        sessionId.Trim() + "</SessionID><CancelAssociated>true</CancelAssociated></Cancel>");
+                }
+                finally { if (control.Connected) control.Disconnect(); }
+            }
+        }
+
         public void Disconnect() { if (_server.Connected) _server.Disconnect(); }
         public void Dispose() => _server.Dispose();
     }

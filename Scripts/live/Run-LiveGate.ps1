@@ -1,6 +1,6 @@
 param(
     [string]$Server = 'localhost\MSSQLSERVERTABU',
-    [string]$Database = ('te2_tmp_' + (Get-Date -Format 'yyyyMMdd'))
+    [string]$Database = ('tmp_te2_' + (Get-Date -Format 'yyyyMMdd'))
 )
 # DAX-006 live gate. Local only, never in CI. Creates the throwaway database $Database (must not exist), runs the
 # host smoke against it through the real TE2 connection and PbiBench AMO executor, and drops it. Build first with

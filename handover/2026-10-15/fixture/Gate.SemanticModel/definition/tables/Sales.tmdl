@@ -1,0 +1,19 @@
+table Sales
+
+	measure 'Total Amount' = SUM(Sales[Amount])
+
+	column Region
+		dataType: string
+		isNameInferred
+		summarizeBy: none
+		sourceColumn: [Region]
+
+	column Amount
+		dataType: int64
+		isNameInferred
+		summarizeBy: sum
+		sourceColumn: [Amount]
+
+	partition Sales = calculated
+		mode: import
+		source = DATATABLE("Region", STRING, "Amount", INTEGER, {{"North", 10}, {"South", 20}, {"East", 5}})

@@ -84,6 +84,7 @@ internal static class MultipleResultsSmoke
             return new DataTableReader(tables);
         }
         public void Cancel() { }
+        public void Abort() { }
         public void Disconnect() { }
         public void Dispose() { Disposed = true; }
     }
