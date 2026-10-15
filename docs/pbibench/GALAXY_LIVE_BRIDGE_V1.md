@@ -1,0 +1,27 @@
+# Galaxy V1 selected-instance live bridge
+
+This candidate extends TE2 Enhanced with an explicit local Windows bridge. The existing six-tool disk-snapshot mode is unchanged and remains the companion default. It is not a query, Save, deployment, authentication or arbitrary-C# interface.
+
+1. In TE2 choose **PbiBench > Galaxy live bridge (explicit instance)**. Its modeless window lets you keep selecting/editing the same loaded model. Expressions in live reads are withheld unless you opt in before starting.
+2. Start the endpoint, copy its `pipe|instance|session` descriptor, then start the portable `mcp/TE2Enhanced.Mcp.exe --live "<descriptor>"` in your chosen stdio client. Nothing discovers instances, installs software, registers a client or edits its configuration.
+3. `te2_live_read` returns the currently unsaved metadata and selection on the TE2 UI thread, with `modelId`, `revision` and `selection` stamps. No rows or connection details are read. Snapshot credential heuristics still apply, with their documented limitations.
+4. `te2_live_propose` accepts exactly one measure's description, expression and/or folder, plus those exact stamps and table/measure names. A TE2 host dialog displays each exact before/after value. Only its explicit approval button admits the typed edit. The sidecar cannot issue an approval boolean. The three changes form one TE2 Undo batch; no implicit Save, query or deployment occurs. Unrelated pre-existing edits are preserved. Stale model/handler/selection/document changes reject approval, including edit-then-revert through Undo events.
+5. Closing/stopping the bridge revokes pending requests and removes the owned endpoint. A disconnected request is rejected before admission. Cancellation after a mutation has already been admitted is not an undo guarantee: if a response is lost the outcome is **UNKNOWN**. Inspect TE2 before retrying; there is no automatic mutation retry.
+
+## Protocol and security
+
+`te2enhanced.live/1`: one four-byte big-endian UTF-8 frame per connection, at most1MiB. Request/response are flat JSON with string values; `changes` contains a second strict flat object with only `description`, `expression`, `folder`. Combined change text is capped at16384characters. Duplicate/unknown fields, wrong types/schema/identity/actions, arbitrary code and row requests are refused. Both peers bind responses to request, instance and session. The sidecar connects only to `.` and the selected `te2-galaxy-<random>` name.
+
+The host creates the resource with a protected DACL granting only its owner SID. Native `PIPE_REJECT_REMOTE_CLIENTS` and first-instance protection are set before listening. A connected local client's native PID must identify the same Windows session; impersonated client SID must equal the owner. No existing ACL, account, global permission or runtime setting is changed. The actual anonymous-access negative test and descriptor inspection are separate evidence; no remote-machine attempt or second-user session is claimed.
+
+Transport faults are isolated to their connection. The120second request deadline closes transport and cancels a queued UI dispatch even if that callback never runs. All TOM/selection access and final freshness admission run on the UI thread. The review dialog polls cancellation. This is not a promise to undo an already admitted mutation or a hard limit on arbitrary host UI code.
+
+## Revision and qualification limits
+
+Disk, Loaded, Live and Git are separate fields. This bridge attests only loaded/unsaved metadata; unknown disk/live/Git revisions remain `UNKNOWN`. `engineEvidence` is explicitly `NOT_EXECUTED`; no result against a loaded engine qualifies an unsaved candidate by association. No engine connection or result is fabricated.
+
+Automated smoke uses the actual compiled host/TOM setters, owned WinForms dialogs, real local IPC, actual stdio child, real anonymous denial and cleanup. Its synthetic approval clicks exercise the host gate but are not a human usability acceptance. The final **human manual Save** on an owned synthetic copy and the protected Fabric consumer adoption remain separately unexecuted until genuinely performed. Do not call the whole TL-UX-018 route closed from a package or smoke alone.
+
+## Provenance and rollback
+
+Source for this candidate is the private GitLab `juliandatapass-group/tabulareditor-j`, exact delivered commit and package hashes in the delivery receipt. No matching GitHub-origin publication is implied. Dirty local builds are diagnostic; delivery requires clean tracked source and mandatory exact-SHA CI. Default disk snapshot remains available without live mode. To roll back this additive bridge, stop it and use the prior qualified portable; no model Save or source overwrite is automatic. Keep manual model edits under TE2 Undo/recovery ownership.

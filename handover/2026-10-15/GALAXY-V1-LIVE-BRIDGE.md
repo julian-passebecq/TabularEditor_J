@@ -1,0 +1,9 @@
+# Galaxy V1 bounded bridge delivery
+
+Base4c4523b2a260e55aa1f943e1e785761a2b758eab; branch `codex/pro-ai-galaxy-v1-live-bridge-20261015`; source destination private GitLab87543925 only. The updated credential-clone smoke registration in `PbiBench.Host.Smoke/Program.cs` is preserved. Existing S001 QA/decisions and current guards are reused as evidenced by the coordination receipt, without claiming Git ancestry that is not proven.
+
+The20path scope adds strict neutral contracts/framing, owner-only local IPC, UI-thread revision capture and host-reviewed typed edits with one Undo; default disk companion remains compatible. No FormMain/TOMWrapper/CI/dependency/runtime change, source from another product, provider call or automatic Save.
+
+Affected local stages pass with counterproofs retained. The first full Verify passed8/8; the next full Verify passed its seven setup/build/Core/companion stages and all new bridge assertions but failed later in unchanged ProjectWindowSmoke, File.Replace HRESULT0x80070497 (cause UNKNOWN). One explicit targeted host rebuild/run then passed the latest complete host suite, including wrong-instance and real malformed-frame vectors. No SafeFileReplace change, retry hidden in product code or weakened gate. All raw attempts and hashes are indexed by the adjacent integration receipt and retained outside the repository under `v1-closure-execution-20261016/te2-delivery`. Exact-source remote mandatory CI remains required before publication. No push, MR, CI publication or merge is performed by this writer before Root checkpoint.
+
+TL-FB-036 recovery/inheritance is reused, not rebuilt. TL-FB-037/038 require the affected real host/stdio/ACL/Undo checks; TL-FB-039 is partial for engine evidence, unknown fields stay unknown. Full TL-UX-018 still requires the human manual Save and protected consumer adoption. No V1 criterion is deferred to V2.

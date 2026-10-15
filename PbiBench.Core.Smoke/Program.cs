@@ -14,6 +14,7 @@ internal static class Program
         try
         {
             BuildFixture(root);
+            Te2LiveBridgeSmoke.Run();
             RunProjectDiscoveryChecks(root);
             ProjectDiscoverySmoke.Run(root);
             RunGitChecks();

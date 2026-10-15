@@ -1,0 +1,112 @@
+{
+  "schema": "galaxy.te2.live-bridge.product-receipt/1",
+  "status": "LOCAL_AFFECTED_STAGES_PASS_WITH_COUNTERPROOFS_REMOTE_GATES_PENDING",
+  "base": "4c4523b2a260e55aa1f943e1e785761a2b758eab",
+  "branch": "codex/pro-ai-galaxy-v1-live-bridge-20261015",
+  "sourceRepository": "https://gitlab.com/juliandatapass-group/tabulareditor-j",
+  "sourcePublication": "Private GitLab only. Exact delivered commit is supplied by the external frozen-source receipt, not a self-referential SHA.",
+  "runtimeContract": "te2enhanced.live/1",
+  "localHistory": [
+    {
+      "attempt": "verify-attempt1",
+      "result": "8/8 required local stages PASS before exact-target display assertion was added"
+    },
+    {
+      "attempt": "verify-final",
+      "result": "7 PASS and full host FAIL after all new bridge assertions PASS",
+      "failure": "ProjectWindowSmoke/ReviewedFilePlan/SafeFileReplace HRESULT0x80070497; cause UNKNOWN, no causal independence or fix claimed"
+    },
+    {
+      "attempt": "host-retry1",
+      "result": "Targeted host build and whole actual-host smoke PASS including latest wrong-instance/oversize/truncated vectors",
+      "retry": "One explicit focused retry, all original logs preserved; unchanged security/thresholds and existing SafeFileReplace source"
+    }
+  ],
+  "proofs": [
+    {
+      "path": "core-attempt1.log",
+      "sha256": "0ecd88b0c8bcdc26b18368b855cdeec9bc506e16c6ad491131f21028a7271128",
+      "bytes": 1205
+    },
+    {
+      "path": "core-attempt2.log",
+      "sha256": "198e609ec3965860829cc6c1f1ce4cb276c59131216927e36d4ce86d0ba86f49",
+      "bytes": 767
+    },
+    {
+      "path": "core-attempt3.log",
+      "sha256": "f8516cc21586aff76a919c8836f2458110d863592cc13159614911127da3be62",
+      "bytes": 3169
+    },
+    {
+      "path": "companion-attempt1.log",
+      "sha256": "4b7462d9f256c5d1fffbe3fa0bf5abbc5da93fb87f0411251c3c8c711f7b3039",
+      "bytes": 1125
+    },
+    {
+      "path": "companion-attempt2.log",
+      "sha256": "cbc3dfabf6a63360be692a9ad58b580abc2b4932057924627aafc9c10788037c",
+      "bytes": 1022
+    },
+    {
+      "path": "companion-attempt3.log",
+      "sha256": "cbc3dfabf6a63360be692a9ad58b580abc2b4932057924627aafc9c10788037c",
+      "bytes": 1022
+    },
+    {
+      "path": "verify-attempt1\\summary.json",
+      "sha256": "8634f2e0cb3040fccaac48e9cfe6662143bc787b4bee7125d6b66fe5d8a07733",
+      "bytes": 2041
+    },
+    {
+      "path": "verify-attempt1\\host-smoke-run.log",
+      "sha256": "cc892d9453acc907627a10cc8fea90a482cbeed6fe21d325d0edeee84c96389f",
+      "bytes": 8398
+    },
+    {
+      "path": "verify-final\\summary.json",
+      "sha256": "6e16012cef3e333f4d31149d01927eda92be7f2247dda351feea37926a3687da",
+      "bytes": 2200
+    },
+    {
+      "path": "verify-final\\host-smoke-run.log",
+      "sha256": "853900057b5d81076d7dc60ca3c205076b856ec98057d417ee48bf96ad0c1f1a",
+      "bytes": 11766
+    },
+    {
+      "path": "host-retry1-build.log",
+      "sha256": "6da5d401a82cc11af485d6b767dbdd0ad361964bc3b2170a0bc9654f9860237c",
+      "bytes": 973
+    },
+    {
+      "path": "host-retry1-run.log",
+      "sha256": "82a09ad23d2d10036cdbc0ccfd473b5058e60525f7999363fe2ee71dd40ea086",
+      "bytes": 4200
+    }
+  ],
+  "affectedHostAssertions": [
+    "Protected owner-only DACL readback",
+    "REAL anonymous local connect denied; impersonation token reverted",
+    "Invalid UTF8, oversized and truncated frames refused; same endpoint still serves",
+    "ACTUAL built stdio executable to owned IPC to compiled host UI and current unsaved selection; child EOF exit0",
+    "Host expression opt-in, wrong instance/session, unknown rows refused",
+    "Exact model/table/measure and before/after shown; real host approval button",
+    "Description/expression/folder apply as ONE Undo; prior human edit preserved",
+    "Stale after modal opens, edit-revert, selection away/back and handler absence refused",
+    "Busy undo batch refused; setter failure rolls previous property back",
+    "Disconnected queued request has no effect",
+    "Stop completes without queued UI callback executing; late callback never touches TOM; repeated disposal removes pipe"
+  ],
+  "securityLimits": [
+    "PIPE_REJECT_REMOTE_CLIENTS applied by native CreateNamedPipeW; no remote-machine attempt performed",
+    "Native client PID/same OS session and impersonated owner SID guards implemented; no second real user/session created or claimed tested",
+    "120second default deadline implemented; cancellation/stop of queued callback tested, no claim of measured 120second wall-clock UI guarantee"
+  ],
+  "notExecuted": [
+    "Human manual Save on owned synthetic copy",
+    "Protected Fabric consumer adoption and full integrated UX018",
+    "Engine queries/evidence or any XMLA/Fabric/provider/account operation",
+    "Remote mandatory exact-SHA CI and private publication (Root checkpoint pending)"
+  ],
+  "globalV1Acceptance": false
+}

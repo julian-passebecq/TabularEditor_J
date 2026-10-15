@@ -9,9 +9,8 @@ using PbiBench.Core.Snapshot;
 namespace TE2Enhanced.Mcp
 {
     /// <summary>
-    /// Read-only MCP server over newline-delimited JSON-RPC 2.0 (stdio transport). It exposes the
-    /// snapshot published explicitly by TE2 Enhanced; it never connects to a model, a server or
-    /// the network, and it has no write tools.
+    /// Compatible read-only disk snapshot over stdio, plus explicitly selected local live tools.
+    /// Live proposals require the TE2 host review; no network, query, Save or deployment interface.
     /// </summary>
     public sealed class McpServer
     {
@@ -22,14 +21,16 @@ namespace TE2Enhanced.Mcp
 
         private readonly string _snapshotPath;
         private readonly Func<DateTime> _utcNow;
+        private readonly LiveBridgeClient? _live;
         private ModelSnapshotV1? _cached;
         private DateTime _cachedStamp;
         private long _cachedLength = -1;
 
-        public McpServer(string snapshotPath, Func<DateTime>? utcNow = null)
+        public McpServer(string snapshotPath, Func<DateTime>? utcNow = null, LiveBridgeClient? live = null)
         {
             _snapshotPath = snapshotPath;
             _utcNow = utcNow ?? (() => DateTime.UtcNow);
+            _live = live;
         }
 
         /// <summary>Handles one JSON-RPC message; returns null for notifications.</summary>
@@ -78,7 +79,7 @@ namespace TE2Enhanced.Mcp
             }
         }
 
-        private static JsonObject Initialize(JsonObject? parameters)
+        private JsonObject Initialize(JsonObject? parameters)
         {
             var requested = parameters == null ? null : OptionalString(parameters, "protocolVersion");
             var version = requested != null && SupportedProtocols.Contains(requested) ? requested : SupportedProtocols[0];
@@ -87,13 +88,20 @@ namespace TE2Enhanced.Mcp
                 ["protocolVersion"] = version,
                 ["capabilities"] = new JsonObject { ["tools"] = new JsonObject { ["listChanged"] = false } },
                 ["serverInfo"] = new JsonObject { ["name"] = "te2-enhanced", ["version"] = ServerVersion },
-                ["instructions"] = "Read-only view of the model snapshot that the user explicitly published from TE2 Enhanced " +
+                ["instructions"] = (_live == null ? "Snapshot mode: six read-only tools. " : "Explicit live mode: additional selected-instance live read and typed proposal tools; only the TE2 host human review can admit an edit. No Save or query tools. ") + "Read-only view of the model snapshot that the user explicitly published from TE2 Enhanced " +
                                    "(PbiBench > Publish read-only snapshot for MCP). It can be stale: check publishedAtUtc and modelRevision. " +
-                                   "No write tools exist; edits stay in TE2 Enhanced with its undo."
+                                   "The six snapshot tools never edit; live proposals, if explicitly enabled, stay in TE2 with its Undo."
             };
         }
 
-        private static JsonObject ToolsList()
+        private JsonObject ToolsList()
+        {
+            var result = SnapshotToolsList();
+            if (_live != null) foreach (var tool in LiveBridgeClient.Tools()) result["tools"]!.AsArray().Add(tool);
+            return result;
+        }
+
+        private static JsonObject SnapshotToolsList()
         {
             static JsonObject Tool(string name, string description, JsonObject properties, params string[] required) => new JsonObject
             {
@@ -144,6 +152,8 @@ namespace TE2Enhanced.Mcp
             var argumentsNode = parameters!["arguments"];
             if (argumentsNode != null && !(argumentsNode is JsonObject)) throw new RpcException(-32602, "arguments must be an object.");
             var args = argumentsNode as JsonObject ?? new JsonObject();
+            if (name.StartsWith("te2_live_", StringComparison.Ordinal))
+                return _live == null ? ToolError("Live mode is not enabled. Start the host bridge explicitly and select its descriptor with --live.") : _live.ToolCall(name, args);
             ModelSnapshotV1 snapshot;
             try { snapshot = Load(); }
             catch (Exception error) when (error is IOException || error is InvalidDataException || error is UnauthorizedAccessException || error is System.Runtime.Serialization.SerializationException)

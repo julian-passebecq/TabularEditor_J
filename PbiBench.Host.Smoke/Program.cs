@@ -27,6 +27,7 @@ internal static class Program
                 RecipeSmoke.Run(handler);
                 SliceSmokes.RunEarly(handler);
                 SnapshotPublisherSmoke.Run(handler);
+                Te2LiveBridgeSmoke.Run(handler);
                 using (var recipeForm = new TabularEditor.PbiBench.Automation.PbiBenchRecipeForm(() => handler))
                 { var handle = recipeForm.Handle; recipeForm.Show(); Application.DoEvents(); recipeForm.Close(); }
                 using (var previewForm = new TabularEditor.PbiBench.Dax.PbiBenchTablePreviewForm(handler.Model))

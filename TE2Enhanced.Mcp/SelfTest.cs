@@ -16,6 +16,7 @@ namespace TE2Enhanced.Mcp
             try
             {
                 Directory.CreateDirectory(dir);
+                LiveBridgeSelfTest.Run();
                 var path = Path.Combine(dir, ModelSnapshotSerializer.FileName);
                 var now = new DateTime(2026, 10, 13, 12, 0, 0, DateTimeKind.Utc);
                 var server = new McpServer(path, () => now);

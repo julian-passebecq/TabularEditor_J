@@ -24,7 +24,10 @@ if (!(Test-Path $exe)) { throw "Build the Release host first: $exe is missing." 
 
 $sha = (git -C $root rev-parse HEAD).Trim()
 $short = $sha.Substring(0, 8)
+$sourceBranch = [string](git -C $root branch --show-current)
 $dirty = [bool](git -C $root status --porcelain --untracked-files=no)
+$untrackedBuildInputs = @(git -C $root ls-files --others --exclude-standard -- '*.cs' '*.csproj' '*.props' '*.targets' '*.ps1')
+$sourceCleanForDelivery = !$dirty -and $untrackedBuildInputs.Count -eq 0
 New-Item -ItemType Directory -Force $OutDirectory | Out-Null
 $stage = Join-Path $OutDirectory "stage-$short"
 if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
@@ -51,6 +54,7 @@ Copy-Item (Join-Path $root 'LICENSE') (Join-Path $stage 'LICENSE.txt')
 Copy-Item (Join-Path $root 'docs/pbibench/GETTING_STARTED.md') (Join-Path $stage 'GETTING-STARTED.md')
 New-Item -ItemType Directory -Force (Join-Path $stage 'docs') | Out-Null
 Copy-Item (Join-Path $root 'docs/pbibench/MCP_COMPANION_V1.md') (Join-Path $stage 'docs/MCP_COMPANION_V1.md')
+Copy-Item (Join-Path $root 'docs/pbibench/GALAXY_LIVE_BRIDGE_V1.md') (Join-Path $stage 'docs/GALAXY_LIVE_BRIDGE_V1.md')
 
 # Third-party notices generated from the shipped binaries themselves (product, company, copyright, version),
 # so the list cannot drift from the zip content. TE2 itself is MIT (LICENSE.txt).
@@ -71,10 +75,13 @@ Get-ChildItem $stage -Recurse -File -Include *.dll, *.exe |
 $notices | Set-Content (Join-Path $stage 'THIRD-PARTY-NOTICES.txt') -Encoding UTF8
 @"
 TE2 Enhanced (Tabular Editor 2 fork) - portable build $short
-Source: https://github.com/julian-passebecq/TabularEditor_J commit $sha
+Source: https://gitlab.com/juliandatapass-group/tabulareditor-j commit $sha (private mirror; no GitHub publication of this candidate implied)
+Tracked source dirty: $dirty. A dirty local build is NOT the qualified exact-SHA delivery package.
+Source clean for delivery (including untracked build inputs): $sourceCleanForDelivery
 Run TabularEditor.exe (requires .NET Framework 4.8). PbiBench features are under Tools > PbiBench.
-mcp\TE2Enhanced.Mcp.exe is an optional read-only MCP companion (requires any .NET 8+ runtime);
-see docs/MCP_COMPANION_V1.md. Start with GETTING-STARTED.md. Not signed; qualification build, not a release.
+mcp\TE2Enhanced.Mcp.exe defaults to its compatible read-only disk snapshot (requires any .NET 8+ runtime).
+Explicit --live selected-instance mode adds owner-ACL IPC and typed proposals admitted only by the TE2 host review dialog, with Undo and no implicit Save/query/deployment.
+See docs/MCP_COMPANION_V1.md and docs/GALAXY_LIVE_BRIDGE_V1.md. Start with GETTING-STARTED.md. Not signed; qualification build, not a release.
 "@ | Set-Content (Join-Path $stage 'README-TE2Enhanced.txt') -Encoding UTF8
 
 # Per-file manifest (inside the zip and next to it) so an extracted folder can be checked file by file.
@@ -97,6 +104,9 @@ $hashes | Set-Content (Join-Path $OutDirectory 'SHA256SUMS.txt') -Encoding ASCII
 [pscustomobject]@{
     hostFileVersion = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exe).FileVersion
     sourceCommit = $sha; dirtyTrackedFiles = $dirty; zip = (Split-Path $zip -Leaf)
+    sourceRepository = 'https://gitlab.com/juliandatapass-group/tabulareditor-j'
+    sourceBranch = $sourceBranch
+    untrackedBuildInputs = $untrackedBuildInputs; sourceCleanForDelivery = $sourceCleanForDelivery
     zipBytes = (Get-Item $zip).Length; mcpIncluded = -not $SkipMcp
     note = 'Build timestamps make binaries non-reproducible; hashes identify this build only.'
 } | ConvertTo-Json | Set-Content (Join-Path $OutDirectory 'source-identity.json') -Encoding UTF8
