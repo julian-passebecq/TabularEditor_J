@@ -24,3 +24,4 @@ using System.Runtime.InteropServices;
 [assembly: InternalsVisibleTo("TOMWrapperTest")]
 [assembly: InternalsVisibleTo("TabularEditor")]
 [assembly: InternalsVisibleTo("TemporaryT4Assembly")]
+[assembly: InternalsVisibleTo("PbiBench.Host.Smoke")]
