@@ -141,6 +141,15 @@ namespace TabularEditor.TOMWrapper
         private PowerBiTemplate pbit;
 
         private string serverName;
+        private string openedConnectionString;
+
+        /// <summary>
+        /// The connection string this handler connected with, credentials included. AMO's
+        /// Server.ConnectionString drops the password, so a second session cloned from it cannot
+        /// sign in again (service principal on powerbi:// XMLA). Internal on purpose: it may hold a
+        /// secret and must never be shown, logged or exposed to scripts.
+        /// </summary>
+        internal string OpenedConnectionString => openedConnectionString;
 
         private readonly string applicationName = "TabularEditor-" + Guid.NewGuid().ToString("D");
         private readonly ExternalChangeTrace trace;
@@ -227,6 +236,7 @@ namespace TabularEditor.TOMWrapper
 
             var connectionString = TabularConnection.GetConnectionString(serverName, applicationName, databaseName);
             server.Connect(connectionString);
+            openedConnectionString = connectionString;
 
             if (string.IsNullOrEmpty(databaseName))
             {

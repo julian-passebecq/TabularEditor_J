@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Data;
+using System.Data.Common;
 using System.Linq;
 using System.Security;
 using System.Threading;
@@ -60,7 +61,7 @@ namespace TabularEditor.PbiBench.Dax
             }
 
             var server = handler.Database.Server;
-            var connectionString = server.ConnectionString;
+            var connectionString = BuildQueryConnectionString(server.ConnectionString, handler.OpenedConnectionString);
             if (string.IsNullOrWhiteSpace(connectionString))
             {
                 unavailableReason = "The live model connection cannot be cloned safely for query execution.";
@@ -74,13 +75,46 @@ namespace TabularEditor.PbiBench.Dax
                 return false;
             }
 
-            var serverLabel = string.IsNullOrWhiteSpace(server.Name) ? "Analysis Services" : server.Name;
             executor = new PbiBenchAmoDaxQueryExecutor(
                 connectionString,
                 databaseName,
-                serverLabel + " / " + databaseName);
+                BuildConnectionLabel(server.Name, databaseName));
             return true;
         }
+
+        private static readonly string[] PasswordKeys = { "Password", "PWD" };
+
+        /// <summary>
+        /// Connection string for the owned query session. AMO's Server.ConnectionString omits the password, so a
+        /// service principal on powerbi:// XMLA (User ID=app:...;Password=...) could not sign in again from it
+        /// (live gate, 2026-10-15: every query failed in 1 ms). The password is taken back from the string the
+        /// editor connected with; every other key stays as AMO reports it. The result may hold a secret: it is
+        /// only passed to AMO, never shown or logged.
+        /// </summary>
+        internal static string BuildQueryConnectionString(string serverConnectionString, string openedConnectionString)
+        {
+            if (string.IsNullOrWhiteSpace(serverConnectionString) || string.IsNullOrWhiteSpace(openedConnectionString)
+                || openedConnectionString.IndexOf('=') < 0)
+                return serverConnectionString;
+            DbConnectionStringBuilder opened, clone;
+            try
+            {
+                opened = new DbConnectionStringBuilder { ConnectionString = openedConnectionString };
+                clone = new DbConnectionStringBuilder { ConnectionString = serverConnectionString };
+            }
+            catch (ArgumentException) { return serverConnectionString; }
+            if (PasswordKeys.Any(key => clone.ContainsKey(key) && !string.IsNullOrEmpty(Convert.ToString(clone[key]))))
+                return serverConnectionString;
+            var source = PasswordKeys.FirstOrDefault(key => opened.ContainsKey(key) && !string.IsNullOrEmpty(Convert.ToString(opened[key])));
+            if (source == null) return serverConnectionString;
+            foreach (var key in PasswordKeys) clone.Remove(key);
+            clone["Password"] = opened[source];
+            return clone.ConnectionString;
+        }
+
+        /// <summary>Display label: server name and catalog only, never connection-string keys.</summary>
+        internal static string BuildConnectionLabel(string serverName, string databaseName) =>
+            (string.IsNullOrWhiteSpace(serverName) || serverName.IndexOf('=') >= 0 ? "Analysis Services" : serverName) + " / " + databaseName;
 
         internal PbiBenchAmoDaxQueryExecutor(Func<IDaxQuerySession> factory, int abortAfterMilliseconds = DefaultAbortAfterMilliseconds)
         {

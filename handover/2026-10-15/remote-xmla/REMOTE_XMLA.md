@@ -43,3 +43,9 @@ For about 20 minutes after the workspace was created and `sp-writer` was added, 
 
 - Nothing was written outside `dpf-test-pbibench-20261015`. The Fabric Studio workspaces were not touched. The P23 workspace was only read (connection and catalog list, `EVALUATE ROW("x", 1)`).
 - The scripts in `evidence/tool` use `<repo>` and `<datapass-fabric-bi>` in place of local paths. No tenant id, client id, secret, UPN or item id is in this folder (checked by string search against the real values).
+
+## Follow-up fix (2026-10-15, branch claude/pbibench-xmla-credential-clone)
+
+- `TabularModelHandler.OpenedConnectionString` (internal) keeps the string the editor connected with. `PbiBenchAmoDaxQueryExecutor.TryCreate` now builds the query clone from `Server.ConnectionString` plus the password taken back from that string (`BuildQueryConnectionString`); labels keep server and catalog only. Covered by `PbiBench.Host.Smoke/CredentialCloneSmoke.cs` (synthetic strings).
+- `CheckConflicts` connects with the editor's credentials, looks the database up by ID with `Find`, retries a missing database 3 times (1 s, 2 s), then throws a clear `InvalidOperationException` instead of a null reference, and disposes its connection.
+- Not yet re-qualified: the vault build is still e7a8b06. Row 4 turns PASS only after a new build re-runs `evidence/tool` against the workspace.

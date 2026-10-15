@@ -19,19 +19,52 @@ namespace TabularEditor.TOMWrapper
             public bool Conflict;
         }
 
+        internal const int ConflictCheckAttempts = 3;
+
         public ConflictInfo CheckConflicts()
         {
             if (string.IsNullOrEmpty(this.serverName)) return new ConflictInfo { DatabaseVersion = -1 };
-            var s = new TOM.Server();
-            s.Connect(this.serverName);
-            var db = s.Databases[database?.ID];
-            return new ConflictInfo
+            var id = database?.ID;
+            var connectionString = GetConflictCheckConnectionString(openedConnectionString ?? serverName);
+            // A newly created Power BI workspace can hide the database from some new connections for a while
+            // (live XMLA gate, 2026-10-15: 15-25 % of connections for ~20 minutes), so a missing database is
+            // retried a few times before it is reported, instead of failing on a null reference.
+            for (var attempt = 1; ; attempt++)
             {
-                DatabaseVersion = db.Version,
-                LoadedVersion = Version,
-                DatabaseLastUpdate = db.LastUpdate,
-                Conflict = db.Version != Version
-            };
+                using (var s = new TOM.Server())
+                {
+                    s.Connect(connectionString);
+                    try
+                    {
+                        var db = string.IsNullOrEmpty(id) ? null : s.Databases.Find(id);
+                        if (db != null)
+                            return new ConflictInfo
+                            {
+                                DatabaseVersion = db.Version,
+                                LoadedVersion = Version,
+                                DatabaseLastUpdate = db.LastUpdate,
+                                Conflict = db.Version != Version
+                            };
+                    }
+                    finally { if (s.Connected) s.Disconnect(); }
+                }
+                if (attempt >= ConflictCheckAttempts)
+                    throw new InvalidOperationException("The database '" + database?.Name + "' was not found on the server. It may have been deleted, or a new Power BI workspace may still be propagating access; try again in a few minutes.");
+                Thread.Sleep(1000 * attempt);
+            }
+        }
+
+        /// <summary>
+        /// Same server and credentials as the editor connection, without a catalog: the database may have been
+        /// renamed locally since it was opened, so it is looked up by ID instead.
+        /// </summary>
+        internal static string GetConflictCheckConnectionString(string connectionStringOrServer)
+        {
+            if (string.IsNullOrEmpty(connectionStringOrServer) || connectionStringOrServer.IndexOf('=') < 0) return connectionStringOrServer;
+            var builder = new System.Data.Common.DbConnectionStringBuilder { ConnectionString = connectionStringOrServer };
+            foreach (var key in new[] { "Initial Catalog", "InitialCatalog", "Catalog", "Database" })
+                builder.Remove(key);
+            return builder.ConnectionString;
         }
 
         public void UpdateVersion()

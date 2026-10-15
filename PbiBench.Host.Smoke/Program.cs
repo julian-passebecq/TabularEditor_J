@@ -44,6 +44,7 @@ internal static class Program
                 DaxWorkbenchSmoke.Run(Host);
                 DaxDocumentSmoke.Run(Host);
                 QueryLifecycleSmoke.Run();
+                CredentialCloneSmoke.Run();
                 MultipleResultsSmoke.Run();
                 ProjectSmoke.Run();
                 FormatterExportSmoke.Run();
