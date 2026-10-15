@@ -17,7 +17,7 @@ using TabularEditor.TOMWrapper;
 
 internal static class Te2LiveBridgeSmoke
 {
-    internal static void Run(TabularModelHandler handler)
+    internal static void Run(TabularModelHandler handler, string companionExecutable = null)
     {
         var table = handler.Model.AddTable("Galaxy bridge synthetic");
         var target = table.AddMeasure("Unsaved target", "1");
@@ -28,7 +28,21 @@ internal static class Te2LiveBridgeSmoke
         EventHandler selectionChanged = null;
         using (var ui = new Form { Text = "Owned synthetic TE2 bridge host", Width = 700, Height = 400 })
         {
+            var ownerClicks = 0;
+            var ownerAction = new Button { Text = "Owned host action" };
+            ownerAction.Click += (s, e) => ownerClicks++;
+            ui.Controls.Add(ownerAction);
             ui.Show(); Application.DoEvents();
+            if (!Environment.UserInteractive)
+            {
+                // Pure owned-form diagnostic only: no TOM, approval, guard override or product PASS.
+                using (var modalProbe = new Form { Text = "Owned modal capability diagnostic" })
+                {
+                    modalProbe.Shown += (s, e) => modalProbe.Close();
+                    try { modalProbe.ShowDialog(ui); Console.WriteLine("TE2 legacy modal diagnostic: UserInteractive=False; no exception observed; historical cause remains UNKNOWN"); }
+                    catch (InvalidOperationException error) { Console.WriteLine("TE2 legacy modal diagnostic: UserInteractive=False; observed=" + error.GetType().Name + "; no product qualification inferred"); }
+                }
+            }
             using (var host = new PbiBenchLiveBridgeHost(ui, () => current, () => selected, false))
             {
                 host.TrackSelection(h => selectionChanged += h, h => selectionChanged -= h);
@@ -56,7 +70,7 @@ internal static class Te2LiveBridgeSmoke
                 var read = Pump(Task.Run(() => Send(host, Request(host, "read"))));
                 Check(read["code"] == "OK" && host.LastModelReadThread == Thread.CurrentThread.ManagedThreadId, "same UI thread reads actual unsaved model");
                 Check(!host.Completion.IsCompleted, "invalid UTF8 refused per connection; SAME endpoint still serves");
-                RunActualStdio(host);
+                RunActualStdio(host, companionExecutable);
                 Check(read["snapshot"].Contains("Unsaved target") && read["snapshot"].Contains("\"IncludesExpressions\":false") && read["diskRevision"] == "UNKNOWN" && read["engineEvidence"].StartsWith("NOT_EXECUTED"), "unsaved metadata, withheld expressions and distinct engine provenance");
                 var expressions = Request(host, "read"); expressions["includeExpressions"] = "true";
                 Check(Pump(Task.Run(() => Send(host, expressions)))["code"] == "EXPRESSIONS_NOT_APPROVED", "host expression opt-in required");
@@ -68,18 +82,26 @@ internal static class Te2LiveBridgeSmoke
                 Check(Pump(Task.Run(() => Send(host, bad)))["code"] == "INVALID_REQUEST", "row request refused");
 
                 var proposal = Proposal(host, read, target, new Dictionary<string, string> { ["description"] = "Reviewed", ["expression"] = "3 + 4", ["folder"] = "Galaxy" });
+                var undoBeforeReview = handler.UndoManager.UndoSize;
                 using (var approve = new System.Windows.Forms.Timer { Interval = 30 })
                 {
                     approve.Tick += (s, e) =>
                     {
                         var form = Application.OpenForms.OfType<PbiBenchLiveBridgeReviewForm>().SingleOrDefault();
                         var button = form == null ? null : Descendants(form).OfType<Button>().SingleOrDefault(x => x.Name == "bridgeApprove");
-                        if (button != null) Check(Descendants(form).OfType<TextBox>().Any(x => x.AccessibleName == "Exact loaded model, table and measure target" && x.Text.Contains("Unsaved target")), "review visibly identifies exact target");
+                        if (button != null)
+                        {
+                            Check(Descendants(form).OfType<TextBox>().Any(x => x.AccessibleName == "Exact loaded model, table and measure target" && x.Text.Contains("Unsaved target")), "review visibly identifies exact target");
+                            Check(ui.Enabled && !form.Modal && target.Expression == "1" && handler.UndoManager.UndoSize == undoBeforeReview, "owned review is modeless and has no mutation or Undo before approval");
+                            ownerAction.PerformClick();
+                            Check(ownerClicks == 1, "owner UI action remains usable during live review");
+                        }
                         button?.PerformClick();
                     };
                     approve.Start();
                     var response = Pump(Task.Run(() => Send(host, proposal))); approve.Stop();
-                    Check(response["code"] == "APPLIED_LOADED_MODEL_ONLY", "real host review button admits proposal");
+                    Console.WriteLine("TE2 live review context: UserInteractive=" + Environment.UserInteractive + "; response=" + response["code"]);
+                    Check(response["code"] == "APPLIED_LOADED_MODEL_ONLY", "real host review button admits proposal; actual=" + response["code"] + "; UserInteractive=" + Environment.UserInteractive);
                 }
                 Check(target.Description == "Reviewed" && target.Expression == "3 + 4" && target.DisplayFolder == "Galaxy", "three typed properties readback");
                 handler.UndoManager.Undo();
@@ -131,9 +153,30 @@ internal static class Te2LiveBridgeSmoke
                 // Let the transport observe EOF while the UI callback is still queued, then pump it.
                 Thread.Sleep(150); Application.DoEvents();
                 Check((target.Description ?? "") == "", "disconnected queued request has no effect");
+
+                fresh = Pump(Task.Run(() => Send(host, Request(host, "read"))));
+                var cancelUndoSize = handler.UndoManager.UndoSize;
+                PbiBenchLiveBridgeReviewForm cancelledReview = null;
+                using (var stopReview = new System.Windows.Forms.Timer { Interval = 30 })
+                {
+                    stopReview.Tick += (s, e) =>
+                    {
+                        var form = Application.OpenForms.OfType<PbiBenchLiveBridgeReviewForm>().SingleOrDefault();
+                        if (form == null || cancelledReview != null) return;
+                        cancelledReview = form;
+                        host.Dispose();
+                        // A real button click after channel cancellation must still refuse mutation.
+                        Descendants(form).OfType<Button>().Single(x => x.Name == "bridgeApprove").PerformClick();
+                    };
+                    stopReview.Start();
+                    Pump(Task.Run(() => { try { Send(host, Proposal(host, fresh, target, new Dictionary<string, string> { ["description"] = "cancelled review must not apply" })); } catch (IOException) { } }));
+                    stopReview.Stop();
+                }
+                Pump(Task.Delay(200));
+                Check(cancelledReview != null && cancelledReview.IsDisposed && (target.Description ?? "") == "" && handler.UndoManager.UndoSize == cancelUndoSize && handler.UndoManager.BatchDepth == 0, "dispose DURING open review closes form with no apply or Undo even after approval click");
                 host.Dispose(); host.Dispose(); Pump(host.Completion);
                 Check(!CanConnect(host.PipeName), "pipe disappears after repeated dispose");
-                Console.WriteLine("TE2 live actual compiled host: UI thread/unsaved/selection, real review button, three typed edits + ONE Undo, human edit preservation, stale edit-revert/selection/handler, rollback, disconnect and repeated cleanup PASS; no Save/query/provider executed");
+                Console.WriteLine("TE2 live actual compiled host: UI thread/unsaved/selection, modeless review + usable owner UI + real approval, three typed edits + ONE Undo, human edit preservation, stale edit-revert/selection/handler, rollback, disconnect, stop DURING review and repeated cleanup PASS; no Save/query/provider executed");
             }
             using (var closing = new PbiBenchLiveBridgeHost(ui, () => current, () => selected, false))
             {
@@ -148,9 +191,9 @@ internal static class Te2LiveBridgeSmoke
         }
         table.Delete();
     }
-    private static void RunActualStdio(PbiBenchLiveBridgeHost host)
+    private static void RunActualStdio(PbiBenchLiveBridgeHost host, string companionExecutable)
     {
-        var exe = Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../../TE2Enhanced.Mcp/bin/Release/net8.0/TE2Enhanced.Mcp.exe"));
+        var exe = companionExecutable ?? Path.GetFullPath(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../../TE2Enhanced.Mcp/bin/Release/net8.0/TE2Enhanced.Mcp.exe"));
         Check(File.Exists(exe), "actual built stdio companion required");
         using (var child = Process.Start(new ProcessStartInfo { FileName = exe, Arguments = "--live \"" + host.Descriptor + "\"", UseShellExecute = false, CreateNoWindow = true, RedirectStandardInput = true, RedirectStandardOutput = true, RedirectStandardError = true }))
         {

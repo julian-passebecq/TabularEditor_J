@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
 using System.Windows.Forms;
 using TabularEditor;
 using TabularEditor.TOMWrapper;
@@ -12,12 +16,43 @@ internal static class Program
     private static readonly Assembly Host = typeof(FormMain).Assembly;
 
     [STAThread]
-    private static int Main()
+    private static int Main(string[] args)
+    {
+        // The portable host embeds TOMWrapper/Newtonsoft with its existing Costura module initializer.
+        // Run that exact host initializer before JIT touches TOM types; never copy shadow DLLs into a package.
+        RuntimeHelpers.RunModuleConstructor(Host.ManifestModule.ModuleHandle);
+        return Run(args);
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    private static int Run(string[] args)
     {
         try
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            if (args.Length != 0)
+            {
+                if (args.Length != 2 || args[0] != "--galaxy-live-only" || !Path.IsPathRooted(args[1])) throw new ArgumentException("Only --galaxy-live-only <absolute extracted portable root> is supported.");
+                var portable = Path.GetFullPath(args[1]).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                var testRoot = Path.GetFullPath(AppDomain.CurrentDomain.BaseDirectory).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+                if (!string.Equals(portable, testRoot, StringComparison.OrdinalIgnoreCase) || !File.Exists(Path.Combine(portable, "MANIFEST.txt"))) throw new InvalidOperationException("Copy only this exact-SHA harness/config into an owned extracted portable root containing MANIFEST.txt.");
+                foreach (var assembly in new[] { Host, typeof(TabularModelHandler).Assembly, typeof(PbiBench.Core.Interop.Te2LiveBridgeV1).Assembly, typeof(Newtonsoft.Json.Linq.JObject).Assembly })
+                {
+                    if (!string.IsNullOrEmpty(assembly.Location))
+                    {
+                        if (!string.Equals(Path.GetDirectoryName(assembly.Location), portable, StringComparison.OrdinalIgnoreCase)) throw new InvalidOperationException("PACKAGED_ASSEMBLY_REQUIRED: " + assembly.GetName().Name);
+                        PrintQualifiedFile("loaded assembly", assembly.Location);
+                    }
+                    else PrintEmbeddedAssembly(assembly);
+                }
+                var companion = Path.Combine(portable, "mcp", "TE2Enhanced.Mcp.exe");
+                PrintQualifiedFile("selected packaged stdio companion", companion);
+                PrintQualifiedFile("selected packaged stdio implementation", Path.ChangeExtension(companion, ".dll"));
+                using (var handler = new TabularModelHandler()) Te2LiveBridgeSmoke.Run(handler, companion);
+                Console.WriteLine("Galaxy live-only PACKAGED host smoke: PASS; full Verify was NOT_RUN by this opt-in mode; no human Save/engine/Fabric acceptance claimed.");
+                return 0;
+            }
             using (var handler = new TabularModelHandler())
             {
                 var table = handler.Model.AddTable("Smoke model");
@@ -61,6 +96,32 @@ internal static class Program
             Console.Error.WriteLine(error);
             Console.Error.WriteLine("Base exception HRESULT: 0x" + error.GetBaseException().HResult.ToString("X8"));
             return 1;
+        }
+    }
+
+    private static void PrintQualifiedFile(string label, string path)
+    {
+        using (var input = File.OpenRead(path))
+        using (var sha = SHA256.Create()) Console.WriteLine("Galaxy portable " + label + ": " + path + " ; sha256=" + BitConverter.ToString(sha.ComputeHash(input)).Replace("-", "").ToLowerInvariant());
+    }
+
+    private static void PrintEmbeddedAssembly(Assembly assembly)
+    {
+        var name = assembly.GetName().Name;
+        if (name != "TOMWrapper" && name != "Newtonsoft.Json") throw new InvalidOperationException("UNEXPECTED_MEMORY_ASSEMBLY: " + name);
+        var resource = "costura." + name.ToLowerInvariant() + ".dll.compressed";
+        using (var source = Host.GetManifestResourceStream(resource))
+        {
+            if (source == null) throw new InvalidOperationException("PACKAGED_EMBEDDED_RESOURCE_REQUIRED: " + resource);
+            using (var inflate = new DeflateStream(source, CompressionMode.Decompress))
+            using (var bytes = new MemoryStream())
+            {
+                inflate.CopyTo(bytes);
+                var content = bytes.ToArray();
+                var identity = Assembly.ReflectionOnlyLoad(content);
+                if (identity.FullName != assembly.FullName || identity.ManifestModule.ModuleVersionId != assembly.ManifestModule.ModuleVersionId) throw new InvalidOperationException("EMBEDDED_ASSEMBLY_IDENTITY_MISMATCH: " + name);
+                using (var sha = SHA256.Create()) Console.WriteLine("Galaxy portable loaded embedded assembly: Location=<memory>; host=" + Host.Location + "; resource=" + resource + "; mvid=" + assembly.ManifestModule.ModuleVersionId + "; sha256=" + BitConverter.ToString(sha.ComputeHash(content)).Replace("-", "").ToLowerInvariant());
+            }
         }
     }
 

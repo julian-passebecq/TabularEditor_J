@@ -71,6 +71,7 @@ namespace TabularEditor.PbiBench.Mcp
                 try { token.ThrowIfCancellationRequested(); proposal.Apply(); DialogResult = DialogResult.OK; Close(); }
                 catch (Exception) { status.Text = "Not applied: proposal stale, channel closed or setter rejected. Review a fresh proposal; no implicit retry."; }
             };
+            reject.Click += (s, e) => Close();
             actions.Controls.Add(approve); actions.Controls.Add(reject); Controls.Add(diff); Controls.Add(target); Controls.Add(status); Controls.Add(actions); CancelButton = reject;
             // Enter is deliberately not an approval shortcut.
             _timer.Tick += (s, e) => { if (token.IsCancellationRequested) { DialogResult = DialogResult.Cancel; Close(); } };

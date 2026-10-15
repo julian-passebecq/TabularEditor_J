@@ -96,6 +96,25 @@ if (Test-Path $zip) { Remove-Item -Force $zip }
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 [System.IO.Compression.ZipFile]::CreateFromDirectory($stage, $zip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
 
+# Qualification tools are private CI artifacts alongside the ZIP, never product ZIP content.
+# Only the exact Verify-built harness/config may be copied into an owned extraction later.
+if (!$SkipMcp) {
+    $harness = Join-Path $root 'PbiBench.Host.Smoke/bin/Release/net48/PbiBench.Host.Smoke.exe'
+    $harnessConfig = $harness + '.config'
+    if (!(Test-Path -LiteralPath $harness) -or !(Test-Path -LiteralPath $harnessConfig)) { throw 'Required exact-source Windows host qualification harness/config missing; run the complete Verify first.' }
+    $qualificationTools = Join-Path $OutDirectory 'qualification-tools'
+    New-Item -ItemType Directory -Force $qualificationTools | Out-Null
+    Copy-Item -LiteralPath $harness, $harnessConfig -Destination $qualificationTools
+    [pscustomobject]@{
+        sourceCommit = $sha; sourceRepository = 'https://gitlab.com/juliandatapass-group/tabulareditor-j'
+        sourceCleanForDelivery = $sourceCleanForDelivery
+        harnessFile = 'PbiBench.Host.Smoke.exe'; harnessSha256 = Get-Sha256 $harness
+        configurationFile = 'PbiBench.Host.Smoke.exe.config'; configurationSha256 = Get-Sha256 $harnessConfig
+        mode = '--galaxy-live-only <absolute owned extracted portable root>'
+        note = 'Exact-source private CI qualification tools, outside the product ZIP and Generic package files; no repository dependency DLLs copied.'
+    } | ConvertTo-Json | Set-Content (Join-Path $qualificationTools 'harness-identity.json') -Encoding UTF8
+}
+
 $hashes = @($zip, $exe, (Join-Path $stage 'mcp/TE2Enhanced.Mcp.dll'), (Join-Path $stage 'PbiBench.Core.dll')) |
     Where-Object { Test-Path $_ } |
     ForEach-Object { '{0}  {1}' -f (Get-Sha256 $_), (Split-Path $_ -Leaf) }

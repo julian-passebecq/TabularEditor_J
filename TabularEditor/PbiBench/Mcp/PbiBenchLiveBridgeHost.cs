@@ -114,7 +114,7 @@ namespace TabularEditor.PbiBench.Mcp
             pipe.RunAsClient(() => { using (var identity = WindowsIdentity.GetCurrent()) { if (!identity.IsAnonymous) sid = identity.User?.Value; } });
             if (sid != _ownerSid) throw new UnauthorizedAccessException("OWNER_REQUIRED");
         }
-        private Task<Dictionary<string, string>> OnUi(Func<Dictionary<string, string>> action, CancellationToken token)
+        private Task<Dictionary<string, string>> OnUi(Func<Task<Dictionary<string, string>>> action, CancellationToken token)
         {
             var result = new TaskCompletionSource<Dictionary<string, string>>(TaskCreationOptions.RunContinuationsAsynchronously);
             Interlocked.Increment(ref _pendingDispatches);
@@ -122,16 +122,16 @@ namespace TabularEditor.PbiBench.Mcp
             result.Task.ContinueWith(t => { registration.Dispose(); Interlocked.Decrement(ref _pendingDispatches); }, TaskScheduler.Default);
             try
             {
-                _ui.BeginInvoke(new Action(() =>
+                _ui.BeginInvoke(new Action(async () =>
                 {
-                    try { token.ThrowIfCancellationRequested(); if (_disposed) throw new OperationCanceledException(); result.TrySetResult(action()); }
+                    try { token.ThrowIfCancellationRequested(); if (_disposed) throw new OperationCanceledException(); result.TrySetResult(await action()); }
                     catch (Exception) { result.TrySetResult(Response("", "REFUSED")); }
                 }));
             }
             catch (InvalidOperationException) { result.TrySetCanceled(); }
             return result.Task;
         }
-        private Dictionary<string, string> Handle(Dictionary<string, string> request, CancellationToken token)
+        private async Task<Dictionary<string, string>> Handle(Dictionary<string, string> request, CancellationToken token)
         {
             _revision.AssertUi(); LastModelReadThread = Thread.CurrentThread.ManagedThreadId;
             var id = request["requestId"];
@@ -161,7 +161,16 @@ namespace TabularEditor.PbiBench.Mcp
                 var measure = table?.Measures.FirstOrDefault(m => m.Name == request["measure"]);
                 if (measure == null) return Response(id, "TARGET_ABSENT");
                 var proposal = new PbiBenchLiveBridgeProposal(handler, measure, Te2LiveBridgeV1.Changes(request), () => current() && !measure.IsRemoved && ReferenceEquals(table.Measures.FirstOrDefault(m => m.Name == request["measure"]), measure));
-                using (var form = new PbiBenchLiveBridgeReviewForm(proposal, token)) form.ShowDialog(_ui);
+                using (var form = new PbiBenchLiveBridgeReviewForm(proposal, token))
+                {
+                    // Keep the owned TE2 UI usable while the request waits for a real host decision.
+                    // No modal service-desktop bypass or message pumping is used by the product.
+                    var closed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+                    form.FormClosed += (sender, args) => closed.TrySetResult(true);
+                    form.Show(_ui);
+                    await closed.Task;
+                }
+                _revision.AssertUi();
                 return Response(id, proposal.Applied ? "APPLIED_LOADED_MODEL_ONLY" : "NOT_APPLIED");
             }
             catch (Exception) { return Response(id, "REFUSED"); }
