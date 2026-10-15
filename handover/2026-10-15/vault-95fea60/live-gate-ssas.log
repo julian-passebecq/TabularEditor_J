@@ -1,0 +1,5 @@
+DAX-006 live gate: throwaway database created
+DAX-006 live cancel returned after 2864 ms
+DAX-006 live timeout returned after 3058 ms
+DAX-006 live gate (multi-rowset, measure, row limit, query error, cancel, timeout, abort, editor connection, reuse) PASS
+DAX-006 live gate: throwaway database dropped

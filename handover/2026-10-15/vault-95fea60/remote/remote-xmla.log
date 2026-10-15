@@ -1,0 +1,28 @@
+   0.12s TabularEditor 2.28.9784.42286 41b30b507975975e624b8395bfa3f23dd465af2e5f7a317e91f9703ebf56f64a
+   0.13s PbiBench.Core 1.0.0.0 a270f7a96890d7ca2c2dada641d83914c159b8dbc5b5d826af0987bc59e352fa
+   0.13s TOMWrapper 2.28.9784.42285 6ad5b69bfbfb2309d1a705f592b78d85f90dd932ff29c66558bcdef7a0775bdc
+   0.13s Microsoft.AnalysisServices.Tabular 19.112.0.0 17.0.61.21
+   2.90s TOM connected in 2773 ms; server version 17.0.94.13, product '', edition Enterprise64, mode Tabular
+   2.91s database exists, reused (deployed by an earlier run of this harness)
+   3.97s PASS deploy: database 'Gate' present (compat 1600), not redeployed
+   6.36s TE2 handler connected in 1469 ms: IsConnected=True, compat 1600, source type Database
+   6.36s   remote table Sales (CalculatedTable) = DATATABLE("Region", STRING, "Amount", INTEGER, {{"North", 10}, {"South", 20}, {"East", 5}})
+   6.36s   remote column Sales[Amount] Int64
+   6.36s   remote column Sales[Region] String
+   6.36s   remote measure Sales[Total Amount] = SUM(Sales[Amount])
+   6.36s PASS te2-read: vault TE2 opened 'Gate' over XMLA in 1469 ms (4 signature lines)
+   6.36s PASS te2-model-equal: remote model signature equals the fixture as read by the vault TE2 from disk
+   6.37s executor: dpf-test-pbibench-20261015 / Gate
+   6.37s Server.ConnectionString keys: data source, user id, provider, application name, initial catalog
+   7.49s PASS executor-product-path: TryCreate(handler) on the XMLA connection, Q1: state=Completed reason=None in 1112 ms; Server.ConnectionString keys: data source, user id, provider, application name, initial catalog
+   8.60s Q1: state=Completed reason=None rows=1 1108 ms 
+   9.75s Q2: state=Completed reason=None rows=3 1149 ms 
+  11.00s Q3: state=Completed reason=None rows=1 1253 ms 
+  12.22s Q4: state=Completed reason=None rows=1 1214 ms 
+  13.40s Q5: state=Completed reason=None rows=3 1182 ms 
+  14.58s Q6: state=Completed reason=None rows=1 1177 ms 
+  14.58s PASS oracle-run: 6/6 queries completed through the product executor from TryCreate(handler)
+  17.13s PASS timeout-client: 1 s timeout: client returned in 1470 ms state=Cancelled reason=Timeout; executor reusable: Completed
+  21.02s PASS te2-write: TE2 SaveDB added 'TE2 Remote Double'; query over XMLA returned 70
+  26.73s PASS te2-rollback: after delete + SaveDB a fresh TOM connection sees Sales measures: [Total Amount]
+  26.73s ALL PASS

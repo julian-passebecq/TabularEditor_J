@@ -1,0 +1,26 @@
+{
+  "product": "TE2 Enhanced / PbiBench portable qualification build (not signed, not a public release)",
+  "sourceRepo": "github.com/julian-passebecq/TabularEditor_J (private)",
+  "sourceCommit": "95fea608ffb970a71ebbfb2222168f4f01c30f6b",
+  "supersedes": "pbibench 2.28.9784.4682-e7a8b06 (adds PR #9: executor keeps the service-principal password when it clones the live connection; CheckConflicts uses the editor's credentials and retries a missing database)",
+  "hostFileVersion": "2.28.9784.42286",
+  "zip": "TE2Enhanced-95fea608-portable.zip",
+  "zipSha256": "3ff961d0a25b4ae6bb82b69c2e71317c79623691079585e4bcb37af2d33dd4e7",
+  "zipBytes": 12261076,
+  "ciBuild": "gitlab juliandatapass-group/tabulareditor-j pipeline 2952846826, job 17216137522 (runner tag local-windows)",
+  "verdict": "YELLOW (no RED): unverified gates remain DPI 150/200 real monitor, multi-monitor, interactive Entra sign-in",
+  "gates": {
+    "ciVerify8Stages": "PASS (job 17216137522; host-smoke-run includes CredentialCloneSmoke)",
+    "ciPackageAndMcpSelfTest": "PASS (job 17216137522)",
+    "packageIntegrity": "PASS: zip sha = SHA256SUMS, 161 MANIFEST lines match, inner = outer MANIFEST, required files, no .pdb, guide = repo docs",
+    "confidentialityScan": "PASS: no tokens, keys, user/dev paths, personal email, FOIL/client data, transcript markers; 0 hits for the real sp-writer client id, secret and tenant id; 1 triaged false positive (credential-guard test string of the MCP self-test)",
+    "extractedHostLaunch": "PASS: window 'Tabular Editor 2.28.0' in 5.6 s, graceful close exit 0",
+    "extractedMcpSelfTest": "PASS",
+    "remoteXmlaServicePrincipal": "PASS 8/8 on dpf-test-pbibench-20261015 as sp-writer: TryCreate(handler) executor runs queries, oracle 6/6 = local SSAS, 1 s timeout, TE2 write + rollback",
+    "dpiMultiMonitor": "NOT_RUN (manual)",
+    "interactiveEntraSignIn": "NOT_RUN (needs Julian's login)",
+    "localVerify8Stages": "PASS (2026-10-15, worktree at 95fea60; first local attempt hit a transient file-lock IOException in core-smoke SafeFileReplace, re-run PASS)",
+    "liveGateLocalSsas": "PASS: tmp_te2_20261015 created and dropped, cancel 2864 ms, timeout 3058 ms (local build of the same commit)",
+    "notRerunOnThisBuild": "Power BI Desktop live gate, DAX Studio handoff (passed on e7a8b06; PR #9 touches only the executor clone and CheckConflicts)"
+  }
+}
