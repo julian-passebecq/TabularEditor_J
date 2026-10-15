@@ -16,6 +16,8 @@ The host creates the resource with a protected DACL granting only its owner SID.
 
 Transport faults are isolated to their connection. The120second request deadline closes transport and cancels a queued UI dispatch even if that callback never runs. All TOM/selection access and final freshness admission run on the UI thread. The review window polls cancellation and closes; a later approval click still checks the canceled token before Apply. The product contains no message-pumping loop or override of WinForms interactive-desktop checks. This is not a promise to undo an already admitted mutation or a hard limit on arbitrary host UI code.
 
+Presentation uses the public modeless API uniformly: set `Owner` to the exact living top-level UI Form, then call inherited `Show()`. Missing, disposed, handleless, disabled or wrong-thread owners refuse review; there is no ownerless or service-specific fallback. Microsoft documents this nonmodal API equivalence in [Form.Show remarks](https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.form.show?view=netframework-4.8.1) and the modeless [Control.Show API](https://learn.microsoft.com/en-us/dotnet/api/system.windows.forms.control.show?view=netframework-4.8.1). A service-owned synthetic control test is still not evidence that a human saw or accepted a preview.
+
 ## Revision and qualification limits
 
 Disk, Loaded, Live and Git are separate fields. This bridge attests only loaded/unsaved metadata; unknown disk/live/Git revisions remain `UNKNOWN`. `engineEvidence` is explicitly `NOT_EXECUTED`; no result against a loaded engine qualifies an unsaved candidate by association. No engine connection or result is fabricated.

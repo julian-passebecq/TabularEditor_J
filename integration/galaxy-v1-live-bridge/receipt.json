@@ -1,6 +1,6 @@
 {
   "schema": "galaxy.te2.live-bridge.product-receipt/1",
-  "status": "SERVICE_GATE_FAILED_INTERNAL_DIAGNOSTIC_PENDING",
+  "status": "LOCAL_OWNER_API_HOST_PASS_SERVICE_CI_AND_CANONICAL_PACKAGE_PENDING",
   "base": "4c4523b2a260e55aa1f943e1e785761a2b758eab",
   "branch": "codex/pro-ai-galaxy-v1-live-bridge-20261015",
   "sourceRepository": "https://gitlab.com/juliandatapass-group/tabulareditor-j",
@@ -50,6 +50,17 @@
       "attempt": "refused-diagnostic affected host build, smoke build and complete Windows HostSmoke",
       "result": "PASS exit0 locally; UserInteractive=true, APPLIED, requestIdMatches=true, reviewSeen=true, synthetic values applied, last exception NONE",
       "scope": "Instrumentation only: fixed phase/type/HRESULT/thread/context internal metadata and synthetic harness booleans, no messages/stacks/client fields or guard/synchronization/approval changes. Service cause remains unproved until observed diagnostic."
+    },
+    {
+      "attempt": "323c0425 diagnostic service jobs17218322704 and17218322504",
+      "result": "Both mandatory CI FAIL with actual captured phase/type/thread",
+      "observed": "review-show / System.InvalidOperationException / HRESULT0x80131509 / UIthread1 / WindowsFormsSynchronizationContext; UserInteractive=false; reviewSeen=false; knownSyntheticApplied=false; UndoDelta0",
+      "diagnosis": "Before review display/mutation, not post-await or FileReplace. Form.Show(owner) documents noninteractive refusal."
+    },
+    {
+      "attempt": "owner-api affected host build, smoke build and complete Windows HostSmoke",
+      "result": "PASS exit0 locally with retained real ACL/stdio/approval/one Undo/stale/cancellation",
+      "scope": "Uniform public modeless Owner=exact living UI Form then inherited Show; owner reference/OwnedForms verified, real ownerless control refused without mutation/Undo and cleaned. No ownerless/service fallback or UserInteractive/runner/account/desktop/permission change. Local success does not qualify service or canonical ZIP."
     }
   ],
   "proofs": [
@@ -192,6 +203,46 @@
       "path": "refused-diagnostic-smoke-run.log",
       "sha256": "ff85db2e3c44ec58677f902442e5c8efa007086088d41eca87ac8ece0a540324",
       "bytes": 4490
+    },
+    {
+      "path": "CI-17218322704\\ci-evidence\\host-smoke-run.log",
+      "sha256": "e26532dd73e929b3baa64a50283a2516bf53fb03f2a643464944b98cf2f2e641",
+      "bytes": 6432
+    },
+    {
+      "path": "CI-17218322704\\ci-evidence\\summary.json",
+      "sha256": "a4ed2007d42fbd7c407d8fc1471371d672253f8ba373769c0df26c44db438a9d",
+      "bytes": 2048
+    },
+    {
+      "path": "CI-17218322504\\ci-evidence\\host-smoke-run.log",
+      "sha256": "6c964f1566c971878951e8db9fa982a881cb105c69ba7d9427a613fd304cd348",
+      "bytes": 6432
+    },
+    {
+      "path": "CI-17218322504\\ci-evidence\\summary.json",
+      "sha256": "dcc6701045683fa1fee5790f8e03f91e011b8ff4e9cfe070f510a7d00067d369",
+      "bytes": 2048
+    },
+    {
+      "path": "SERVICE-SHOW-ROOTCAUSE.json",
+      "sha256": "5f1e75868d72c378df0bdca90cd3f4e9032249f0bd038dd9a52d43535fbfc6eb",
+      "bytes": 2867
+    },
+    {
+      "path": "owner-api-host-build.log",
+      "sha256": "42da8a5515bac5b11365c39d3b3884980b2f9edc0b98768a1d7c394cdccc54a9",
+      "bytes": 602327
+    },
+    {
+      "path": "owner-api-smoke-build.log",
+      "sha256": "0ee4f6970e4d236fa5a6c4045052aa6e0c77030e262fff20e0de8f194dd571c0",
+      "bytes": 973
+    },
+    {
+      "path": "owner-api-smoke-run.log",
+      "sha256": "ff85db2e3c44ec58677f902442e5c8efa007086088d41eca87ac8ece0a540324",
+      "bytes": 4490
     }
   ],
   "affectedHostAssertions": [
@@ -207,7 +258,9 @@
     "Disconnected queued request has no effect",
     "Stop completes without queued UI callback executing; late callback never touches TOM; repeated disposal removes pipe",
     "Owned modeless review leaves a real owner button usable with no mutation/Undo before approval",
-    "Dispose DURING open review closes it with no apply/Undo even after a later real approval click"
+    "Dispose DURING open review closes it with no apply/Undo even after a later real approval click",
+    "Exact living owner Form identity and OwnedForms membership during real review",
+    "Ownerless control refuses review without mutation/Undo and endpoint cleans up"
   ],
   "securityLimits": [
     "PIPE_REJECT_REMOTE_CLIENTS applied by native CreateNamedPipeW; no remote-machine attempt performed",
@@ -225,5 +278,6 @@
   "globalV1Acceptance": false,
   "sourceCounterproofCommit": "94bdf5893c34220f7cb4e2c4c03051edebc89c06",
   "portableQualificationMethod": "Default full Verify unchanged; private CI dist/qualification-tools contains only exact-source harness/config and source/hash identity outside product ZIP. Copy only those two files into an owned exact CI ZIP extraction and run --galaxy-live-only <absolute root>. Embedded assemblies must match actual host resource identity/MVID; no repository DLL shadows. Service-only pure Form ShowDialog probe logs exception type without qualifying product or disabling guards.",
-  "secondSourceCounterproofCommit": "ac053cbc82ad1f77fb93d9a9e695397562a683f9"
+  "secondSourceCounterproofCommit": "ac053cbc82ad1f77fb93d9a9e695397562a683f9",
+  "diagnosticCounterproofCommit": "323c042555c27d661e7d11de3cf8eaad6858fbc8"
 }

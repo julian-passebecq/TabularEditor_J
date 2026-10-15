@@ -172,8 +172,14 @@ namespace TabularEditor.PbiBench.Mcp
                     // No modal service-desktop bypass or message pumping is used by the product.
                     var closed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                     form.FormClosed += (sender, args) => closed.TrySetResult(true);
+                    phase = "review-owner";
+                    var owner = (_ui as Form) ?? _ui.FindForm();
+                    if (owner == null || owner.IsDisposed || !owner.IsHandleCreated || owner.InvokeRequired || !owner.TopLevel || !owner.Enabled) throw new InvalidOperationException("LIVING_UI_OWNER_REQUIRED");
+                    form.Owner = owner;
                     phase = "review-show";
-                    form.Show(_ui);
+                    // Public modeless API, uniform on interactive and service-owned test hosts.
+                    // Owner stays explicit; no UserInteractive override, ownerless fallback or desktop change.
+                    form.Show();
                     phase = "review-await-close";
                     await closed.Task;
                 }

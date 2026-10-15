@@ -92,6 +92,7 @@ internal static class Te2LiveBridgeSmoke
                         if (button != null)
                         {
                             Check(Descendants(form).OfType<TextBox>().Any(x => x.AccessibleName == "Exact loaded model, table and measure target" && x.Text.Contains("Unsaved target")), "review visibly identifies exact target");
+                            Check(ReferenceEquals(form.Owner, ui) && ui.OwnedForms.Contains(form), "review is attached to the exact living native owner Form");
                             Check(ui.Enabled && !form.Modal && target.Expression == "1" && handler.UndoManager.UndoSize == undoBeforeReview, "owned review is modeless and has no mutation or Undo before approval");
                             ownerAction.PerformClick();
                             Check(ownerClicks == 1, "owner UI action remains usable during live review");
@@ -186,6 +187,19 @@ internal static class Te2LiveBridgeSmoke
                 Check(closing.Completion.Wait(3000), "stop completes even when queued UI callback NEVER executes");
                 queued.GetAwaiter().GetResult(); Application.DoEvents();
                 Check(closing.LastModelReadThread == 0 && !CanConnect(closing.PipeName), "late callback after close does not touch TOM");
+            }
+            using (var detached = new Control())
+            {
+                var detachedHandle = detached.Handle;
+                using (var ownerless = new PbiBenchLiveBridgeHost(detached, () => current, () => selected, false))
+                {
+                    var stamp = Pump(Task.Run(() => Send(ownerless, Request(ownerless, "read"))));
+                    var undoBefore = handler.UndoManager.UndoSize;
+                    var refused = Pump(Task.Run(() => Send(ownerless, Proposal(ownerless, stamp, target, new Dictionary<string, string> { ["description"] = "ownerless forbidden" }))));
+                    Check(refused["code"] == "REFUSED" && ownerless.LastRefusalDiagnostic.Contains("phase=review-owner") && (target.Description ?? "") == "" && handler.UndoManager.UndoSize == undoBefore, "ownerless UI control refuses review without mutation or Undo");
+                    ownerless.Dispose(); Pump(ownerless.Completion);
+                    Check(!CanConnect(ownerless.PipeName), "ownerless refused endpoint cleanup");
+                }
             }
             ui.Close();
         }
