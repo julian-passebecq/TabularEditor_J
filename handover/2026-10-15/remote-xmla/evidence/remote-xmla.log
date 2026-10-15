@@ -1,0 +1,31 @@
+   0.11s TabularEditor 2.28.9784.4682 7127912a124caa502a14737a4dd381c62b571247de6185b53b1325afe202f4ff
+   0.11s PbiBench.Core 1.0.0.0 c3598a7f8eefbcf89639259886daeb28cbd9421151a9b0dc977686194273a27a
+   0.11s TOMWrapper 2.28.9784.4680 2e980392b57d73463a3f7ce04178037409317a72cb0fe47b6d74453757decf5d
+   0.11s Microsoft.AnalysisServices.Tabular 19.112.0.0 17.0.61.21
+   2.22s TOM connected in 2114 ms; server version 17.0.94.13, product '', edition Enterprise64, mode Tabular
+   2.23s database exists, reused (deployed by an earlier run of this harness)
+   3.11s removing leftover measure from an aborted run
+   4.13s PASS deploy: database 'Gate' present (compat 1600), not redeployed
+   6.42s TE2 handler connected in 1392 ms: IsConnected=True, compat 1600, source type Database
+   6.42s   remote table Sales (CalculatedTable) = DATATABLE("Region", STRING, "Amount", INTEGER, {{"North", 10}, {"South", 20}, {"East", 5}})
+   6.42s   remote column Sales[Amount] Int64
+   6.42s   remote column Sales[Region] String
+   6.42s   remote measure Sales[Total Amount] = SUM(Sales[Amount])
+   6.42s PASS te2-read: vault TE2 opened 'Gate' over XMLA in 1392 ms (4 signature lines)
+   6.42s PASS te2-model-equal: remote model signature equals the fixture as read by the vault TE2 from disk
+   6.43s executor: dpf-test-pbibench-20261015 / Gate
+   6.43s cloned connection string keys: data source, user id, provider, application name, initial catalog
+   6.43s diag: session-style connect System.InvalidOperationException: When interactive authentication is not supported, an external access-token is required; either provide it in the connection-string or by setting the AccessToken property.
+   6.44s FAIL executor-product-path: TryCreate(handler) on the XMLA connection, Q1: state=Failed reason=Connection in 1 ms ('Could not connect to the query endpoint.'); cloned Server.ConnectionString keys: data source, user id, provider, application name, initial catalog
+   6.44s executor (credentialed): dpf-test-pbibench-20261015 / Gate (credentialed)
+   7.77s Q1: state=Completed reason=None rows=1 1331 ms 
+   9.35s Q2: state=Completed reason=None rows=3 1580 ms 
+  10.80s Q3: state=Completed reason=None rows=1 1448 ms 
+  11.85s Q4: state=Completed reason=None rows=1 1055 ms 
+  13.17s Q5: state=Completed reason=None rows=3 1311 ms 
+  14.45s Q6: state=Completed reason=None rows=1 1285 ms 
+  14.45s PASS oracle-run: 6/6 queries completed through PbiBenchAmoDaxQueryExecutor
+  17.19s PASS timeout-client: 1 s timeout: client returned in 1510 ms state=Cancelled reason=Timeout; executor reusable: Completed
+  25.79s PASS te2-write: TE2 SaveDB added 'TE2 Remote Double'; query over XMLA returned 70
+  30.14s PASS te2-rollback: after delete + SaveDB a fresh TOM connection sees Sales measures: [Total Amount]
+  30.15s 1 FAIL

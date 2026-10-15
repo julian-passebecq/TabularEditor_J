@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net48</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>PbiBench.Host.Smoke</AssemblyName>
+    <PlatformTarget>x64</PlatformTarget>
+    <Nullable>disable</Nullable>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <Pkg>$(MSBuildThisFileDirectory)..\te2</Pkg>
+    <Ref>$(MSBuildThisFileDirectory)..\ref</Ref>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="TabularEditor"><HintPath>$(Pkg)\TabularEditor.exe</HintPath><Private>false</Private></Reference>
+    <Reference Include="PbiBench.Core"><HintPath>$(Pkg)\PbiBench.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="TOMWrapper"><HintPath>$(Ref)\tomwrapper.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Microsoft.AnalysisServices.Core"><HintPath>$(Pkg)\Microsoft.AnalysisServices.Core.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Microsoft.AnalysisServices"><HintPath>$(Pkg)\Microsoft.AnalysisServices.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Microsoft.AnalysisServices.Tabular"><HintPath>$(Pkg)\Microsoft.AnalysisServices.Tabular.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Microsoft.AnalysisServices.Tabular.Json"><HintPath>$(Pkg)\Microsoft.AnalysisServices.Tabular.Json.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+</Project>
+
