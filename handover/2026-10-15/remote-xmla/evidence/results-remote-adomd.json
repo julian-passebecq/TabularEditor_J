@@ -1,0 +1,128 @@
+[
+  {
+    "id": "Q1",
+    "query": "EVALUATE ROW(\"Total\", [Total Amount])",
+    "columns": [
+      "[Total]"
+    ],
+    "rows": [
+      [
+        35
+      ]
+    ],
+    "error": null,
+    "ms": 3766
+  },
+  {
+    "id": "Q2",
+    "query": "EVALUATE SUMMARIZECOLUMNS(Sales[Region], \"Total\", [Total Amount]) ORDER BY Sales[Region]",
+    "columns": [
+      "Sales[Region]",
+      "[Total]"
+    ],
+    "rows": [
+      [
+        "East",
+        5
+      ],
+      [
+        "North",
+        10
+      ],
+      [
+        "South",
+        20
+      ]
+    ],
+    "error": null,
+    "ms": 3056
+  },
+  {
+    "id": "Q3",
+    "query": "EVALUATE ROW(\"Rows\", COUNTROWS(Sales), \"Avg\", AVERAGE(Sales[Amount]), \"Max\", MAX(Sales[Amount]))",
+    "columns": [
+      "[Rows]",
+      "[Avg]",
+      "[Max]"
+    ],
+    "rows": [
+      [
+        3,
+        11.666666666666666,
+        20
+      ]
+    ],
+    "error": null,
+    "ms": 3227
+  },
+  {
+    "id": "Q4",
+    "query": "EVALUATE ROW(\"Share North\", DIVIDE(CALCULATE([Total Amount], Sales[Region] = \"North\"), [Total Amount]))",
+    "columns": [
+      "[Share North]"
+    ],
+    "rows": [
+      [
+        0.2857142857142857
+      ]
+    ],
+    "error": null,
+    "ms": 3048
+  },
+  {
+    "id": "Q5",
+    "query": "EVALUATE ADDCOLUMNS(VALUES(Sales[Region]), \"Rank\", RANKX(ALL(Sales[Region]), [Total Amount])) ORDER BY Sales[Region]",
+    "columns": [
+      "Sales[Region]",
+      "[Rank]"
+    ],
+    "rows": [
+      [
+        "East",
+        3
+      ],
+      [
+        "North",
+        2
+      ],
+      [
+        "South",
+        1
+      ]
+    ],
+    "error": null,
+    "ms": 3115
+  },
+  {
+    "id": "Q6",
+    "query": "EVALUATE ROW(\"Blank\", CALCULATE([Total Amount], Sales[Region] = \"West\"), \"Div0\", DIVIDE(1, 0), \"Txt\", CONCATENATEX(Sales, Sales[Region], \",\", Sales[Amount], ASC))",
+    "columns": [
+      "[Blank]",
+      "[Div0]",
+      "[Txt]"
+    ],
+    "rows": [
+      [
+        null,
+        null,
+        "East,North,South"
+      ]
+    ],
+    "error": null,
+    "ms": 3321
+  },
+  {
+    "id": "Q7",
+    "query": "EVALUATE ROW(\"ok\", 1)",
+    "columns": [
+      "[ok]"
+    ],
+    "rows": [
+      [
+        1
+      ]
+    ],
+    "error": null,
+    "ms": 3675
+  }
+]
