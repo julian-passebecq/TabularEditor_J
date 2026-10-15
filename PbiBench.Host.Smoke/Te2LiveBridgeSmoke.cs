@@ -100,7 +100,7 @@ internal static class Te2LiveBridgeSmoke
                     };
                     approve.Start();
                     var response = Pump(Task.Run(() => Send(host, proposal))); approve.Stop();
-                    Console.WriteLine("TE2 live review context: UserInteractive=" + Environment.UserInteractive + "; response=" + response["code"]);
+                    Console.WriteLine("TE2 live review context: UserInteractive=" + Environment.UserInteractive + "; response=" + response["code"] + "; requestIdMatches=" + (response["requestId"] == proposal["requestId"]) + "; reviewSeen=" + (ownerClicks != 0) + "; knownSyntheticValuesApplied=" + (target.Description == "Reviewed" && target.Expression == "3 + 4" && target.DisplayFolder == "Galaxy") + "; UndoDelta=" + (handler.UndoManager.UndoSize - undoBeforeReview) + "; uiThread=" + Thread.CurrentThread.ManagedThreadId + "; uiContext=" + (SynchronizationContext.Current?.GetType().FullName ?? "NONE") + "; " + host.LastRefusalDiagnostic);
                     Check(response["code"] == "APPLIED_LOADED_MODEL_ONLY", "real host review button admits proposal; actual=" + response["code"] + "; UserInteractive=" + Environment.UserInteractive);
                 }
                 Check(target.Description == "Reviewed" && target.Expression == "3 + 4" && target.DisplayFolder == "Galaxy", "three typed properties readback");

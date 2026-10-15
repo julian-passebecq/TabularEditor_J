@@ -40,6 +40,7 @@ namespace TabularEditor.PbiBench.Mcp
         internal Task Completion { get; }
         internal string PipeSddl { get; }
         internal int LastModelReadThread { get; private set; }
+        internal string LastRefusalDiagnostic { get; private set; } = "NONE";
         internal int PendingDispatches => Volatile.Read(ref _pendingDispatches);
         internal PbiBenchLiveBridgeHost(Control ui, Func<TabularModelHandler> handler, Func<IEnumerable<ITabularNamedObject>> selection, bool expressions, Func<long> context = null)
         {
@@ -125,7 +126,7 @@ namespace TabularEditor.PbiBench.Mcp
                 _ui.BeginInvoke(new Action(async () =>
                 {
                     try { token.ThrowIfCancellationRequested(); if (_disposed) throw new OperationCanceledException(); result.TrySetResult(await action()); }
-                    catch (Exception) { result.TrySetResult(Response("", "REFUSED")); }
+                    catch (Exception error) { RecordRefusal("dispatch", error); result.TrySetResult(Response("", "REFUSED")); }
                 }));
             }
             catch (InvalidOperationException) { result.TrySetCanceled(); }
@@ -137,6 +138,7 @@ namespace TabularEditor.PbiBench.Mcp
             var id = request["requestId"];
             if (_disposed || token.IsCancellationRequested) return Response(id, "CLOSED");
             if (request["instance"] != Instance || request["session"] != Session) return Response(id, "INSTANCE_SESSION_MISMATCH");
+            var phase = "capture";
             try
             {
                 var handler = _handler();
@@ -156,24 +158,35 @@ namespace TabularEditor.PbiBench.Mcp
                     _revision.Capture(handler, _selection(), false, out var nowRevision, out var nowSelection, _context());
                     return request["modelId"] == _revision.ModelId && nowRevision == request["revision"] && nowSelection == request["selection"];
                 };
+                phase = "freshness";
                 if (!current()) return Response(id, "STALE");
                 var table = handler.Model.Tables.FirstOrDefault(t => t.Name == request["table"]);
                 var measure = table?.Measures.FirstOrDefault(m => m.Name == request["measure"]);
                 if (measure == null) return Response(id, "TARGET_ABSENT");
+                phase = "proposal-construct";
                 var proposal = new PbiBenchLiveBridgeProposal(handler, measure, Te2LiveBridgeV1.Changes(request), () => current() && !measure.IsRemoved && ReferenceEquals(table.Measures.FirstOrDefault(m => m.Name == request["measure"]), measure));
+                phase = "review-construct";
                 using (var form = new PbiBenchLiveBridgeReviewForm(proposal, token))
                 {
                     // Keep the owned TE2 UI usable while the request waits for a real host decision.
                     // No modal service-desktop bypass or message pumping is used by the product.
                     var closed = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                     form.FormClosed += (sender, args) => closed.TrySetResult(true);
+                    phase = "review-show";
                     form.Show(_ui);
+                    phase = "review-await-close";
                     await closed.Task;
                 }
+                phase = "review-closed-continuation";
                 _revision.AssertUi();
                 return Response(id, proposal.Applied ? "APPLIED_LOADED_MODEL_ONLY" : "NOT_APPLIED");
             }
-            catch (Exception) { return Response(id, "REFUSED"); }
+            catch (Exception error) { RecordRefusal(phase, error); return Response(id, "REFUSED"); }
+        }
+        private void RecordRefusal(string phase, Exception error)
+        {
+            // Internal owned-harness diagnostics only; never response fields, messages, stacks or model/client data.
+            LastRefusalDiagnostic = "phase=" + phase + "; type=" + error.GetType().FullName + "; HRESULT=0x" + error.HResult.ToString("X8") + "; thread=" + Thread.CurrentThread.ManagedThreadId + "; context=" + (SynchronizationContext.Current?.GetType().FullName ?? "NONE");
         }
         private Dictionary<string, string> Response(string id, string code) => new Dictionary<string, string>
         { ["schema"] = Te2LiveBridgeV1.Schema, ["requestId"] = id, ["code"] = code, ["instance"] = Instance, ["session"] = Session };

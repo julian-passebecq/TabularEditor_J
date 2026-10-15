@@ -1,6 +1,6 @@
 {
   "schema": "galaxy.te2.live-bridge.product-receipt/1",
-  "status": "LOCAL_MODELESS_HOST_PASS_REMOTE_SERVICE_AND_CANONICAL_PACKAGE_PENDING",
+  "status": "SERVICE_GATE_FAILED_INTERNAL_DIAGNOSTIC_PENDING",
   "base": "4c4523b2a260e55aa1f943e1e785761a2b758eab",
   "branch": "codex/pro-ai-galaxy-v1-live-bridge-20261015",
   "sourceRepository": "https://gitlab.com/juliandatapass-group/tabulareditor-j",
@@ -40,6 +40,16 @@
       "attempt": "local-copy2-live-only diagnostic",
       "result": "PASS exit0 after standard existing host module initializer before typed NoInlining body",
       "scope": "Dirty local copied build only, NOT a canonical CI ZIP. Actual host/Core/MCP paths/hashes and embedded TOM/Newtonsoft resource SHA/identity/MVID checked. Full Verify NOT_RUN by opt-in mode."
+    },
+    {
+      "attempt": "ac053cbc jobs17218257211 and17218257319",
+      "result": "Both mandatory CI FAIL at real review assertion, actual response REFUSED after seven stages plus ACL/stdio PASS",
+      "failure": "UserInteractive=false, pure Form modal probe observed InvalidOperationException; actual product exception and phase still uncaptured. Not OBS-001; modeless alone did not qualify service behavior."
+    },
+    {
+      "attempt": "refused-diagnostic affected host build, smoke build and complete Windows HostSmoke",
+      "result": "PASS exit0 locally; UserInteractive=true, APPLIED, requestIdMatches=true, reviewSeen=true, synthetic values applied, last exception NONE",
+      "scope": "Instrumentation only: fixed phase/type/HRESULT/thread/context internal metadata and synthetic harness booleans, no messages/stacks/client fields or guard/synchronization/approval changes. Service cause remains unproved until observed diagnostic."
     }
   ],
   "proofs": [
@@ -147,6 +157,41 @@
       "path": "modeless-local-copy2-live-only.log",
       "sha256": "f591e424091662e1c4f14d27b366269b52c90235f7c33a0b636cc704f0f4e49c",
       "bytes": 2598
+    },
+    {
+      "path": "CI-17218257211-FAILED\\ci-evidence\\host-smoke-run.log",
+      "sha256": "a4b23fe5408ce63b1c0ba7531cbadb5db59f34c2b248038217d456a9f51b8b30",
+      "bytes": 5822
+    },
+    {
+      "path": "CI-17218257211-FAILED\\ci-evidence\\summary.json",
+      "sha256": "dcc6701045683fa1fee5790f8e03f91e011b8ff4e9cfe070f510a7d00067d369",
+      "bytes": 2048
+    },
+    {
+      "path": "CI-17218257319-FAILED\\ci-evidence\\host-smoke-run.log",
+      "sha256": "bbd210622bf30aa4298cd6c611f37607568e4e09c30b54538720532edf05b79e",
+      "bytes": 5822
+    },
+    {
+      "path": "CI-17218257319-FAILED\\ci-evidence\\summary.json",
+      "sha256": "a4ed2007d42fbd7c407d8fc1471371d672253f8ba373769c0df26c44db438a9d",
+      "bytes": 2048
+    },
+    {
+      "path": "refused-diagnostic-host-build.log",
+      "sha256": "6c35240c5311bb140c38cf73de5449dc05b5041bcd78c1ea98d3621aab589493",
+      "bytes": 602327
+    },
+    {
+      "path": "refused-diagnostic-smoke-build.log",
+      "sha256": "6c438dd5b4f62697c4ef346b412a7158dcd7af10cd3ced95251a6c3f1fe0e5a1",
+      "bytes": 973
+    },
+    {
+      "path": "refused-diagnostic-smoke-run.log",
+      "sha256": "ff85db2e3c44ec58677f902442e5c8efa007086088d41eca87ac8ece0a540324",
+      "bytes": 4490
     }
   ],
   "affectedHostAssertions": [
@@ -179,5 +224,6 @@
   ],
   "globalV1Acceptance": false,
   "sourceCounterproofCommit": "94bdf5893c34220f7cb4e2c4c03051edebc89c06",
-  "portableQualificationMethod": "Default full Verify unchanged; private CI dist/qualification-tools contains only exact-source harness/config and source/hash identity outside product ZIP. Copy only those two files into an owned exact CI ZIP extraction and run --galaxy-live-only <absolute root>. Embedded assemblies must match actual host resource identity/MVID; no repository DLL shadows. Service-only pure Form ShowDialog probe logs exception type without qualifying product or disabling guards."
+  "portableQualificationMethod": "Default full Verify unchanged; private CI dist/qualification-tools contains only exact-source harness/config and source/hash identity outside product ZIP. Copy only those two files into an owned exact CI ZIP extraction and run --galaxy-live-only <absolute root>. Embedded assemblies must match actual host resource identity/MVID; no repository DLL shadows. Service-only pure Form ShowDialog probe logs exception type without qualifying product or disabling guards.",
+  "secondSourceCounterproofCommit": "ac053cbc82ad1f77fb93d9a9e695397562a683f9"
 }
