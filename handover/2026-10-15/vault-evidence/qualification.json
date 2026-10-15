@@ -1,0 +1,25 @@
+{
+  "product": "TE2 Enhanced / PbiBench portable qualification build (not signed, not a public release)",
+  "sourceRepo": "github.com/julian-passebecq/TabularEditor_J (private)",
+  "sourceCommit": "e7a8b06705d9ac66520795583205e49e9dede06f",
+  "hostFileVersion": "2.28.9784.4682",
+  "zip": "TE2Enhanced-e7a8b067-portable.zip",
+  "zipSha256": "3458fac2521d1154a0a4d11b43c9d5248e2ecc48523ea7275739fca8a46799bd",
+  "zipBytes": 12260486,
+  "ciBuild": "gitlab juliandatapass-group/tabulareditor-j pipeline 2948872778, job 17187088432 (runner tag local-windows)",
+  "verdict": "YELLOW (no RED): unverified gates remain DPI 150/200 real monitor, multi-monitor, remote XMLA/Entra",
+  "gates": {
+    "ciVerify8Stages": "PASS (job 17187088432)",
+    "ciPackageAndMcpSelfTest": "PASS (job 17187088432)",
+    "localVerify8Stages": "PASS (2026-10-15, worktree at e7a8b06)",
+    "packageIntegrity": "PASS: zip sha = SHA256SUMS, 161 MANIFEST lines match, required files, no .pdb, guide = repo docs",
+    "confidentialityScan": "PASS: no tokens, keys, user/dev paths, personal email, FOIL/client data; 3 triaged false positives (locale strings in msalruntime, masked password template in AMO, credential-guard test strings in MCP)",
+    "extractedHostLaunch": "PASS: window in 3.7 s, graceful close exit 0",
+    "extractedMcpSelfTest": "PASS",
+    "liveGateLocalSsas": "PASS: tmp_te2_20261015 created and dropped, cancel 2898 ms, timeout 3137 ms",
+    "powerBiDesktopLiveGate": "PASS: measure written, Total=35 Double=70, cancel 754 ms",
+    "daxStudioHandoffLive": "PASS: DAX Studio 3.0.11 opened with /server= /database=, connected to the Gate model, no Connect dialog",
+    "dpiMultiMonitor": "NOT_RUN (manual)",
+    "remoteXmlaEntra": "NOT_RUN (cloud login)"
+  }
+}

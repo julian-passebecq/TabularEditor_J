@@ -1,0 +1,9 @@
+ScriptWorkspaceSmoke: Problems list, per-version trust, one undo batch, rollback on failure, stale/model guards, opt-in recovery PASS
+DAX Workbench: selection, results, history, cancellation and failure recovery PASS
+T08/T09: formatter denial/payload/script/UDF/stale/undo and atomic CSV/UI failures PASS (recording transport, no network)
+DAX-006 live gate: throwaway database created
+DAX-006 live cancel returned after 2898 ms
+DAX-006 live timeout returned after 3137 ms
+DAX-006 live gate (multi-rowset, measure, row limit, query error, cancel, timeout, abort, editor connection, reuse) PASS
+DAX-006 live gate: throwaway database dropped
+S3 recovery: opt-in disclosure, dax-only copies, delete on save/close, crash survival, restore, hash-failed skip PASS
