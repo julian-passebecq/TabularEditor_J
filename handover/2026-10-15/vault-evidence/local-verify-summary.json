@@ -1,0 +1,50 @@
+[
+    {
+        "stage":  "restore-legacy",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.claude\\worktrees\\pbibench-vault-e7a8b06\\.tools\\verify\\restore-legacy.log"
+    },
+    {
+        "stage":  "restore-core",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.claude\\worktrees\\pbibench-vault-e7a8b06\\.tools\\verify\\restore-core.log"
+    },
+    {
+        "stage":  "antlr-debug",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.claude\\worktrees\\pbibench-vault-e7a8b06\\.tools\\verify\\antlr-debug.log"
+    },
+    {
+        "stage":  "host-release",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.claude\\worktrees\\pbibench-vault-e7a8b06\\.tools\\verify\\host-release.log"
+    },
+    {
+        "stage":  "core-smoke",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.claude\\worktrees\\pbibench-vault-e7a8b06\\.tools\\verify\\core-smoke.log"
+    },
+    {
+        "stage":  "mcp-smoke",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.claude\\worktrees\\pbibench-vault-e7a8b06\\.tools\\verify\\mcp-smoke.log"
+    },
+    {
+        "stage":  "host-smoke-build",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.claude\\worktrees\\pbibench-vault-e7a8b06\\.tools\\verify\\host-smoke-build.log"
+    },
+    {
+        "stage":  "host-smoke-run",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "D:\\PROJ\\TabularEditor_J\\.claude\\worktrees\\pbibench-vault-e7a8b06\\.tools\\verify\\host-smoke-run.log"
+    }
+]

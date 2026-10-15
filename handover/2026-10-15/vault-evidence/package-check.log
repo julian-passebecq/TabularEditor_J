@@ -1,0 +1,24 @@
+PASS zip sha256 = SHA256SUMS: 3458fac2521d1154a0a4d11b43c9d5248e2ecc48523ea7275739fca8a46799bd
+PASS zip entries safe (no absolute/.. paths)
+PASS MANIFEST lines match extracted files: 161 lines, 162 files (incl. MANIFEST.txt), mismatches=[]
+PASS inner MANIFEST = outer MANIFEST
+PASS TabularEditor.exe sha = SHA256SUMS
+PASS TabularEditor.exe sha = SHA256SUMS
+PASS PbiBench.Core.dll sha = SHA256SUMS
+PASS mcp/TE2Enhanced.Mcp.dll sha = SHA256SUMS
+PASS required files present: []
+PASS no .pdb
+PASS GETTING-STARTED.md = repo docs/pbibench/GETTING_STARTED.md
+PASS confidentiality: no gitlab token
+PASS confidentiality: no github token
+FAIL confidentiality: no openai/anthropic key: runtimes/win-arm64/native/msalruntime_arm64.dll, runtimes/win-x64/native/msalruntime.dll, runtimes/win-x86/native/msalruntime_x86.dll
+PASS confidentiality: no aws key
+PASS confidentiality: no private key
+FAIL confidentiality: no connection secret: Microsoft.AnalysisServices.Core.dll, mcp/TE2Enhanced.Mcp.dll
+PASS confidentiality: no user profile path
+PASS confidentiality: no dev tree path
+PASS confidentiality: no personal email
+PASS confidentiality: no FOIL private
+PASS confidentiality: no transcript marker
+INFO build-agent paths embedded (CI runner, not personal): []
+{"zip": "TE2Enhanced-e7a8b067-portable.zip", "sha256": "3458fac2521d1154a0a4d11b43c9d5248e2ecc48523ea7275739fca8a46799bd", "bytes": 12260486, "files": 162, "fails": ["confidentiality: no openai/anthropic key", "confidentiality: no connection secret"]}
