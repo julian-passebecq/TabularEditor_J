@@ -1,0 +1,19 @@
+Check 4 tools-launch (desktop lane, 2026-10-15). Target: Power BI Desktop instance C (port 23451, model db GUID), opened from the restored copy.
+Global-config snapshot (hash + UTC timestamp) before and after both tools: %APPDATA%\DaxStudio, %LOCALAPPDATA%\DaxStudio, %LOCALAPPDATA%\TabularEditor, %APPDATA%\TabularEditor, Power BI Desktop External Tools folder, %LOCALAPPDATA%\TE2Enhanced. Script: tool\snap.ps1.
+(a) DAX Studio 3.0.11.982, args exactly as PbiBench.Core DaxStudioHandoff.BuildArguments: /server=localhost:23451 /database=<model GUID>.
+    No Connect dialog. Log: "Establishing Connection", "Connected"; status bar localhost:23451, 17.0.87.18; metadata pane lists Sales (daxstudio-connected.png).
+    Query EVALUATE {[Total Amount]} typed into the editor (foreground checked = DAX Studio pid), F5: status "1 row", Value 35 (daxstudio-query-35.png).
+    (UIA Invoke/Toggle on the Run ribbon button did not run the query; F5 did.)
+    Closed via WindowPattern.Close -> "Don't Save" (id DontSave). Process exited.
+(b) Vault <pkg>\TabularEditor.exe (sha256 7127912a...) args: localhost:23451 <model GUID>.
+    Window title "Gate.pbix (localhost:23451) - Tabular Editor 2.28.0", status "Connected successfully."; tree expanded by keyboard on tvModel: Model > Tables > Sales > Total Amount, Region, Amount (te2-connected.png).
+    Closed via WindowPattern.Close, no save prompt (no edits). Process exited.
+Snapshot diff (config-diff-tools.json):
+  %LOCALAPPDATA%\DaxStudio\Log\DaxStudio-<date>.log           appended            -> log
+  %LOCALAPPDATA%\DaxStudio\QueryHistory\<ts>-query-history.json new file           -> query history (MRU/cache)
+  %LOCALAPPDATA%\TabularEditor\Preferences.json                timestamp rewritten, SHA256 unchanged -> config file, content unchanged
+  %LOCALAPPDATA%\TabularEditor\TOMWrapper14.dll                rewritten with the vault exe's embedded TOMWrapper (1052672 -> 960512 bytes) -> extracted-assembly cache
+  %LOCALAPPDATA%\TabularEditor\newtonsoft.json.dll             timestamp rewritten, SHA256 unchanged -> extracted-assembly cache
+  No change: %APPDATA%\DaxStudio, %APPDATA%\TabularEditor, External Tools folder, %LOCALAPPDATA%\TE2Enhanced.
+  The same 3 TabularEditor files were also rewritten by the harness smoke runs earlier (pre-run vs pre-tools diff), so this is TE2 start-up behaviour, not specific to the handoff.
+Result: PASS with note (no config content changed; TE2 rewrites Preferences.json with identical bytes and replaces the shared TOMWrapper14.dll cache with its own build, which any other TE2 2.x install on the PC also uses).

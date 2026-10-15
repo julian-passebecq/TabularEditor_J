@@ -1,0 +1,17 @@
+{
+    "instance":  "default (MSSQLServerOLAPService, localhost)",
+    "serverVersion":  "16.0.42.229",
+    "productName":  "Microsoft SQL Server Analysis Services",
+    "edition":  5,
+    "serverMode":  "Tabular",
+    "productLevel":  "RTM",
+    "databaseCompatibilityLevel":  1600,
+    "fixtureCompatibilityLevel":  1600,
+    "discoverProperties":  [
+                               {
+                                   "name":  "DBMSVersion",
+                                   "value":  ""
+                               }
+                           ],
+    "adomdServerVersion":  "16.0.42.229"
+}

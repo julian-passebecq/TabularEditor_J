@@ -1,0 +1,18 @@
+Check 3 reopen-render-rollback (desktop lane, 2026-10-15). Power BI Desktop Store 2.158.1304.0, FlaUI 4.0.0 UIA3, every action scoped to this run's PBIDesktop PID.
+Model copy: <scratch>\work\desktop\model = fixture Gate.pbip with report.json given 2 visuals (card Total Amount, table Region/Total Amount; see baseline-report.json). Semantic model files byte-identical to the fixture.
+(a) 18:08 open copy: PBIDesktop pid A, child msmdsrv pid A', port 38929, db GUID, compat 1606.
+    UIA: Image "Total Amount 35.", Text "35", DataItems "Select Row East 5", "North 10", "South 20". Banner "calculated tables need to be manually refreshed" -> Invoke "Refresh now" -> banner gone. render-baseline.png.
+(b) harness PbiBench.Host.Smoke.exe (vault TabularEditor.exe 7127912a, PbiBench.Core c3598a7f), PBIBENCH_DESKTOP_PHASE=live, server localhost:38929: exit 0;
+    "TE2 saved measure 'TE2 Gate Double'", "Total=35, Double=70", "cancel returned after 726 ms", live gate PASS. Query check: PRESENT (Total Amount|TE2 Gate Double).
+(c) WindowPattern.Close -> "Do you want to save your changes?" -> Invoke "Don't save" (close-prompt-dont-save.png) -> Auto recovery dialog -> select "Yes, I want to view the files later." -> OK. pid A and A' exited.
+    Copy files after close: 7 files, all SHA256 equal to baseline (no write).
+    Reopen (pid B, port 30028): UIA "Total Amount 35.", rows East 5/North 10/South 20 present; measure check ABSENT (measures=Total Amount). render-after-rollback-nosave.png.
+(d) Refresh now; harness live phase again on port 30028: exit 0, Total=35, Double=70, cancel 732 ms, PASS; PRESENT.
+    Invoke Save (id=save) -> PBIR prompt "Upgrade your report format ... (PBIR) (Preview)" -> Invoke "Don't upgrade". Title "Last saved: Today at 6:13 PM".
+    Saved copy: 15 files (Desktop added .gitignore, .platform, .pbi\*, diagramLayout.json, cache.abf). Sales.tmdl line 7: measure 'TE2 Gate Double' = [Total Amount] * 2 (saved-Sales.tmdl).
+    Harness disk phase (PBIBENCH_DESKTOP_TMDL = saved definition folder): "TE2 reloads the project Desktop saved; measure present" PASS.
+    Close (no save prompt; Auto recovery dialog -> keep files -> OK), pid B and B' exited.
+    File-level rollback: copy folder deleted and re-copied from the pre-change baseline; 7 files, all SHA256 equal to baseline.
+    Reopen (pid C, port 23451): Refresh now; UIA "Total Amount 35.", rows East 5/North 10/South 20; measure check ABSENT. render-after-file-rollback.png.
+Note: the PBIR prompt screenshot call failed (dialog is not a top-level window of the process); the prompt is evidenced by its UIA names above.
+Result: PASS

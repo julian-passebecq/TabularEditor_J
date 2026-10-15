@@ -1,0 +1,50 @@
+[
+    {
+        "stage":  "restore-legacy",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "<scratch>\\harness\\verify\\restore-legacy.log"
+    },
+    {
+        "stage":  "restore-core",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "<scratch>\\harness\\verify\\restore-core.log"
+    },
+    {
+        "stage":  "antlr-debug",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "<scratch>\\harness\\verify\\antlr-debug.log"
+    },
+    {
+        "stage":  "host-release",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "<scratch>\\harness\\verify\\host-release.log"
+    },
+    {
+        "stage":  "core-smoke",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "<scratch>\\harness\\verify\\core-smoke.log"
+    },
+    {
+        "stage":  "mcp-smoke",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "<scratch>\\harness\\verify\\mcp-smoke.log"
+    },
+    {
+        "stage":  "host-smoke-build",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "<scratch>\\harness\\verify\\host-smoke-build.log"
+    },
+    {
+        "stage":  "host-smoke-run",
+        "exitCode":  0,
+        "result":  "PASS",
+        "log":  "<scratch>\\harness\\verify\\host-smoke-run.log"
+    }
+]

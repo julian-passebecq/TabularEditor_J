@@ -1,0 +1,11 @@
+Cleanup (desktop lane, 2026-10-15)
+Processes started by this lane (all closed through their own windows, none killed):
+  PBIDesktop A + msmdsrv A' (port 38929): exited after "Don't save" + Auto recovery "keep files" + OK.
+  PBIDesktop B + msmdsrv B' (port 30028): exited after Auto recovery "keep files" + OK.
+  PBIDesktop C + msmdsrv C' (port 23451): exited after "Don't save" + Auto recovery "keep files" + OK.
+  DaxStudio: exited after "Don't Save". TabularEditor (vault): exited on close.
+  Final check: all 8 PIDs not alive. No kill by PID was needed. Another session's PBIDesktop ("Energy") and its msmdsrv were never touched.
+AS workspace folders of the 3 instances: removed by Desktop itself on exit (verified absent); nothing else under AnalysisServicesWorkspaces touched.
+AutoRecovery + TempSaves: 60 entries before, 60 after, same names, none newer than the run start (Gate.pbip has enableAutoRecovery=false). The pre-existing files were kept by choosing "Yes, I want to view the files later".
+Model copy <scratch>\work\desktop\model deleted. SSAS: this lane created no database.
+Global configs: see tools-launch.log (no config content changed).
