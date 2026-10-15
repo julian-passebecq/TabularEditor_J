@@ -1,0 +1,10 @@
+   1.34s created tmp_pbibench-pilot_20261015
+   5.02s user-cancel@700ms: client returned state=Cancelled reason=UserCancellation productDuration=2736ms wall=2753ms (client within 10s: True)
+  12.74s user-cancel@700ms: engine command first seen at +216ms, last seen at +7289ms relative to execute start (samples=42, last elapsed=0ms cpu=5843ms)
+  12.74s user-cancel@700ms: engine kept executing 4536ms after the client returned; stopped=True; server-side within 10 s: True
+  12.77s user-cancel@700ms: executor reusable afterwards: Completed
+  16.50s timeout@1s: client returned state=Cancelled reason=Timeout productDuration=3129ms wall=3130ms (client within 10s: True)
+  22.73s timeout@1s: engine command first seen at +182ms, last seen at +6186ms relative to execute start (samples=38, last elapsed=0ms cpu=5968ms)
+  22.73s timeout@1s: engine kept executing 3056ms after the client returned; stopped=True; server-side within 10 s: True
+  22.76s timeout@1s: executor reusable afterwards: Completed
+  22.88s dropped; exists=False

@@ -1,0 +1,74 @@
+[
+  {
+    "side": "after",
+    "root": "%LOCALAPPDATA%\\DaxStudio",
+    "path": "\\Log\\DaxStudio-20261015.log",
+    "length": 11438,
+    "lastWriteUtc": "2026-10-15T16:17:55.8567635Z",
+    "sha256": "E7E26C11258B73F116CA242669D941DB532D6FB94F236AC68FF509A53A52A073"
+  },
+  {
+    "side": "after",
+    "root": "%LOCALAPPDATA%\\DaxStudio",
+    "path": "\\QueryHistory\\20261015181736035-query-history.json",
+    "length": 293,
+    "lastWriteUtc": "2026-10-15T16:17:36.196935Z",
+    "sha256": "CF0A321C44C259D49E40292739C57FC9803D68630D3347575BCDAB9C6A697748"
+  },
+  {
+    "side": "after",
+    "root": "%LOCALAPPDATA%\\TabularEditor",
+    "path": "\\newtonsoft.json.dll",
+    "length": 711952,
+    "lastWriteUtc": "2026-10-15T16:18:44.2894398Z",
+    "sha256": "E1E27AF7B07EEEDF5CE71A9255F0422816A6FC5849A483C6714E1B472044FA9D"
+  },
+  {
+    "side": "after",
+    "root": "%LOCALAPPDATA%\\TabularEditor",
+    "path": "\\Preferences.json",
+    "length": 2861,
+    "lastWriteUtc": "2026-10-15T16:20:38.0783272Z",
+    "sha256": "1A4F2070C0393268BDD60156130DE694A09A65F79DB10A877B8B2F5F833BAEAA"
+  },
+  {
+    "side": "after",
+    "root": "%LOCALAPPDATA%\\TabularEditor",
+    "path": "\\TOMWrapper14.dll",
+    "length": 960512,
+    "lastWriteUtc": "2026-10-15T16:18:44.2846645Z",
+    "sha256": "95493057E4DB998CD8FF008406EEE4B28EDD24E9BEA22CCC6C3FC5C259C0DBA9"
+  },
+  {
+    "side": "before",
+    "root": "%LOCALAPPDATA%\\DaxStudio",
+    "path": "\\Log\\DaxStudio-20261015.log",
+    "length": 9659,
+    "lastWriteUtc": "2026-10-15T00:41:53.7446255Z",
+    "sha256": "B55F8DAB70F785F1DB4D8422AF6A038DE5BA4E17820EEF0A0DC627F1DBD6D68F"
+  },
+  {
+    "side": "before",
+    "root": "%LOCALAPPDATA%\\TabularEditor",
+    "path": "\\newtonsoft.json.dll",
+    "length": 711952,
+    "lastWriteUtc": "2026-10-15T16:14:02.0900101Z",
+    "sha256": "E1E27AF7B07EEEDF5CE71A9255F0422816A6FC5849A483C6714E1B472044FA9D"
+  },
+  {
+    "side": "before",
+    "root": "%LOCALAPPDATA%\\TabularEditor",
+    "path": "\\Preferences.json",
+    "length": 2861,
+    "lastWriteUtc": "2026-10-15T16:14:05.653097Z",
+    "sha256": "1A4F2070C0393268BDD60156130DE694A09A65F79DB10A877B8B2F5F833BAEAA"
+  },
+  {
+    "side": "before",
+    "root": "%LOCALAPPDATA%\\TabularEditor",
+    "path": "\\TOMWrapper14.dll",
+    "length": 1052672,
+    "lastWriteUtc": "2026-10-15T16:12:48.6598035Z",
+    "sha256": "2E980392B57D73463A3F7CE04178037409317A72CB0FE47B6D74453757DECF5D"
+  }
+]

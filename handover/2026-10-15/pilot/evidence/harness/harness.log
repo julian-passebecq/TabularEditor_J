@@ -1,0 +1,23 @@
+TE2 Enhanced pilot - harness (lane "harness")
+Repo HEAD cd03a34 (product build under test: e7a8b06, vault package, not rebuilt).
+1. Smoke exe was stale (built 2026-10-13, sources changed by #5). Rebuilt with Scripts/Verify-PbiBench.ps1:
+   restore, antlr, host-release, core-smoke, mcp-smoke, host-smoke-build, host-smoke-run = all exit 0. Tracked files unchanged (git status clean).
+   Harness exe: <scratch>\harness\bin\PbiBench.Host.Smoke.exe (net48, AnyCPU).
+2. <scratch>\harness\bin = copy of vault package <pkg> + PbiBench.Host.Smoke.exe/.config.
+   The vault TabularEditor.exe embeds TOMWrapper, Newtonsoft.Json, Antlr4.Runtime (Costura); the smoke references TOMWrapper as a
+   file, so those 3 DLLs were extracted from the vault TabularEditor.exe resources into the copy (no vault file overwritten).
+   Rebuilt TabularEditor.exe/PbiBench.Core.dll (non-deterministic build) were NOT copied.
+   sha256 TabularEditor.exe  7127912a124caa50...  == vault
+   sha256 PbiBench.Core.dll  c3598a7f8eefbcf8...  == vault
+   TOMWrapper.dll (extracted, 2.28.9784.4680) 2e980392b57d73463a3f...; Newtonsoft.Json 13.0.0.0 e1e27af7b07eeedf...; Antlr4.Runtime 4.6.0.0 df8a7146f8fcb92b...
+3. Offline smoke run directly (no PBIBENCH_* set): exit 0, "PbiBench host smoke: PASS";
+   DAX-006 live gate NOT_RUN and Power BI Desktop gate NOT_RUN (env vars unset), as expected.
+   Note: smoke prints "ThemeApplySmoke: OBS-001 observed" (known, rollback byte-exact).
+4. Load proof (Probe.exe in separate dir, AppDomain.GetAssemblies after smoke Main returned 0), all from <scratch>\harness\bin:
+   TabularEditor 2.28.9784.4682  TabularEditor.exe  7127912a124caa502a14737a4dd381c62b571247de6185b53b1325afe202f4ff
+   PbiBench.Core 1.0.0.0         PbiBench.Core.dll  c3598a7f8eefbcf89639259886daeb28cbd9421151a9b0dc977686194273a27a
+   TOMWrapper 2.28.9784.4680     TOMWrapper.dll     2e980392b57d73463a3f7ce04178037409317a72cb0fe47b6d74453757decf5d
+   Microsoft.AnalysisServices.Tabular 19.112.0.0 (package copy) 6b5c379440d055dc...
+   No assembly resolved from outside the copy. Process-module polling was unreliable (only the exe seen), hence the in-process probe.
+Result: harness loads the vault binaries (TabularEditor.exe, PbiBench.Core.dll byte-identical; TOMWrapper from vault exe resources).
+Limit: harness exe itself and Probe.exe are built from HEAD, not part of the vault package.

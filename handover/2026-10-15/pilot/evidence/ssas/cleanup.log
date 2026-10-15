@@ -1,0 +1,5 @@
+after=[]
+tmp_pbibench-pilot_20261015 exists=False
+any tmp_pbibench* exists=False
+before=[] ; equal to after list: True
+Note: a first deploy attempt (PowerBI_V3 data source version, rejected by SSAS) left an empty shell of tmp_pbibench-pilot_20261015; it was dropped by this lane before the real run. The initial list was empty. Later runs created and dropped the same name only.

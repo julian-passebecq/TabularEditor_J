@@ -1,0 +1,27 @@
+table Sales
+	lineageTag: ce6d785b-cd63-4623-af8f-d7d4f4f2edda
+
+	measure 'Total Amount' = SUM(Sales[Amount])
+		lineageTag: 5b483953-30eb-4ef2-a400-a38764d8b8dd
+
+	measure 'TE2 Gate Double' = [Total Amount] * 2
+		lineageTag: 1efc409e-28d7-4fb2-aac3-ed23a6bc2773
+
+	column Region
+		dataType: string
+		lineageTag: 66357f86-c94d-40b1-97c0-958304dbd19f
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Region]
+
+	column Amount
+		dataType: int64
+		lineageTag: d4283893-3248-4154-bf26-aacb626ea470
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Amount]
+
+	partition Sales = calculated
+		mode: import
+		source = DATATABLE("Region", STRING, "Amount", INTEGER, {{"North", 10}, {"South", 20}, {"East", 5}})
+

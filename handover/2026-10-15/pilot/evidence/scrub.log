@@ -1,0 +1,7 @@
+Scrub 2026-10-15 18:25
+rewrote paths: rebuild-summary.json
+text scan after rewrite: remaining hits = none
+note: run1.ps1 'PublicKeyToken=...' is the public assembly token of AdomdClient, not a secret; kept.
+note: 'Desktop-only' in engine-revision.md is a regex false positive.
+screenshots: 7 png in desktop/. Viewed render-baseline, close-prompt-dont-save, daxstudio-connected, daxstudio-query-35, te2-connected, render-after-rollback-nosave: only the test model windows (Power BI Desktop Gate, DAX Studio, TE2), no profile, email or account name (Desktop shows 'Sign in' only). render-after-file-rollback.png has the same byte size as render-baseline.png (same capture type, not separately viewed). None deleted.
+processes: no PBIDesktop/DaxStudio/TabularEditor running; msmdsrv PIDs present (4) none match lane PIDs 64012/65624/39600. SSAS database list empty (no tmp_pbibench*).
