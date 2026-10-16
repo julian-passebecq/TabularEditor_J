@@ -160,7 +160,7 @@ namespace TabularEditor.PbiBench.Dax
             var connected = false;
             var finishing = false;
             Task cancelWork = null;
-            long cancelAt = -1;
+            long cancelAt = -1; // written and read under sync
             var finished = new ManualResetEventSlim();
             // Callback only enqueues work. Never runs blocking AMO on the cancelling/UI thread.
             // Cancel first asks the engine to stop the command. When the command is still running after
@@ -228,7 +228,8 @@ namespace TabularEditor.PbiBench.Dax
             }
             finally
             {
-                lock (sync) finishing = true;
+                long cancelRequestedAt;
+                lock (sync) { finishing = true; cancelRequestedAt = cancelAt; }
                 finished.Set();
                 registration.Dispose();
                 // One owner retains admission until cancel, reader and session cleanup all finish.
@@ -243,7 +244,7 @@ namespace TabularEditor.PbiBench.Dax
                 {
                     try { serverStop = session.WaitForServerStop(_serverStopWaitMilliseconds); }
                     catch { serverStop = DaxServerStopState.Unknown; }
-                    serverStopMilliseconds = Math.Max(0, watch.ElapsedMilliseconds - cancelAt);
+                    serverStopMilliseconds = Math.Max(0, watch.ElapsedMilliseconds - cancelRequestedAt);
                 }
                 try { session?.Disconnect(); } catch { }
                 try { session?.Dispose(); } catch { }
@@ -387,6 +388,9 @@ namespace TabularEditor.PbiBench.Dax
         private readonly Server _server = new Server();
         private string _connectionString;
         private string _sessionId;
+        // Server process id of the query session, read before Abort ends the session: the stop check needs it once
+        // the session itself may be gone from DISCOVER_SESSIONS while its command still runs.
+        private volatile string _spid;
         public void Connect(string connectionString, int timeoutSeconds)
         {
             var builder = new System.Data.Common.DbConnectionStringBuilder { ConnectionString = connectionString };
@@ -444,6 +448,7 @@ namespace TabularEditor.PbiBench.Dax
                 control.Connect(builder.ConnectionString);
                 try
                 {
+                    try { _spid = SessionSpid(control, parsed) ?? _spid; } catch { }
                     control.Execute("<Cancel xmlns=\"http://schemas.microsoft.com/analysisservices/2003/engine\"><SessionID>" +
                         sessionId.Trim() + "</SessionID><CancelAssociated>true</CancelAssociated></Cancel>");
                 }
@@ -452,10 +457,11 @@ namespace TabularEditor.PbiBench.Dax
         }
 
         /// <summary>
-        /// Polls DISCOVER_SESSIONS and DISCOVER_COMMANDS from a second, short-lived connection: the query has
-        /// stopped when its session is gone or the session's command has an end time (live, SSAS 2022: the end time
-        /// appears when the engine really finishes, not when the client is released). Read-only. A DMV the
-        /// endpoint refuses gives Unknown, never a guess.
+        /// Polls DISCOVER_COMMANDS from a second, short-lived connection until no command of the query session's
+        /// SPID is left without an end time (live, SSAS 2022: the end time appears when the engine really finishes,
+        /// not when the client is released, and a cancelled session keeps its SPID rows until then). The SPID comes
+        /// from DISCOVER_SESSIONS, read here or by Abort before it ended the session. Read-only. No SPID, or a DMV
+        /// the endpoint refuses, gives Unknown, never a guess.
         /// </summary>
         public DaxServerStopState WaitForServerStop(int timeoutMilliseconds)
         {
@@ -473,12 +479,10 @@ namespace TabularEditor.PbiBench.Dax
                 catch { return DaxServerStopState.Unknown; }
                 try
                 {
-                    Guid self;
-                    if (!Guid.TryParse(control.SessionID, out self)) return DaxServerStopState.Unknown;
                     while (true)
                     {
                         bool? running;
-                        try { running = CommandRunning(control, parsed, self); }
+                        try { running = CommandRunning(control, parsed); }
                         catch { return DaxServerStopState.Unknown; }
                         if (running == null) return DaxServerStopState.Unknown;
                         if (running == false) return DaxServerStopState.Confirmed;
@@ -491,22 +495,26 @@ namespace TabularEditor.PbiBench.Dax
         }
 
         /// <summary>
-        /// True while the session's command has no end time; false once it has one or the session is gone. A missing
-        /// session counts only when the DMV lists the control session itself, which runs as the same identity (a
-        /// non-admin sees only their own sessions); otherwise the endpoint gives no proof and the answer is null.
+        /// True while any DISCOVER_COMMANDS row of the session's SPID has no end time, false when none has (the
+        /// server runs nothing for it), null when the SPID is unknown or a DMV cannot be read.
         /// </summary>
-        private static bool? CommandRunning(Server control, Guid sessionId, Guid controlSessionId)
+        private bool? CommandRunning(Server control, Guid sessionId)
         {
-            var sessions = Rows(control, "SELECT SESSION_ID, SESSION_SPID FROM $SYSTEM.DISCOVER_SESSIONS");
-            if (sessions == null) return null;
-            Func<object[], Guid, bool> isSession = (row, wanted) => Guid.TryParse(Convert.ToString(row[0]), out var id) && id == wanted;
-            var mine = sessions.FirstOrDefault(row => isSession(row, sessionId));
-            if (mine == null) return sessions.Any(row => isSession(row, controlSessionId)) ? (bool?)false : null;
-            var spid = Convert.ToString(mine[1]);
+            var spid = SessionSpid(control, sessionId) ?? _spid;
+            if (string.IsNullOrEmpty(spid)) return null;
+            _spid = spid;
             var commands = Rows(control, "SELECT SESSION_SPID, COMMAND_END_TIME FROM $SYSTEM.DISCOVER_COMMANDS");
             if (commands == null) return null;
-            var command = commands.FirstOrDefault(row => Convert.ToString(row[0]) == spid);
-            return command != null && (command[1] == null || command[1] is DBNull);
+            return commands.Any(row => Convert.ToString(row[0]) == spid && (row[1] == null || row[1] is DBNull));
+        }
+
+        /// <summary>SPID of the given session from DISCOVER_SESSIONS, or null when the session is not listed.</summary>
+        private static string SessionSpid(Server control, Guid sessionId)
+        {
+            var sessions = Rows(control, "SELECT SESSION_ID, SESSION_SPID FROM $SYSTEM.DISCOVER_SESSIONS");
+            var mine = sessions?.FirstOrDefault(row => Guid.TryParse(Convert.ToString(row[0]), out var id) && id == sessionId);
+            var spid = mine == null ? null : Convert.ToString(mine[1]);
+            return string.IsNullOrEmpty(spid) ? null : spid;
         }
 
         private static List<object[]> Rows(Server control, string dmv)

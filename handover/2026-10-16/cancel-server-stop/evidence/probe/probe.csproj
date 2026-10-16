@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework><LangVersion>latest</LangVersion></PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.AnalysisServices.Core"><HintPath><repo>/TabularEditor/bin/Release/Microsoft.AnalysisServices.Core.dll</HintPath></Reference>
+    <Reference Include="Microsoft.AnalysisServices"><HintPath><repo>/TabularEditor/bin/Release/Microsoft.AnalysisServices.dll</HintPath></Reference>
+    <Reference Include="Microsoft.AnalysisServices.Tabular"><HintPath><repo>/TabularEditor/bin/Release/Microsoft.AnalysisServices.Tabular.dll</HintPath></Reference>
+    <Reference Include="Microsoft.AnalysisServices.Tabular.Json"><HintPath><repo>/TabularEditor/bin/Release/Microsoft.AnalysisServices.Tabular.Json.dll</HintPath></Reference>
+    <Reference Include="Microsoft.AnalysisServices.SPClient.Interfaces"><HintPath><repo>/TabularEditor/bin/Release/Microsoft.AnalysisServices.SPClient.Interfaces.dll</HintPath></Reference>
+    <Reference Include="System.Data" /><Reference Include="System.Security" />
+  </ItemGroup>
+</Project>

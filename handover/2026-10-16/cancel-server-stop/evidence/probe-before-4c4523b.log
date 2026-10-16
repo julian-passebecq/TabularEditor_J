@@ -1,0 +1,141 @@
+   0.060 build before TabularEditor.exe 51876acf6b56d5df
+  14.616 created tmp_pbibench-cancel_20261016
+  16.023 tag probe_52afc124a67f
+  29.218    dmv[none] msmdsrv cpu=0.0%
+  29.434    dmv[none] msmdsrv cpu=0.0%
+  29.615 === SE cancel@700ms
+  29.641    dmv[none] msmdsrv cpu=0.0%
+  29.862    dmv[spid=10658 elapsed=103 cpu=0 end=-] msmdsrv cpu=4.3%
+  30.076    dmv[spid=10658 elapsed=318 cpu=0 end=-] msmdsrv cpu=4.5%
+  30.309    dmv[spid=10658 elapsed=535 cpu=0 end=-] msmdsrv cpu=4.7%
+  30.487 SE cancel@700ms: CLIENT returned +871 ms state=Cancelled reason=UserCancellation serverStop=(not in this build) message="Query cancelled."
+  30.534    dmv[spid=10658 elapsed=768 cpu=0 end=-] msmdsrv cpu=3.8%
+  30.733    dmv[none] msmdsrv cpu=0.0%
+  30.963    dmv[none] msmdsrv cpu=0.0%
+  31.210    dmv[none] msmdsrv cpu=0.0%
+  31.471    dmv[none] msmdsrv cpu=0.0%
+  31.751    dmv[none] msmdsrv cpu=0.0%
+  31.963    dmv[none] msmdsrv cpu=0.0%
+  32.187    dmv[none] msmdsrv cpu=0.0%
+  32.402    dmv[none] msmdsrv cpu=0.0%
+  32.622    dmv[none] msmdsrv cpu=0.0%
+  32.835    dmv[none] msmdsrv cpu=0.0%
+  33.055    dmv[none] msmdsrv cpu=0.0%
+  33.266    dmv[none] msmdsrv cpu=0.0%
+  33.380 SE cancel@700ms: msmdsrv CPU while running (before cancel) avg 4.6%, in the 2 s after the client returned avg 0.0%; command row gone from DISCOVER_COMMANDS at +1024 ms (client returned +871 ms)
+  33.380 SE cancel@700ms: SERVER COMMAND_END_TIME=not captured UTC, client return 17:16:51.023 UTC
+  33.380 SE cancel@700ms: SERVER command end observed at +1024 ms; server stopped before (or with) the client return
+  33.413 SE cancel@700ms: executor reuse afterwards: Completed
+  33.413 tag probe_fbb5481ae118
+  34.208    dmv[none] msmdsrv cpu=0.0%
+  34.424    dmv[none] msmdsrv cpu=0.0%
+  34.595 === SE timeout@1s
+  34.729    dmv[none] msmdsrv cpu=1.5%
+  35.049    dmv[spid=10673 elapsed=220 cpu=0 end=-] msmdsrv cpu=4.5%
+  35.271    dmv[spid=10673 elapsed=531 cpu=0 end=-] msmdsrv cpu=4.5%
+  35.482    dmv[spid=10673 elapsed=748 cpu=0 end=-] msmdsrv cpu=4.3%
+  35.662 SE timeout@1s: CLIENT returned +1067 ms state=Cancelled reason=Timeout serverStop=(not in this build) message="Query timeout requested; provider cleanup completed."
+  35.707    dmv[spid=10673 elapsed=964 cpu=0 end=-] msmdsrv cpu=4.1%
+  36.523    dmv[none] msmdsrv cpu=0.0%
+  37.769    dmv[none] msmdsrv cpu=0.0%
+  38.081    dmv[none] msmdsrv cpu=0.0%
+  38.397    dmv[none] msmdsrv cpu=0.0%
+  38.521 SE timeout@1s: msmdsrv CPU while running (before cancel) avg 4.5%, in the 2 s after the client returned avg 0.0%; command row gone from DISCOVER_COMMANDS at +1240 ms (client returned +1067 ms)
+  38.521 SE timeout@1s: SERVER COMMAND_END_TIME=not captured UTC, client return 17:16:56.198 UTC
+  38.521 SE timeout@1s: SERVER command end observed at +1240 ms; server stopped before (or with) the client return
+  38.563 SE timeout@1s: executor reuse afterwards: Completed
+  38.563 tag probe_72892c91c70e
+  39.697    dmv[none] msmdsrv cpu=0.3%
+  39.969    dmv[none] msmdsrv cpu=0.0%
+  40.060 === FE cancel@700ms
+  40.200    dmv[spid=10686 elapsed=1 cpu=0 end=-] msmdsrv cpu=1.2%
+  40.430    dmv[spid=10686 elapsed=232 cpu=0 end=-] msmdsrv cpu=3.7%
+  40.652    dmv[spid=10686 elapsed=451 cpu=0 end=-] msmdsrv cpu=3.9%
+  40.883    dmv[spid=10686 elapsed=674 cpu=0 end=-] msmdsrv cpu=3.8%
+  41.117    dmv[spid=10686 elapsed=911 cpu=0 end=-] msmdsrv cpu=3.5%
+  41.339    dmv[spid=10686 elapsed=1136 cpu=0 end=-] msmdsrv cpu=3.8%
+  41.619    dmv[spid=10686 elapsed=1371 cpu=0 end=-] msmdsrv cpu=3.7%
+  41.859    dmv[spid=10686 elapsed=1651 cpu=0 end=-] msmdsrv cpu=4.3%
+  42.114    dmv[spid=10686 elapsed=1892 cpu=0 end=-] msmdsrv cpu=3.7%
+  42.355    dmv[spid=10686 elapsed=2139 cpu=0 end=-] msmdsrv cpu=4.9%
+  42.640    dmv[spid=10686 elapsed=2384 cpu=0 end=-] msmdsrv cpu=4.0%
+  42.826 FE cancel@700ms: CLIENT returned +2766 ms state=Cancelled reason=UserCancellation serverStop=(not in this build) message="Query cancelled."
+  42.876    dmv[spid=10686 elapsed=2663 cpu=0 end=-] msmdsrv cpu=3.6%
+  43.181    dmv[spid=10686 elapsed=2908 cpu=0 end=-] msmdsrv cpu=3.2%
+  43.405    dmv[spid=10686 elapsed=3199 cpu=0 end=-] msmdsrv cpu=4.5%
+  43.688    dmv[spid=10686 elapsed=3434 cpu=0 end=-] msmdsrv cpu=3.7%
+  43.910    dmv[spid=10686 elapsed=3710 cpu=0 end=-] msmdsrv cpu=3.9%
+  44.164    dmv[spid=10686 elapsed=3945 cpu=0 end=-] msmdsrv cpu=3.9%
+  44.408    dmv[spid=10686 elapsed=4185 cpu=0 end=-] msmdsrv cpu=4.4%
+  44.671    dmv[spid=10686 elapsed=4439 cpu=0 end=-] msmdsrv cpu=3.9%
+  44.934    dmv[spid=10686 elapsed=4692 cpu=0 end=-] msmdsrv cpu=3.4%
+  45.193    dmv[spid=10686 elapsed=4968 cpu=0 end=-] msmdsrv cpu=4.1%
+  45.423    dmv[spid=10686 elapsed=5219 cpu=0 end=-] msmdsrv cpu=3.6%
+  45.685    dmv[spid=10686 elapsed=5448 cpu=0 end=-] msmdsrv cpu=4.8%
+  45.932    dmv[spid=10686 elapsed=5707 cpu=0 end=-] msmdsrv cpu=4.2%
+  46.366    dmv[spid=10686 elapsed=6044 cpu=0 end=-] msmdsrv cpu=2.5%
+  46.633    dmv[spid=10686 elapsed=0 cpu=5187 end=17:17:06.973] msmdsrv cpu=1.1%
+  46.872    dmv[spid=10686 elapsed=0 cpu=5187 end=17:17:06.973] msmdsrv cpu=0.0%
+  47.122    dmv[spid=10686 elapsed=0 cpu=5187 end=17:17:06.973] msmdsrv cpu=0.3%
+  47.365    dmv[spid=10686 elapsed=0 cpu=5187 end=17:17:06.973] msmdsrv cpu=0.0%
+  47.641    dmv[spid=10686 elapsed=0 cpu=5187 end=17:17:06.973] msmdsrv cpu=0.0%
+  47.952    dmv[spid=10686 elapsed=0 cpu=5187 end=17:17:06.973] msmdsrv cpu=0.0%
+  48.213    dmv[spid=10686 elapsed=0 cpu=5187 end=17:17:06.973] msmdsrv cpu=0.0%
+  48.452    dmv[spid=10686 elapsed=0 cpu=5187 end=17:17:06.973] msmdsrv cpu=0.0%
+  48.695    dmv[spid=10686 elapsed=0 cpu=5187 end=17:17:06.973] msmdsrv cpu=0.0%
+  48.954    dmv[none] msmdsrv cpu=0.0%
+  49.184    dmv[none] msmdsrv cpu=0.0%
+  49.291 FE cancel@700ms: msmdsrv CPU while running (before cancel) avg 3.9%, in the 2 s after the client returned avg 4.0%; command row gone from DISCOVER_COMMANDS at +8757 ms (client returned +2766 ms)
+  49.292 FE cancel@700ms: SERVER COMMAND_END_TIME=17:17:06.973 UTC, client return 17:17:03.362 UTC => server ended 3610 ms relative to the client return (negative = before)
+  49.292 FE cancel@700ms: SERVER command end observed at +6421 ms; server kept running 3655 ms AFTER the client returned
+  49.360 FE cancel@700ms: executor reuse afterwards: Completed
+  49.360 tag probe_9c62f0372e47
+  50.210    dmv[none] msmdsrv cpu=0.5%
+  50.430    dmv[none] msmdsrv cpu=0.0%
+  50.608 === FE timeout@1s
+  50.672    dmv[none] msmdsrv cpu=0.6%
+  50.914    dmv[spid=10732 elapsed=169 cpu=0 end=-] msmdsrv cpu=3.8%
+  51.142    dmv[spid=10732 elapsed=390 cpu=0 end=-] msmdsrv cpu=4.1%
+  51.388    dmv[spid=10732 elapsed=620 cpu=0 end=-] msmdsrv cpu=4.9%
+  51.619    dmv[spid=10732 elapsed=870 cpu=0 end=-] msmdsrv cpu=3.2%
+  51.851    dmv[spid=10732 elapsed=1108 cpu=0 end=-] msmdsrv cpu=3.6%
+  52.138    dmv[spid=10732 elapsed=1385 cpu=0 end=-] msmdsrv cpu=2.5%
+  52.363    dmv[spid=10732 elapsed=1621 cpu=0 end=-] msmdsrv cpu=2.8%
+  52.603    dmv[spid=10732 elapsed=1851 cpu=0 end=-] msmdsrv cpu=3.3%
+  52.861    dmv[spid=10732 elapsed=2078 cpu=0 end=-] msmdsrv cpu=3.3%
+  53.085    dmv[spid=10732 elapsed=2336 cpu=0 end=-] msmdsrv cpu=4.6%
+  53.333    dmv[spid=10732 elapsed=2559 cpu=0 end=-] msmdsrv cpu=3.5%
+  53.584    dmv[spid=10732 elapsed=2812 cpu=0 end=-] msmdsrv cpu=3.8%
+  53.699 FE timeout@1s: CLIENT returned +3091 ms state=Cancelled reason=Timeout serverStop=(not in this build) message="Query timeout requested; provider cleanup completed."
+  53.809    dmv[spid=10732 elapsed=3065 cpu=0 end=-] msmdsrv cpu=3.6%
+  54.043    dmv[spid=10732 elapsed=3293 cpu=0 end=-] msmdsrv cpu=3.6%
+  54.303    dmv[spid=10732 elapsed=3513 cpu=0 end=-] msmdsrv cpu=3.8%
+  54.619    dmv[spid=10732 elapsed=3793 cpu=0 end=-] msmdsrv cpu=3.2%
+  54.846    dmv[spid=10732 elapsed=4104 cpu=0 end=-] msmdsrv cpu=4.0%
+  55.092    dmv[spid=10732 elapsed=4337 cpu=0 end=-] msmdsrv cpu=4.5%
+  55.321    dmv[spid=10732 elapsed=4576 cpu=0 end=-] msmdsrv cpu=2.7%
+  55.557    dmv[spid=10732 elapsed=4791 cpu=0 end=-] msmdsrv cpu=2.5%
+  55.766    dmv[spid=10732 elapsed=5029 cpu=0 end=-] msmdsrv cpu=4.6%
+  56.004    dmv[spid=10732 elapsed=5244 cpu=0 end=-] msmdsrv cpu=3.9%
+  56.246    dmv[spid=10732 elapsed=5492 cpu=0 end=-] msmdsrv cpu=3.8%
+  56.465    dmv[spid=10732 elapsed=5722 cpu=0 end=-] msmdsrv cpu=3.9%
+  56.705    dmv[spid=10732 elapsed=5946 cpu=0 end=-] msmdsrv cpu=2.5%
+  56.930    dmv[spid=10732 elapsed=6186 cpu=0 end=-] msmdsrv cpu=3.1%
+  57.155    dmv[spid=10732 elapsed=6408 cpu=0 end=-] msmdsrv cpu=3.5%
+  57.372    dmv[spid=10732 elapsed=6626 cpu=0 end=-] msmdsrv cpu=4.5%
+  57.611    dmv[spid=10732 elapsed=0 cpu=5218 end=17:17:17.913] msmdsrv cpu=0.0%
+  57.856    dmv[spid=10732 elapsed=0 cpu=5218 end=17:17:17.913] msmdsrv cpu=0.0%
+  58.134    dmv[spid=10732 elapsed=0 cpu=5218 end=17:17:17.913] msmdsrv cpu=0.0%
+  58.371    dmv[spid=10732 elapsed=0 cpu=5218 end=17:17:17.913] msmdsrv cpu=0.3%
+  58.591    dmv[spid=10732 elapsed=0 cpu=5218 end=17:17:17.913] msmdsrv cpu=0.0%
+  58.821    dmv[spid=10732 elapsed=0 cpu=5218 end=17:17:17.913] msmdsrv cpu=0.3%
+  59.062    dmv[none] msmdsrv cpu=0.3%
+  59.283    dmv[none] msmdsrv cpu=0.0%
+  59.494    dmv[none] msmdsrv cpu=0.0%
+  59.763    dmv[none] msmdsrv cpu=0.0%
+  59.962    dmv[none] msmdsrv cpu=0.0%
+  60.066 FE timeout@1s: msmdsrv CPU while running (before cancel) avg 4.5%, in the 2 s after the client returned avg 3.6%; command row gone from DISCOVER_COMMANDS at +8332 ms (client returned +3091 ms)
+  60.066 FE timeout@1s: SERVER COMMAND_END_TIME=17:17:17.913 UTC, client return 17:17:14.235 UTC => server ended 3677 ms relative to the client return (negative = before)
+  60.066 FE timeout@1s: SERVER command end observed at +6871 ms; server kept running 3780 ms AFTER the client returned
+  60.093 FE timeout@1s: executor reuse afterwards: Completed
+  60.265 dropped exists=False dbs=0
