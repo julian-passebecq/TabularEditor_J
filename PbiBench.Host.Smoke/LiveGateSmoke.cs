@@ -7,7 +7,7 @@ using TabularEditor.TOMWrapper;
 using Tom = Microsoft.AnalysisServices.Tabular;
 
 // DAX-006 live gate (opt-in, never in CI). Runs only when PBIBENCH_LIVE_SERVER and PBIBENCH_LIVE_DATABASE are set.
-// The database name must match tmp_te2_yyyymmdd (or the older te2_tmp_yyyymmdd) and must not exist yet: the gate creates it from synthetic
+// The database name must match tmp_te2_yyyymmdd, tmp_pbibench-<lane>_yyyymmdd (or the older te2_tmp_yyyymmdd) and must not exist yet: the gate creates it from synthetic
 // DATATABLE rows, runs the real TE2 connection + PbiBench AMO executor against it, and drops it in finally.
 // No other database on the server is opened, read or changed (only Databases.ContainsName on the target name).
 internal static partial class SliceSmokes
@@ -23,7 +23,7 @@ internal static class LiveGateSmoke
         var dbName = Environment.GetEnvironmentVariable("PBIBENCH_LIVE_DATABASE");
         if (string.IsNullOrWhiteSpace(serverName) || string.IsNullOrWhiteSpace(dbName))
         { Console.WriteLine("DAX-006 live gate NOT_RUN (PBIBENCH_LIVE_SERVER/PBIBENCH_LIVE_DATABASE not set)"); return; }
-        Check(Regex.IsMatch(dbName, @"^(tmp_te2|te2_tmp)_\d{8}$"), "database name must match tmp_te2_yyyymmdd");
+        Check(Regex.IsMatch(dbName, @"^(tmp_te2|te2_tmp|tmp_pbibench-[a-z0-9]+)_\d{8}$"), "database name must match tmp_te2_yyyymmdd or tmp_pbibench-<lane>_yyyymmdd");
 
         var admin = new Tom.Server();
         admin.Connect("Data Source=" + serverName);
@@ -57,27 +57,32 @@ internal static class LiveGateSmoke
             Check(bad.State == DaxQueryExecutionState.Failed && bad.Reason == DaxQueryReason.Query && bad.ErrorMessage.IndexOf("NoSuchTable", StringComparison.Ordinal) < 0,
                 "query error fails without echoing provider text (" + bad.State + ", " + bad.Reason + ")");
 
-            const string slow = "EVALUATE ROW(\"n\", COUNTROWS(FILTER(CROSSJOIN(SELECTCOLUMNS(GENERATESERIES(1,6000),\"a\",[Value]),SELECTCOLUMNS(GENERATESERIES(1,6000),\"b\",[Value])), MOD([a]*[b],7)=3)))";
-            using (var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(700)))
+            // Formula-engine bound (no storage-engine scan): SSAS 2022 runs it to its end (about 6 s) whatever cancel is sent.
+            const string slowFe = "EVALUATE ROW(\"n\", COUNTROWS(FILTER(CROSSJOIN(SELECTCOLUMNS(GENERATESERIES(1,6000),\"a\",[Value]),SELECTCOLUMNS(GENERATESERIES(1,6000),\"b\",[Value])), MOD([a]*[b],7)=3)))";
+            // Storage-engine bound: one scan of Big per row; minutes uncancelled. The engine honours a cancel here.
+            const string slowSe = "EVALUATE ROW(\"se\", SUMX(SELECTCOLUMNS(GENERATESERIES(1,2000),\"k\",[Value]), VAR k = [k] RETURN CALCULATE(COUNTROWS(Big), Big[V] > k * 1000, Big[G] <> MOD(k, 977))))";
+            foreach (var slow in new[] { slowSe, slowFe })
             {
-                var cancelled = executor.ExecuteAsync(new DaxQueryRequest { QueryText = slow }, cts.Token).GetAwaiter().GetResult();
-                Check(cancelled.State == DaxQueryExecutionState.Cancelled && cancelled.Reason == DaxQueryReason.UserCancellation,
-                    "user cancel reports Cancelled, never results (" + cancelled.State + ", " + cancelled.DurationMilliseconds + " ms)");
-                Check(cancelled.DurationMilliseconds < 10000, "user cancel returns within 10 s through the session abort (" + cancelled.DurationMilliseconds + " ms)");
-                Console.WriteLine("DAX-006 live cancel returned after " + cancelled.DurationMilliseconds + " ms");
+                var kind = slow == slowSe ? "storage-engine" : "formula-engine";
+                using (var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(700)))
+                {
+                    var cancelled = executor.ExecuteAsync(new DaxQueryRequest { QueryText = slow }, cts.Token).GetAwaiter().GetResult();
+                    Check(cancelled.State == DaxQueryExecutionState.Cancelled && cancelled.Reason == DaxQueryReason.UserCancellation,
+                        kind + " user cancel reports Cancelled, never results (" + cancelled.State + ", " + cancelled.DurationMilliseconds + " ms)");
+                    CheckServerStopped(admin, cancelled, kind + " user cancel");
+                }
+                var timedOut = Run(executor, slow, timeoutSeconds: 1);
+                Check(timedOut.State == DaxQueryExecutionState.Cancelled && timedOut.Reason == DaxQueryReason.Timeout,
+                    kind + " timeout reports Cancelled/Timeout (" + timedOut.State + ", " + timedOut.Reason + ", " + timedOut.DurationMilliseconds + " ms)");
+                CheckServerStopped(admin, timedOut, kind + " timeout");
             }
-            var timedOut = Run(executor, slow, timeoutSeconds: 1);
-            Check(timedOut.State == DaxQueryExecutionState.Cancelled && timedOut.Reason == DaxQueryReason.Timeout,
-                "timeout reports Cancelled/Timeout (" + timedOut.State + ", " + timedOut.Reason + ", " + timedOut.DurationMilliseconds + " ms)");
-            Check(timedOut.DurationMilliseconds < 10000, "timeout returns within 10 s through the session abort (" + timedOut.DurationMilliseconds + " ms)");
-            Console.WriteLine("DAX-006 live timeout returned after " + timedOut.DurationMilliseconds + " ms");
             // The abort ends only the dedicated query session: the TE2 editor connection must still work.
             handler.Database.Refresh(true);
             Check(handler.Database.Server.Connected && handler.Database.Model.Tables.Contains("Sales"), "TE2 editor connection survives the query-session abort");
 
             var after = Run(executor, "EVALUATE ROW(\"ok\", 1)");
             Check(after.State == DaxQueryExecutionState.Completed, "executor usable after cancel and timeout");
-            Console.WriteLine("DAX-006 live gate (multi-rowset, measure, row limit, query error, cancel, timeout, abort, editor connection, reuse) PASS");
+            Console.WriteLine("DAX-006 live gate (multi-rowset, measure, row limit, query error, cancel, timeout, abort, server stop, editor connection, reuse) PASS");
         }
         finally
         {
@@ -103,6 +108,10 @@ internal static class LiveGateSmoke
         sales.Partitions.Add(new Tom.Partition { Name = "Sales", Source = new Tom.CalculatedPartitionSource {
             Expression = "DATATABLE(\"Region\", STRING, \"Amount\", INTEGER, {{\"North\", 10}, {\"South\", 20}, {\"East\", 5}})" } });
         db.Model.Tables.Add(sales);
+        var big = new Tom.Table { Name = "Big" };
+        big.Partitions.Add(new Tom.Partition { Name = "Big", Source = new Tom.CalculatedPartitionSource {
+            Expression = "SELECTCOLUMNS(GENERATESERIES(1, 3000000), \"V\", [Value], \"G\", MOD([Value], 977))" } });
+        db.Model.Tables.Add(big);
         admin.Databases.Add(db);
         db.Update(Microsoft.AnalysisServices.UpdateOptions.ExpandFull);
         db.Model.RequestRefresh(Tom.RefreshType.Full);
@@ -111,6 +120,25 @@ internal static class LiveGateSmoke
         db.Model.SaveChanges();
         db.Model.RequestRefresh(Tom.RefreshType.Calculate);
         db.Model.SaveChanges();
+    }
+
+    /// <summary>
+    /// The product must say Confirmed only when the server really stopped: checked here again from the gate's own
+    /// admin connection, so the claim does not rest on the product's own DMV reading.
+    /// </summary>
+    private static void CheckServerStopped(Tom.Server admin, DaxQueryResult result, string label)
+    {
+        Check(result.ServerStop == DaxServerStopState.Confirmed,
+            label + ": server stop confirmed (" + result.ServerStop + ", " + result.ServerStopMilliseconds + " ms)");
+        var running = 0;
+        Microsoft.AnalysisServices.XmlaResultCollection messages;
+        using (var reader = admin.ExecuteReader("<Statement>SELECT COMMAND_TEXT, COMMAND_END_TIME FROM $SYSTEM.DISCOVER_COMMANDS</Statement>",
+            out messages, new System.Collections.Generic.Dictionary<string, string> { { "Format", "Tabular" } }))
+            while (reader != null && reader.Read())
+                if (Convert.ToString(reader[0]).IndexOf("GENERATESERIES(1,", StringComparison.Ordinal) >= 0 && reader.IsDBNull(1)) running++;
+        Check(running == 0, label + ": no gate query still running on the server (" + running + ")");
+        Console.WriteLine("DAX-006 live " + label + ": client " + result.DurationMilliseconds + " ms, server stopped " + result.ServerStopMilliseconds +
+            " ms after the cancel; DMV: no command running");
     }
 
     private static DaxQueryResult Run(PbiBenchAmoDaxQueryExecutor executor, string query, int maxRows = 5000, int timeoutSeconds = 60) =>

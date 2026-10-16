@@ -26,9 +26,16 @@ namespace TabularEditor.PbiBench.Dax
         private readonly string _connectionString;
         private readonly string _databaseName;
         private readonly int _abortAfterMilliseconds = DefaultAbortAfterMilliseconds;
+        private readonly int _serverStopWaitMilliseconds = DefaultServerStopWaitMilliseconds;
 
         /// <summary>How long a cancel or timeout waits for the engine before the query session is ended.</summary>
         internal const int DefaultAbortAfterMilliseconds = 2000;
+
+        /// <summary>
+        /// After a cancel or timeout, how long the run waits for the server to show that the query has stopped
+        /// before it reports StillRunning. Admission stays held meanwhile, so no new query overlaps it.
+        /// </summary>
+        internal const int DefaultServerStopWaitMilliseconds = 30000;
 
         private PbiBenchAmoDaxQueryExecutor(string connectionString, string databaseName, string connectionLabel)
         {
@@ -116,10 +123,12 @@ namespace TabularEditor.PbiBench.Dax
         internal static string BuildConnectionLabel(string serverName, string databaseName) =>
             (string.IsNullOrWhiteSpace(serverName) || serverName.IndexOf('=') >= 0 ? "Analysis Services" : serverName) + " / " + databaseName;
 
-        internal PbiBenchAmoDaxQueryExecutor(Func<IDaxQuerySession> factory, int abortAfterMilliseconds = DefaultAbortAfterMilliseconds)
+        internal PbiBenchAmoDaxQueryExecutor(Func<IDaxQuerySession> factory, int abortAfterMilliseconds = DefaultAbortAfterMilliseconds,
+            int serverStopWaitMilliseconds = DefaultServerStopWaitMilliseconds)
         {
             _sessionFactory = factory;
             _abortAfterMilliseconds = abortAfterMilliseconds;
+            _serverStopWaitMilliseconds = serverStopWaitMilliseconds;
             _connectionString = "";
             _databaseName = "";
             ConnectionLabel = "Controlled session";
@@ -151,6 +160,7 @@ namespace TabularEditor.PbiBench.Dax
             var connected = false;
             var finishing = false;
             Task cancelWork = null;
+            long cancelAt = -1;
             var finished = new ManualResetEventSlim();
             // Callback only enqueues work. Never runs blocking AMO on the cancelling/UI thread.
             // Cancel first asks the engine to stop the command. When the command is still running after
@@ -161,6 +171,8 @@ namespace TabularEditor.PbiBench.Dax
             {
                 lock (sync)
                     if (connected && !finishing && cancelWork == null)
+                    {
+                        cancelAt = watch.ElapsedMilliseconds;
                         cancelWork = Task.Run(() =>
                         {
                             var since = Stopwatch.StartNew();
@@ -175,9 +187,12 @@ namespace TabularEditor.PbiBench.Dax
                                 catch { }
                             } while (!finished.Wait(100));
                         });
+                    }
             };
             var registration = token.Register(signal);
             DaxQueryResult result;
+            var serverStop = DaxServerStopState.NotApplicable;
+            long serverStopMilliseconds = 0;
             var phase = DaxQueryReason.Connection;
             try
             {
@@ -221,6 +236,15 @@ namespace TabularEditor.PbiBench.Dax
                 if (cancelWork != null) cancelWork.GetAwaiter().GetResult();
                 finished.Dispose();
                 try { reader?.Dispose(); } catch { }
+                // A released client call does not mean the engine stopped (live, SSAS 2022: formula-engine work
+                // ran to completion after the session was ended). Before admission is released, the server is
+                // asked whether it still runs this session's command, while the session id is still valid.
+                if (cancelWork != null)
+                {
+                    try { serverStop = session.WaitForServerStop(_serverStopWaitMilliseconds); }
+                    catch { serverStop = DaxServerStopState.Unknown; }
+                    serverStopMilliseconds = Math.Max(0, watch.ElapsedMilliseconds - cancelAt);
+                }
                 try { session?.Disconnect(); } catch { }
                 try { session?.Dispose(); } catch { }
             }
@@ -228,9 +252,28 @@ namespace TabularEditor.PbiBench.Dax
             if (user.IsCancellationRequested || timeout.IsCancellationRequested)
                 result = new DaxQueryResult { State = DaxQueryExecutionState.Cancelled,
                     Reason = user.IsCancellationRequested ? DaxQueryReason.UserCancellation : DaxQueryReason.Timeout,
-                    ErrorMessage = user.IsCancellationRequested ? "Query cancelled." : "Query timeout requested; provider cleanup completed." };
+                    ErrorMessage = CancelMessage(user.IsCancellationRequested, serverStop, serverStopMilliseconds) };
+            result.ServerStop = serverStop;
+            result.ServerStopMilliseconds = serverStopMilliseconds;
             result.DurationMilliseconds = watch.ElapsedMilliseconds;
             return result;
+        }
+
+        internal static string CancelMessage(bool user, DaxServerStopState stop, long milliseconds)
+        {
+            var head = user ? "Query cancelled" : "Query timeout";
+            switch (stop)
+            {
+                case DaxServerStopState.Confirmed:
+                    return head + "; the server stopped the query " + milliseconds + " ms after the cancel.";
+                case DaxServerStopState.StillRunning:
+                    return head + " on the client; the server was still computing the query " + (milliseconds / 1000) +
+                        " s after the cancel. Formula-engine work can run to its end; no result from it is shown.";
+                case DaxServerStopState.Unknown:
+                    return head + " on the client; this endpoint did not let the server stop be checked.";
+                default:
+                    return user ? "Query cancelled." : "Query timeout requested; provider cleanup completed.";
+            }
         }
 
         private static DaxQueryResult ReadResults(IDataReader reader, DaxQueryRequest request, CancellationToken token)
@@ -325,6 +368,11 @@ namespace TabularEditor.PbiBench.Dax
         void Cancel();
         /// <summary>Ends this query session on the server so a blocked Execute/Read returns. Called at most once.</summary>
         void Abort();
+        /// <summary>
+        /// Called once after a cancel or timeout, once the blocked call has returned and before Disconnect: waits
+        /// up to <paramref name="timeoutMilliseconds"/> for the server to show that this session runs no command.
+        /// </summary>
+        DaxServerStopState WaitForServerStop(int timeoutMilliseconds);
         void Disconnect();
     }
 
@@ -401,6 +449,82 @@ namespace TabularEditor.PbiBench.Dax
                 }
                 finally { if (control.Connected) control.Disconnect(); }
             }
+        }
+
+        /// <summary>
+        /// Polls DISCOVER_SESSIONS and DISCOVER_COMMANDS from a second, short-lived connection: the query has
+        /// stopped when its session is gone or the session's command has an end time (live, SSAS 2022: the end time
+        /// appears when the engine really finishes, not when the client is released). Read-only. A DMV the
+        /// endpoint refuses gives Unknown, never a guess.
+        /// </summary>
+        public DaxServerStopState WaitForServerStop(int timeoutMilliseconds)
+        {
+            var sessionId = _sessionId;
+            Guid parsed;
+            if (string.IsNullOrEmpty(sessionId) || string.IsNullOrEmpty(_connectionString) || !Guid.TryParseExact(sessionId.Trim(), "D", out parsed))
+                return DaxServerStopState.Unknown;
+            var watch = Stopwatch.StartNew();
+            var builder = new System.Data.Common.DbConnectionStringBuilder { ConnectionString = _connectionString };
+            builder["Connect Timeout"] = 10;
+            builder["Timeout"] = 10;
+            using (var control = new Server())
+            {
+                try { control.Connect(builder.ConnectionString); }
+                catch { return DaxServerStopState.Unknown; }
+                try
+                {
+                    Guid self;
+                    if (!Guid.TryParse(control.SessionID, out self)) return DaxServerStopState.Unknown;
+                    while (true)
+                    {
+                        bool? running;
+                        try { running = CommandRunning(control, parsed, self); }
+                        catch { return DaxServerStopState.Unknown; }
+                        if (running == null) return DaxServerStopState.Unknown;
+                        if (running == false) return DaxServerStopState.Confirmed;
+                        if (watch.ElapsedMilliseconds >= timeoutMilliseconds) return DaxServerStopState.StillRunning;
+                        Thread.Sleep(200);
+                    }
+                }
+                finally { if (control.Connected) control.Disconnect(); }
+            }
+        }
+
+        /// <summary>
+        /// True while the session's command has no end time; false once it has one or the session is gone. A missing
+        /// session counts only when the DMV lists the control session itself, which runs as the same identity (a
+        /// non-admin sees only their own sessions); otherwise the endpoint gives no proof and the answer is null.
+        /// </summary>
+        private static bool? CommandRunning(Server control, Guid sessionId, Guid controlSessionId)
+        {
+            var sessions = Rows(control, "SELECT SESSION_ID, SESSION_SPID FROM $SYSTEM.DISCOVER_SESSIONS");
+            if (sessions == null) return null;
+            Func<object[], Guid, bool> isSession = (row, wanted) => Guid.TryParse(Convert.ToString(row[0]), out var id) && id == wanted;
+            var mine = sessions.FirstOrDefault(row => isSession(row, sessionId));
+            if (mine == null) return sessions.Any(row => isSession(row, controlSessionId)) ? (bool?)false : null;
+            var spid = Convert.ToString(mine[1]);
+            var commands = Rows(control, "SELECT SESSION_SPID, COMMAND_END_TIME FROM $SYSTEM.DISCOVER_COMMANDS");
+            if (commands == null) return null;
+            var command = commands.FirstOrDefault(row => Convert.ToString(row[0]) == spid);
+            return command != null && (command[1] == null || command[1] is DBNull);
+        }
+
+        private static List<object[]> Rows(Server control, string dmv)
+        {
+            XmlaResultCollection results;
+            var rows = new List<object[]>();
+            using (var reader = control.ExecuteReader("<Statement>" + SecurityElement.Escape(dmv) + "</Statement>", out results,
+                new Dictionary<string, string> { { "Format", "Tabular" } }))
+            {
+                if (HasError(results) || reader == null) return null;
+                while (reader.Read())
+                {
+                    var row = new object[reader.FieldCount];
+                    reader.GetValues(row);
+                    rows.Add(row);
+                }
+            }
+            return rows;
         }
 
         public void Disconnect() { if (_server.Connected) _server.Disconnect(); }

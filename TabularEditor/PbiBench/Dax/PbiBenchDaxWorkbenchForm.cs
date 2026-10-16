@@ -373,7 +373,7 @@ namespace TabularEditor.PbiBench.Dax
         private void CancelQuery()
         {
             if (_runCts == null || _runCts.IsCancellationRequested) return;
-            SetStatus("Cancellation requested · waiting for provider and cleanup; the draft remains open.");
+            SetStatus("Cancellation requested · waiting for the server to stop the query (up to 30 s); the draft remains open.");
             _runCts.Cancel();
         }
 

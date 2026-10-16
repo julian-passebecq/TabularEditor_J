@@ -104,6 +104,7 @@ internal static class QueryLifecycleSmoke
             Assert(task.Result.Reason == DaxQueryReason.UserCancellation && session.Disposes == 1, "Cancel/cleanup error replaced original outcome.");
         }
         AbortEscalation();
+        ServerStop();
         ProductionClose();
         Bounds();
         Console.WriteLine("T05/T06/T07: production orchestration, cancellation/UI message, ownership, diagnostics and retained bounds PASS");
@@ -150,6 +151,66 @@ internal static class QueryLifecycleSmoke
             Wait(() => entered.IsSet); user.Cancel(); Wait(() => task.IsCompleted);
             Assert(task.Result.Reason == DaxQueryReason.UserCancellation && session.Aborts == 0, "An honoured cancel must not end the session.");
         }
+    }
+
+    /// <summary>
+    /// A released client call is not a stopped server query (live, SSAS 2022). After a cancel or timeout the run
+    /// asks the session once, before Disconnect and while admission is held, whether the server still runs it, and
+    /// the result says so. A completed run never asks.
+    /// </summary>
+    private static void ServerStop()
+    {
+        foreach (var stop in new[] { DaxServerStopState.Confirmed, DaxServerStopState.StillRunning, DaxServerStopState.Unknown })
+        foreach (var timeout in new[] { false, true })
+        using (var released = new ManualResetEventSlim())
+        using (var entered = new ManualResetEventSlim())
+        using (var waiting = new ManualResetEventSlim())
+        using (var releaseWait = new ManualResetEventSlim())
+        using (var user = new CancellationTokenSource())
+        {
+            var session = new Session
+            {
+                OnExecute = () => { entered.Set(); Assert(released.Wait(10000), "Cancel never released the blocked execute."); throw new Exception("connection lost sentinel"); },
+                OnCancel = () => released.Set(),
+                OnWaitForServerStop = () => { waiting.Set(); Assert(releaseWait.Wait(10000), "Stop wait not released."); return stop; }
+            };
+            var current = session;
+            var executor = new PbiBenchAmoDaxQueryExecutor(() => current, serverStopWaitMilliseconds: 1234);
+            var task = executor.ExecuteAsync(new DaxQueryRequest { QueryText = "stop", TimeoutSeconds = timeout ? 1 : 30 }, user.Token);
+            Wait(() => entered.IsSet);
+            if (!timeout) user.Cancel();
+            Wait(() => waiting.IsSet);
+            var overlap = executor.ExecuteAsync(new DaxQueryRequest { QueryText = "overlap" }, CancellationToken.None);
+            Assert(overlap.Result.State == DaxQueryExecutionState.Failed && !task.IsCompleted, "Admission released before the server stop was known.");
+            releaseWait.Set(); Wait(() => task.IsCompleted);
+            var result = task.Result;
+            Assert(result.State == DaxQueryExecutionState.Cancelled && result.ServerStop == stop && session.StopWaits == 1 &&
+                session.StopWaitMilliseconds == 1234 && session.StopWaitBeforeDisconnect && session.Disconnects == 1 && session.Disposes == 1 &&
+                result.Reason == (timeout ? DaxQueryReason.Timeout : DaxQueryReason.UserCancellation) && !result.ErrorMessage.Contains("sentinel"),
+                "Server stop " + stop + " (" + (timeout ? "timeout" : "user") + "): " + result.ServerStop + ", waits " + session.StopWaits);
+            var text = result.ErrorMessage;
+            Assert(stop == DaxServerStopState.Confirmed ? text.Contains("the server stopped the query") :
+                stop == DaxServerStopState.StillRunning ? text.Contains("still computing") : text.Contains("did not let the server stop be checked"),
+                "Server stop message is not truthful: " + text);
+            current = new Session();
+            var after = executor.ExecuteAsync(new DaxQueryRequest { QueryText = "after" }, CancellationToken.None);
+            Wait(() => after.IsCompleted);
+            Assert(after.Result.State == DaxQueryExecutionState.Completed && after.Result.ServerStop == DaxServerStopState.NotApplicable,
+                "Executor not reusable after the server stop wait.");
+        }
+        using (var user = new CancellationTokenSource())
+        {
+            var session = new Session { OnWaitForServerStop = () => throw new Exception("dmv sentinel") };
+            var entered = new ManualResetEventSlim(); var released = new ManualResetEventSlim();
+            session.OnExecute = () => { entered.Set(); Assert(released.Wait(10000), "release"); };
+            session.OnCancel = () => released.Set();
+            var task = new PbiBenchAmoDaxQueryExecutor(() => session).ExecuteAsync(new DaxQueryRequest { QueryText = "dmv throws" }, user.Token);
+            Wait(() => entered.IsSet); user.Cancel(); Wait(() => task.IsCompleted);
+            Assert(task.Result.ServerStop == DaxServerStopState.Unknown && session.Disposes == 1 && !task.Result.ErrorMessage.Contains("sentinel"),
+                "A failing stop check must give Unknown and still clean up.");
+        }
+        var plain = new Session();
+        Assert(Run(plain).ServerStop == DaxServerStopState.NotApplicable && plain.StopWaits == 0, "A completed run must not wait for a server stop.");
     }
 
     private static void ProductionClose()
@@ -228,13 +289,21 @@ internal static class QueryLifecycleSmoke
     {
         internal readonly Reader Reader;
         internal Action OnConnect, OnExecute, OnCancel, OnAbort, OnDispose;
-        internal int Disconnects, Disposes, Cancels, Aborts;
+        internal int Disconnects, Disposes, Cancels, Aborts, StopWaits, StopWaitMilliseconds;
+        internal bool StopWaitBeforeDisconnect = true;
+        internal Func<DaxServerStopState> OnWaitForServerStop = () => DaxServerStopState.Confirmed;
         internal string Query;
         internal Session(int rows = 1, int columns = 1) { Reader = new Reader(rows, columns); }
         public void Connect(string connectionString, int timeoutSeconds) => OnConnect?.Invoke();
         public IDataReader Execute(string query, string catalog) { Query = query; OnExecute?.Invoke(); return Reader; }
         public void Cancel() { Interlocked.Increment(ref Cancels); OnCancel?.Invoke(); }
         public void Abort() { Interlocked.Increment(ref Aborts); OnAbort?.Invoke(); }
+        public DaxServerStopState WaitForServerStop(int timeoutMilliseconds)
+        {
+            StopWaits++; StopWaitMilliseconds = timeoutMilliseconds;
+            if (Disconnects != 0 || Disposes != 0) StopWaitBeforeDisconnect = false;
+            return OnWaitForServerStop();
+        }
         public void Disconnect() { Disconnects++; }
         public void Dispose() { Disposes++; OnDispose?.Invoke(); }
     }
