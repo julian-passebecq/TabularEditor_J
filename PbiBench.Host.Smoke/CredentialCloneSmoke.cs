@@ -72,6 +72,7 @@ internal static class CredentialCloneSmoke
         public IDataReader Execute(string query, string catalog) => throw new InvalidOperationException("unreachable");
         public void Cancel() { }
         public void Abort() { }
+        public DaxServerStopState WaitForServerStop(int timeoutMilliseconds) => DaxServerStopState.Unknown;
         public void Disconnect() { }
         public void Dispose() { }
     }

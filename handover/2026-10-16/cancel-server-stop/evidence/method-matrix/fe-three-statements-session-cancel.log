@@ -1,0 +1,78 @@
+   0.009 query: EVALUATE ROW("n", COUNTROWS(FILTER(CROSSJOIN(SELECTCOLUMNS(GENERATESERIES(1,6000),"a",[Value]),SELECTCOLUMNS(GENERATESERIES(1,6000),"b",[Value])), MOD([a]*[b],7)=3)))
+EVALUATE ROW("n", COUNTROWS(FILTER(CROSSJOIN(SELECTCOLUMNS(GENERATESERIES(1,6000),"a",[Value]),SELECTCOLUMNS(GENERATESERIES(1,6000),"b",[Value])), MOD([a]*[b],7)=4)))
+EVALUATE ROW("n", COUNTROWS(FILTER(CROSSJOIN(SELECTCOLUMNS(GENERATESERIES(1,6000),"a",[Value]),SELECTCOLUMNS(GENERATESERIES(1,6000),"b",[Value])), MOD([a]*[b],7)=5)))
+   0.443 server 16.0.42.229 mode=Tabular dbs=0
+   1.404 created tmp_pbibench-cancel_20261016
+   1.407 === method session-assoc
+   1.450 query session 2C9315FA-7410-47A4-9804-AEE634383E35
+   3.768 cancel session-assoc at +1506
+   3.805 spid of session = 8999
+   3.808 cancel sent at +1545 messages=
+   3.816 client returned at +1553 outcome=exception ConnectionException
+   7.875   session[spid=8999 status=3 cpu=15] command[spid=8999 el=5460 cpu=0 end=-] msmdsrvCpu=5%
+   8.235   session[spid=8999 status=3 cpu=15] command[spid=8999 el=5820 cpu=0 end=-] msmdsrvCpu=4%
+   8.586   session[spid=8999 status=3 cpu=15] command[spid=8999 el=6188 cpu=0 end=-] msmdsrvCpu=4%
+   8.924   session[spid=8999 status=3 cpu=15] command[spid=8999 el=6529 cpu=0 end=-] msmdsrvCpu=4%
+   9.281   session[spid=8999 status=3 cpu=15] command[spid=8999 el=6879 cpu=0 end=-] msmdsrvCpu=4%
+   9.643   session[spid=8999 status=3 cpu=15] command[spid=8999 el=7234 cpu=0 end=-] msmdsrvCpu=4%
+   9.989   session[spid=8999 status=3 cpu=15] command[spid=8999 el=7584 cpu=0 end=-] msmdsrvCpu=4%
+  10.347   session[spid=8999 status=3 cpu=15] command[spid=8999 el=7946 cpu=0 end=-] msmdsrvCpu=5%
+  10.694   session[spid=8999 status=3 cpu=15] command[spid=8999 el=8294 cpu=0 end=-] msmdsrvCpu=4%
+  11.039   session[spid=8999 status=3 cpu=15] command[spid=8999 el=8643 cpu=0 end=-] msmdsrvCpu=4%
+  11.418   session[spid=8999 status=3 cpu=15] command[spid=8999 el=8990 cpu=0 end=-] msmdsrvCpu=4%
+  11.811   session[spid=8999 status=3 cpu=15] command[spid=8999 el=9373 cpu=0 end=-] msmdsrvCpu=3%
+  12.152   session[spid=8999 status=3 cpu=15] command[spid=8999 el=9752 cpu=0 end=-] msmdsrvCpu=4%
+  12.540   session[spid=8999 status=3 cpu=15] command[spid=8999 el=10127 cpu=0 end=-] msmdsrvCpu=5%
+  12.917   session[spid=8999 status=3 cpu=15] command[spid=8999 el=10489 cpu=0 end=-] msmdsrvCpu=4%
+  13.299   session[spid=8999 status=3 cpu=15] command[spid=8999 el=10869 cpu=0 end=-] msmdsrvCpu=4%
+  13.651   session[spid=8999 status=3 cpu=15] command[spid=8999 el=11241 cpu=0 end=-] msmdsrvCpu=4%
+  14.028   session[spid=8999 status=3 cpu=15] command[spid=8999 el=11616 cpu=0 end=-] msmdsrvCpu=4%
+  14.407   session[spid=8999 status=3 cpu=15] command[spid=8999 el=12002 cpu=0 end=-] msmdsrvCpu=4%
+  14.801   session[spid=8999 status=3 cpu=15] command[spid=8999 el=12365 cpu=0 end=-] msmdsrvCpu=4%
+  15.169   session[spid=8999 status=3 cpu=15] command[spid=8999 el=12747 cpu=0 end=-] msmdsrvCpu=4%
+  15.586   session[spid=8999 status=3 cpu=15] command[spid=8999 el=13123 cpu=0 end=-] msmdsrvCpu=4%
+  15.952   session[spid=8999 status=3 cpu=15] command[spid=8999 el=13544 cpu=0 end=-] msmdsrvCpu=4%
+  16.366   session[spid=8999 status=3 cpu=15] command[spid=8999 el=13967 cpu=0 end=-] msmdsrvCpu=4%
+  16.752   session[spid=8999 status=3 cpu=15] command[spid=8999 el=14343 cpu=0 end=-] msmdsrvCpu=5%
+  17.128   session[spid=8999 status=3 cpu=15] command[spid=8999 el=14705 cpu=0 end=-] msmdsrvCpu=5%
+  17.487   session[spid=8999 status=3 cpu=15] command[spid=8999 el=15085 cpu=0 end=-] msmdsrvCpu=5%
+  17.850   session[spid=8999 status=3 cpu=15] command[spid=8999 el=15443 cpu=0 end=-] msmdsrvCpu=4%
+  18.237   session[spid=8999 status=3 cpu=15] command[spid=8999 el=15809 cpu=0 end=-] msmdsrvCpu=4%
+  18.596   session[spid=8999 status=3 cpu=15] command[spid=8999 el=16195 cpu=0 end=-] msmdsrvCpu=4%
+  18.961   session[spid=8999 status=3 cpu=15] command[spid=8999 el=16545 cpu=0 end=-] msmdsrvCpu=4%
+  19.324   session[spid=8999 status=3 cpu=15] command[spid=8999 el=16915 cpu=0 end=-] msmdsrvCpu=3%
+  19.673   session[spid=8999 status=3 cpu=15] command[spid=8999 el=17270 cpu=0 end=-] msmdsrvCpu=4%
+  20.049   session[spid=8999 status=3 cpu=16125] command[spid=8999 el=1 cpu=16109 end=16:33:08.503] msmdsrvCpu=2%
+  20.405   session[spid=8999 status=3 cpu=16125] command[spid=8999 el=1 cpu=16109 end=16:33:08.503] msmdsrvCpu=0%
+  20.772   session[spid=8999 status=3 cpu=16125] command[spid=8999 el=1 cpu=16109 end=16:33:08.503] msmdsrvCpu=0%
+  21.126   session[spid=8999 status=3 cpu=16125] command[spid=8999 el=1 cpu=16109 end=16:33:08.503] msmdsrvCpu=0%
+  21.535   session[spid=8999 status=3 cpu=16125] command[spid=8999 el=1 cpu=16109 end=16:33:08.503] msmdsrvCpu=0%
+  21.916   session[spid=8999 status=3 cpu=16125] command[spid=8999 el=1 cpu=16109 end=16:33:08.503] msmdsrvCpu=0%
+  22.294   session[spid=8999 status=3 cpu=16125] command[spid=8999 el=1 cpu=16109 end=16:33:08.503] msmdsrvCpu=0%
+  22.653   session[spid=8999 status=3 cpu=16125] command[spid=8999 el=1 cpu=16109 end=16:33:08.503] msmdsrvCpu=0%
+  23.021   session[spid=8999 status=3 cpu=16125] command[spid=8999 el=1 cpu=16109 end=16:33:08.503] msmdsrvCpu=0%
+  23.383   session[spid=8999 status=3 cpu=16125] command[spid=8999 el=1 cpu=16109 end=16:33:08.503] msmdsrvCpu=0%
+  23.738   session[gone] command[none] msmdsrvCpu=0%
+  24.077   session[gone] command[none] msmdsrvCpu=0%
+  24.450   session[gone] command[none] msmdsrvCpu=0%
+  24.816   session[gone] command[none] msmdsrvCpu=0%
+  25.170   session[gone] command[none] msmdsrvCpu=0%
+  25.521   session[gone] command[none] msmdsrvCpu=0%
+  25.887   session[gone] command[none] msmdsrvCpu=0%
+  26.236   session[gone] command[none] msmdsrvCpu=0%
+  26.583   session[gone] command[none] msmdsrvCpu=0%
+  26.933   session[gone] command[none] msmdsrvCpu=0%
+  27.286   session[gone] command[none] msmdsrvCpu=0%
+  27.658   session[gone] command[none] msmdsrvCpu=0%
+  28.018   session[gone] command[none] msmdsrvCpu=0%
+  28.378   session[gone] command[none] msmdsrvCpu=0%
+  28.745   session[gone] command[none] msmdsrvCpu=0%
+  29.097   session[gone] command[none] msmdsrvCpu=0%
+  29.471   session[gone] command[none] msmdsrvCpu=0%
+  29.834   session[gone] command[none] msmdsrvCpu=0%
+  30.199   session[gone] command[none] msmdsrvCpu=0%
+  30.562   session[gone] command[none] msmdsrvCpu=0%
+  30.925   session[gone] command[none] msmdsrvCpu=0%
+  31.279   session[gone] command[none] msmdsrvCpu=0%
+  31.667   session[gone] command[none] msmdsrvCpu=0%
+  34.017 dropped exists=False dbs=0

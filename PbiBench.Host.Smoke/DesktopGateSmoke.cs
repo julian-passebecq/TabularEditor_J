@@ -71,9 +71,12 @@ internal static class DesktopGateSmoke
             using (var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(700)))
             {
                 var cancelled = executor.ExecuteAsync(new DaxQueryRequest { QueryText = slow }, cts.Token).GetAwaiter().GetResult();
-                Check(cancelled.State == DaxQueryExecutionState.Cancelled && cancelled.Reason == DaxQueryReason.UserCancellation && cancelled.DurationMilliseconds < 10000,
-                    "Desktop cancel (" + cancelled.State + ", " + cancelled.Reason + ", " + cancelled.DurationMilliseconds + " ms)");
-                Console.WriteLine("Power BI Desktop gate: cancel returned after " + cancelled.DurationMilliseconds + " ms");
+                // The run now returns only once the engine is seen to stop (or after the 30 s stop wait).
+                Check(cancelled.State == DaxQueryExecutionState.Cancelled && cancelled.Reason == DaxQueryReason.UserCancellation &&
+                    cancelled.ServerStop == DaxServerStopState.Confirmed && cancelled.DurationMilliseconds < 40000,
+                    "Desktop cancel (" + cancelled.State + ", " + cancelled.Reason + ", " + cancelled.ServerStop + ", " + cancelled.DurationMilliseconds + " ms)");
+                Console.WriteLine("Power BI Desktop gate: cancel returned after " + cancelled.DurationMilliseconds + " ms, server stop " +
+                    cancelled.ServerStop + " after " + cancelled.ServerStopMilliseconds + " ms");
             }
             var after = executor.ExecuteAsync(new DaxQueryRequest { QueryText = "EVALUATE ROW(\"ok\", [" + MeasureName + "])" }, CancellationToken.None).GetAwaiter().GetResult();
             Check(after.State == DaxQueryExecutionState.Completed, "executor usable after cancel");

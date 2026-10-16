@@ -1,0 +1,152 @@
+   0.463 server 16.0.42.229 mode=Tabular dbs=0
+   1.307 created tmp_pbibench-cancel_20261016
+   1.310 === method none
+   1.342 query session 19F8DB84-DFC8-4B0D-B0F9-F6B4A19753E9
+   6.499   session[spid=8769 status=1 cpu=0] command[spid=8769 el=4206 cpu=0 end=-] msmdsrvCpu=4%
+   6.805   session[spid=8769 status=1 cpu=0] command[spid=8769 el=4559 cpu=0 end=-] msmdsrvCpu=4%
+   7.117   session[spid=8769 status=1 cpu=0] command[spid=8769 el=4868 cpu=0 end=-] msmdsrvCpu=5%
+   7.413   session[spid=8769 status=1 cpu=0] command[spid=8769 el=5167 cpu=0 end=-] msmdsrvCpu=4%
+   7.724   session[spid=8769 status=1 cpu=0] command[spid=8769 el=5465 cpu=0 end=-] msmdsrvCpu=4%
+   8.042   session[spid=8769 status=1 cpu=0] command[spid=8769 el=5785 cpu=0 end=-] msmdsrvCpu=5%
+   8.048 client returned at +5897 outcome=completed
+   8.366   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+   8.704   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+   9.030   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+   9.361   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+   9.686   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  10.012   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  10.338   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  10.663   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  10.979   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  11.299   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  11.620   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  11.926   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  12.269   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  12.621   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  13.141   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  13.602   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  13.983   session[spid=8769 status=0 cpu=5781] command[spid=8769 el=0 cpu=5781 end=16:28:01.790] msmdsrvCpu=0%
+  16.253 === method session-assoc
+  16.275 query session D514DE0A-A2FF-4070-8693-F24668CDE1D3
+  16.852   session[spid=8780 status=0 cpu=15] command[none] msmdsrvCpu=1%
+  17.149   session[spid=8780 status=0 cpu=15] command[none] msmdsrvCpu=1%
+  17.491   session[spid=8780 status=1 cpu=15] command[spid=8780 el=282 cpu=0 end=-] msmdsrvCpu=4%
+  17.787   session[spid=8780 status=1 cpu=15] command[spid=8780 el=607 cpu=0 end=-] msmdsrvCpu=5%
+  17.800 cancel session-assoc at +712
+  17.820 spid of session = 8780
+  17.822 cancel sent at +733 messages=
+  17.824 client returned at +735 outcome=exception ConnectionException
+  18.115   session[spid=8780 status=3 cpu=15] command[spid=8780 el=902 cpu=0 end=-] msmdsrvCpu=5%
+  18.437   session[spid=8780 status=3 cpu=15] command[spid=8780 el=1235 cpu=0 end=-] msmdsrvCpu=5%
+  18.730   session[spid=8780 status=3 cpu=15] command[spid=8780 el=1561 cpu=0 end=-] msmdsrvCpu=5%
+  19.037   session[spid=8780 status=3 cpu=15] command[spid=8780 el=1856 cpu=0 end=-] msmdsrvCpu=5%
+  19.321   session[spid=8780 status=3 cpu=15] command[spid=8780 el=2151 cpu=0 end=-] msmdsrvCpu=4%
+  19.620   session[spid=8780 status=3 cpu=15] command[spid=8780 el=2435 cpu=0 end=-] msmdsrvCpu=4%
+  19.922   session[spid=8780 status=3 cpu=15] command[spid=8780 el=2748 cpu=0 end=-] msmdsrvCpu=5%
+  20.245   session[spid=8780 status=3 cpu=15] command[spid=8780 el=3051 cpu=0 end=-] msmdsrvCpu=5%
+  20.589   session[spid=8780 status=3 cpu=15] command[spid=8780 el=3372 cpu=0 end=-] msmdsrvCpu=4%
+  20.943   session[spid=8780 status=3 cpu=15] command[spid=8780 el=3719 cpu=0 end=-] msmdsrvCpu=4%
+  21.277   session[spid=8780 status=3 cpu=15] command[spid=8780 el=4062 cpu=0 end=-] msmdsrvCpu=4%
+  21.589   session[spid=8780 status=3 cpu=15] command[spid=8780 el=4405 cpu=0 end=-] msmdsrvCpu=4%
+  21.900   session[spid=8780 status=3 cpu=15] command[spid=8780 el=4706 cpu=0 end=-] msmdsrvCpu=5%
+  22.217   session[spid=8780 status=3 cpu=15] command[spid=8780 el=5020 cpu=0 end=-] msmdsrvCpu=4%
+  22.543   session[spid=8780 status=3 cpu=15] command[spid=8780 el=5341 cpu=0 end=-] msmdsrvCpu=5%
+  22.859   session[spid=8780 status=3 cpu=15] command[spid=8780 el=5668 cpu=0 end=-] msmdsrvCpu=4%
+  23.179   session[spid=8780 status=3 cpu=5781] command[spid=8780 el=0 cpu=5765 end=16:28:16.806] msmdsrvCpu=3%
+  23.492   session[spid=8780 status=3 cpu=5781] command[spid=8780 el=0 cpu=5765 end=16:28:16.806] msmdsrvCpu=0%
+  23.821   session[spid=8780 status=3 cpu=5781] command[spid=8780 el=0 cpu=5765 end=16:28:16.806] msmdsrvCpu=0%
+  26.032 === method spid
+  26.060 query session B69A1A81-FA4B-48AA-9618-9E9FC94FE024
+  27.084   session[spid=8795 status=0 cpu=15] command[spid=8780 el=0 cpu=5765 end=16:28:16.806] msmdsrvCpu=0%
+  27.501   session[spid=8795 status=1 cpu=15] command[spid=8795 el=267 cpu=0 end=-] msmdsrvCpu=0%
+  27.642 cancel spid at +727
+  27.775 spid of session = 8795
+  27.796 cancel sent at +881 messages=
+  27.937   session[spid=8795 status=1 cpu=15] command[spid=8795 el=718 cpu=0 end=-] msmdsrvCpu=0%
+  28.325   session[spid=8795 status=3 cpu=15] command[spid=8795 el=1121 cpu=0 end=-] msmdsrvCpu=0%
+  28.765   session[spid=8795 status=3 cpu=15] command[spid=8795 el=1537 cpu=0 end=-] msmdsrvCpu=0%
+  29.250   session[spid=8795 status=3 cpu=15] command[spid=8795 el=2026 cpu=0 end=-] msmdsrvCpu=1%
+  29.727   session[spid=8795 status=3 cpu=15] command[spid=8795 el=2497 cpu=0 end=-] msmdsrvCpu=1%
+  30.229   session[spid=8795 status=3 cpu=15] command[spid=8795 el=2976 cpu=0 end=-] msmdsrvCpu=0%
+  30.723   session[spid=8795 status=3 cpu=15] command[spid=8795 el=3501 cpu=0 end=-] msmdsrvCpu=2%
+  31.167   session[spid=8795 status=3 cpu=15] command[spid=8795 el=3936 cpu=0 end=-] msmdsrvCpu=1%
+  31.673   session[spid=8795 status=3 cpu=15] command[spid=8795 el=4393 cpu=0 end=-] msmdsrvCpu=0%
+  32.092   session[spid=8795 status=3 cpu=15] command[spid=8795 el=4878 cpu=0 end=-] msmdsrvCpu=2%
+  32.558   session[spid=8795 status=3 cpu=15] command[spid=8795 el=5267 cpu=0 end=-] msmdsrvCpu=1%
+  33.173   session[spid=8795 status=3 cpu=15] command[spid=8795 el=5755 cpu=0 end=-] msmdsrvCpu=1%
+  33.594   session[spid=8795 status=3 cpu=15] command[spid=8795 el=6346 cpu=0 end=-] msmdsrvCpu=1%
+  34.114   session[spid=8795 status=3 cpu=15] command[spid=8795 el=6861 cpu=0 end=-] msmdsrvCpu=0%
+  34.623   session[spid=8795 status=3 cpu=15] command[spid=8795 el=7373 cpu=0 end=-] msmdsrvCpu=1%
+  35.064   session[spid=8795 status=3 cpu=15] command[spid=8795 el=7857 cpu=0 end=-] msmdsrvCpu=2%
+  35.575   session[spid=8795 status=3 cpu=15] command[spid=8795 el=8352 cpu=0 end=-] msmdsrvCpu=1%
+  36.079   session[spid=8795 status=3 cpu=15] command[spid=8795 el=8861 cpu=0 end=-] msmdsrvCpu=2%
+  36.482   session[spid=8795 status=3 cpu=15] command[spid=8795 el=9289 cpu=0 end=-] msmdsrvCpu=2%
+  37.154   session[spid=8795 status=3 cpu=15] command[spid=8795 el=9898 cpu=0 end=-] msmdsrvCpu=0%
+  37.638   session[spid=8795 status=3 cpu=15] command[spid=8795 el=10400 cpu=0 end=-] msmdsrvCpu=2%
+  38.137   session[spid=8795 status=3 cpu=15] command[spid=8795 el=10911 cpu=0 end=-] msmdsrvCpu=0%
+  38.621   session[spid=8795 status=3 cpu=15] command[spid=8795 el=11381 cpu=0 end=-] msmdsrvCpu=0%
+  39.100   session[spid=8795 status=3 cpu=15] command[spid=8795 el=11822 cpu=0 end=-] msmdsrvCpu=3%
+  39.544   session[spid=8795 status=3 cpu=15] command[spid=8795 el=12331 cpu=0 end=-] msmdsrvCpu=1%
+  39.971   session[spid=8795 status=3 cpu=15] command[spid=8795 el=12723 cpu=0 end=-] msmdsrvCpu=2%
+  40.380   session[spid=8795 status=3 cpu=15] command[spid=8795 el=13164 cpu=0 end=-] msmdsrvCpu=1%
+  40.753   session[spid=8795 status=3 cpu=15] command[spid=8795 el=13533 cpu=0 end=-] msmdsrvCpu=2%
+  41.180   session[spid=8795 status=3 cpu=15] command[spid=8795 el=13906 cpu=0 end=-] msmdsrvCpu=4%
+  41.542   session[spid=8795 status=3 cpu=15] command[spid=8795 el=14336 cpu=0 end=-] msmdsrvCpu=4%
+  41.911   session[spid=8795 status=3 cpu=15] command[spid=8795 el=14704 cpu=0 end=-] msmdsrvCpu=4%
+  42.280   session[spid=8795 status=3 cpu=15] command[spid=8795 el=15067 cpu=0 end=-] msmdsrvCpu=4%
+  42.623   session[spid=8795 status=3 cpu=15] command[spid=8795 el=15423 cpu=0 end=-] msmdsrvCpu=4%
+  42.979   session[spid=8795 status=3 cpu=15] command[spid=8795 el=15784 cpu=0 end=-] msmdsrvCpu=4%
+  43.322   session[spid=8795 status=3 cpu=15] command[spid=8795 el=16137 cpu=0 end=-] msmdsrvCpu=4%
+  43.638   session[spid=8795 status=3 cpu=15] command[spid=8795 el=16476 cpu=0 end=-] msmdsrvCpu=4%
+  43.938   session[spid=8795 status=3 cpu=15] command[spid=8795 el=16786 cpu=0 end=-] msmdsrvCpu=5%
+  44.067 client returned at +17152 outcome=exception OperationException
+  44.257   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=2%
+  44.577   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  44.917   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  45.261   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  45.603   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  45.959   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  46.280   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  46.584   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  46.902   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  47.208   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  47.518   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  47.828   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  48.143   session[spid=8795 status=3 cpu=6109] command[spid=8795 el=1 cpu=6093 end=16:28:37.806] msmdsrvCpu=0%
+  48.463   session[gone] command[none] msmdsrvCpu=0%
+  48.775   session[gone] command[none] msmdsrvCpu=0%
+  49.087   session[gone] command[none] msmdsrvCpu=0%
+  49.387   session[gone] command[none] msmdsrvCpu=0%
+  49.705   session[gone] command[none] msmdsrvCpu=0%
+  50.003   session[gone] command[none] msmdsrvCpu=0%
+  52.223 === method spid-assoc
+  52.241 query session 521A8054-6791-40BA-BC18-43661B80F8EC
+  52.721   session[spid=8805 status=0 cpu=15] command[none] msmdsrvCpu=0%
+  53.013   session[spid=8805 status=0 cpu=15] command[none] msmdsrvCpu=0%
+  53.318   session[spid=8805 status=1 cpu=15] command[spid=8805 el=171 cpu=0 end=-] msmdsrvCpu=4%
+  53.611   session[spid=8805 status=1 cpu=15] command[spid=8805 el=470 cpu=0 end=-] msmdsrvCpu=4%
+  53.758 cancel spid-assoc at +705
+  53.779 spid of session = 8805
+  53.779 cancel sent at +726 messages=
+  53.781 client returned at +727 outcome=exception ConnectionException
+  53.928   session[spid=8805 status=3 cpu=15] command[spid=8805 el=771 cpu=0 end=-] msmdsrvCpu=5%
+  54.237   session[spid=8805 status=3 cpu=15] command[spid=8805 el=1078 cpu=0 end=-] msmdsrvCpu=4%
+  54.534   session[spid=8805 status=3 cpu=15] command[spid=8805 el=1388 cpu=0 end=-] msmdsrvCpu=5%
+  54.837   session[spid=8805 status=3 cpu=15] command[spid=8805 el=1687 cpu=0 end=-] msmdsrvCpu=4%
+  55.198   session[spid=8805 status=3 cpu=15] command[spid=8805 el=2002 cpu=0 end=-] msmdsrvCpu=5%
+  55.513   session[spid=8805 status=3 cpu=15] command[spid=8805 el=2355 cpu=0 end=-] msmdsrvCpu=4%
+  55.851   session[spid=8805 status=3 cpu=15] command[spid=8805 el=2672 cpu=0 end=-] msmdsrvCpu=4%
+  56.174   session[spid=8805 status=3 cpu=15] command[spid=8805 el=3001 cpu=0 end=-] msmdsrvCpu=4%
+  56.484   session[spid=8805 status=3 cpu=15] command[spid=8805 el=3328 cpu=0 end=-] msmdsrvCpu=4%
+  56.794   session[spid=8805 status=3 cpu=15] command[spid=8805 el=3641 cpu=0 end=-] msmdsrvCpu=4%
+  57.112   session[spid=8805 status=3 cpu=15] command[spid=8805 el=3952 cpu=0 end=-] msmdsrvCpu=5%
+  57.408   session[spid=8805 status=3 cpu=15] command[spid=8805 el=4264 cpu=0 end=-] msmdsrvCpu=5%
+  57.740   session[spid=8805 status=3 cpu=15] command[spid=8805 el=4562 cpu=0 end=-] msmdsrvCpu=4%
+  58.046   session[spid=8805 status=3 cpu=15] command[spid=8805 el=4891 cpu=0 end=-] msmdsrvCpu=4%
+  58.349   session[spid=8805 status=3 cpu=15] command[spid=8805 el=5206 cpu=0 end=-] msmdsrvCpu=4%
+  58.650   session[spid=8805 status=3 cpu=15] command[spid=8805 el=5505 cpu=0 end=-] msmdsrvCpu=4%
+  58.960   session[spid=8805 status=3 cpu=15] command[spid=8805 el=5811 cpu=0 end=-] msmdsrvCpu=5%
+  59.266   session[spid=8805 status=3 cpu=5828] command[spid=8805 el=0 cpu=5812 end=16:28:52.746] msmdsrvCpu=1%
+  59.571   session[spid=8805 status=3 cpu=5828] command[spid=8805 el=0 cpu=5812 end=16:28:52.746] msmdsrvCpu=0%
+  59.874   session[spid=8805 status=3 cpu=5828] command[spid=8805 el=0 cpu=5812 end=16:28:52.746] msmdsrvCpu=0%
+  62.158 dropped exists=False dbs=0

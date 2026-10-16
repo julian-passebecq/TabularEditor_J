@@ -7,6 +7,13 @@ using System.Threading.Tasks;
 namespace PbiBench.Core.Dax
 {
     public enum DaxQueryReason { None, UserCancellation, Timeout, Connection, Authentication, Query, Unexpected, RowLimit, MemoryLimit, CellLimit, ColumnLimit, UnsupportedValue, ResultSetLimit }
+    /// <summary>
+    /// Server-side outcome of a cancel or timeout. A client can be released before the engine stops, so a
+    /// cancelled run says what the server was seen to do: NotApplicable (no cancel reached a server query),
+    /// Confirmed (the server no longer runs it), StillRunning (still running when the bounded wait ended),
+    /// Unknown (the endpoint did not let the client check).
+    /// </summary>
+    public enum DaxServerStopState { NotApplicable = 0, Confirmed = 1, StillRunning = 2, Unknown = 3 }
     public enum DaxQueryExecutionState
     {
         Draft = 0,
@@ -97,6 +104,10 @@ namespace PbiBench.Core.Dax
         // Columns/Rows remain the first-set projection for older callers. No row copies.
         public DaxResultSet[] ResultSets { get; set; } = Array.Empty<DaxResultSet>();
         public bool RemainingResultsNotRead { get; set; }
+        /// <summary>After a cancel or timeout: whether the server itself was seen to stop the query.</summary>
+        public DaxServerStopState ServerStop { get; set; }
+        /// <summary>From the cancel request to the observed server stop (or to the end of the wait).</summary>
+        public long ServerStopMilliseconds { get; set; }
         public int TotalReturnedRowCount => ResultSets.Length == 0 ? ReturnedRowCount : ResultSets.Sum(x => x.ReturnedRowCount);
     }
 

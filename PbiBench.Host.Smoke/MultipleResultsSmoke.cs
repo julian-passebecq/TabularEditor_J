@@ -85,6 +85,7 @@ internal static class MultipleResultsSmoke
         }
         public void Cancel() { }
         public void Abort() { }
+        public DaxServerStopState WaitForServerStop(int timeoutMilliseconds) => DaxServerStopState.Confirmed;
         public void Disconnect() { }
         public void Dispose() { Disposed = true; }
     }
