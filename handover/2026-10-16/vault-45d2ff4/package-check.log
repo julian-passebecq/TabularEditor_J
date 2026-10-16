@@ -1,0 +1,25 @@
+PASS one zip in dist: ['TE2Enhanced-45d2ff4b-portable.zip']
+PASS zip sha256 = SHA256SUMS: e12eb6e018670e4191d597ed8c49277771de54e1953d00309ce4646ee2a7a6b4
+PASS zip entries safe (no absolute/.. paths)
+PASS inner MANIFEST present
+PASS inner MANIFEST = outer MANIFEST
+PASS MANIFEST lines match extracted files: 161 lines, 162 files, mismatches=[]
+PASS TabularEditor.exe sha = SHA256SUMS
+PASS PbiBench.Core.dll sha = SHA256SUMS
+PASS no .pdb
+PASS GETTING-STARTED = repo docs/pbibench/GETTING_STARTED.md
+PASS sourceCommit = 45d2ff4 (45d2ff4bf85a461f2d0fb81c42e02798692d5e19)
+PASS dirtyTrackedFiles=false (False)
+PASS confidentiality: no gitlab token 
+PASS confidentiality: no github token 
+PASS confidentiality: no openai/anthropic key 
+PASS confidentiality: no aws key 
+PASS confidentiality: no private key 
+PASS confidentiality: no connection secret 
+PASS confidentiality: no user profile path 
+PASS confidentiality: no dev tree path 
+PASS confidentiality: no personal email 
+PASS confidentiality: no FOIL private 
+PASS confidentiality: no transcript marker 
+INFO known false positive excluded: Password=hunter2 and PWD=abc credential-guard test strings of the MCP self-test (TE2Enhanced.Mcp/SelfTest.cs) in mcp/TE2Enhanced.Mcp.dll (triaged on e7a8b06/95fea60)
+{"zip": "TE2Enhanced-45d2ff4b-portable.zip", "sha256": "e12eb6e018670e4191d597ed8c49277771de54e1953d00309ce4646ee2a7a6b4", "bytes": 12262561, "files": 162, "sourceCommit": "45d2ff4bf85a461f2d0fb81c42e02798692d5e19", "fails": []}

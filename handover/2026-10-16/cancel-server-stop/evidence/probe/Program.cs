@@ -27,6 +27,7 @@ internal static class P
     static int Main(string[] a)
     {
         bin = Path.GetFullPath(a[0]);
+        if (a.Length > 6) tomDirOverride = Path.GetFullPath(a[6]); // packaged builds embed TOMWrapper: take it from a build of the same commit
         AppDomain.CurrentDomain.AssemblyResolve += (s, e) =>
         {
             var name = new AssemblyName(e.Name).Name;
@@ -124,7 +125,8 @@ internal static class P
         return 0;
     }
 
-    static string TomDir() => Path.GetFullPath(Path.Combine(bin, "..", "..", "..", "TOMWrapper", "bin", "Release"));
+    static string tomDirOverride;
+    static string TomDir() => tomDirOverride ?? Path.GetFullPath(Path.Combine(bin, "..", "..", "..", "TOMWrapper", "bin", "Release"));
 
     static string Sha(string f) { using (var s = System.Security.Cryptography.SHA256.Create()) using (var fs = File.OpenRead(f)) return BitConverter.ToString(s.ComputeHash(fs)).Replace("-", "").ToLowerInvariant().Substring(0, 16); }
 

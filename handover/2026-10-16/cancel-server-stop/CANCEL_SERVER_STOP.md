@@ -67,7 +67,7 @@ Logs: `evidence/probe-before-4c4523b.log`, `evidence/probe-after-final.log` (eac
 | `Verify-PbiBench.ps1` 8 stages, local | PASS. The first attempt hit the known transient `SafeFileReplace` IOException in core-smoke; the re-run passed. | - |
 | Controlled smoke `QueryLifecycleSmoke.ServerStop` | PASS. Confirmed/StillRunning/Unknown × user/timeout: the wait is called exactly once, before Disconnect, while admission is held (an overlapping query is refused), with the configured bound; the message is truthful; the executor is reusable; a throwing check gives Unknown with cleanup; a completed run never waits. | host-smoke-run |
 | Live gate DAX-006 (`Run-LiveGate.ps1 -Server localhost -Database tmp_pbibench-cancel_20261016`) | PASS. SE cancel: stop 799 ms after cancel; SE timeout: 228 ms; FE cancel: 8778 ms; FE timeout: 8056 ms. Each was re-checked from the gate's own admin connection: no gate command still running. The editor connection survives; reuse works. | `evidence/live-gate-ssas.log` |
-| GitLab CI (local runner) | see PR | - |
+| GitLab CI (local runner `local-windows`) | PASS: pipeline 2956429359 / job 17242672990 on 7ad5bea; master 45d2ff4: pipeline 2956440013 / job 17242760608. GitHub Actions 4/4. | PR #11 |
 | Power BI Desktop gate (`DesktopGateSmoke`, now asserts `Confirmed` and < 40 s) | NOT_RUN: the GUI slot is held by another lane. Desktop answered a cancel in 0.7 s on e7a8b06. | Light QA |
 | Remote XMLA (Fabric) | NOT_RUN, by design: no Fabric access in this lane. A non-admin DMV refusal gives `Unknown`, never a hang. | Light QA |
 
@@ -76,3 +76,5 @@ Logs: `evidence/probe-before-4c4523b.log`, `evidence/probe-after-final.log` (eac
 - A pure formula-engine query keeps running on the server until it finishes. The client now waits for it, up to
   30 s, then reports `StillRunning`. This is an engine limit, not a client one.
 - On endpoints that refuse `DISCOVER_SESSIONS`/`DISCOVER_COMMANDS`, the result is `Unknown` after a cancel.
+
+Merged as `45d2ff4` (PR #11). Vault build and rollback proof: `../vault-45d2ff4/VAULT_45d2ff4.md`.
