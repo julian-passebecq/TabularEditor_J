@@ -16,6 +16,7 @@ internal static class Program
     {
         try
         {
+            IsolateUpstreamProfile();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             using (var handler = new TabularModelHandler())
@@ -61,6 +62,27 @@ internal static class Program
             Console.Error.WriteLine("Base exception HRESULT: 0x" + error.GetBaseException().HResult.ToString("X8"));
             return 1;
         }
+    }
+
+    private static void IsolateUpstreamProfile()
+    {
+        var folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pbibench-host-smoke", Guid.NewGuid().ToString("N"));
+        System.IO.Directory.CreateDirectory(folder);
+        const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+        Action<Type, string, string> redirect = (type, field, name) =>
+        {
+            type.GetField(field, flags).SetValue(null, System.IO.Path.Combine(folder, name));
+            type.GetField("_current", flags)?.SetValue(null, null);
+        };
+        redirect(typeof(TabularEditor.UIServices.Preferences), "PREFERENCES_PATH", "Preferences.json");
+        redirect(typeof(TabularEditor.UIServices.RecentFiles), "RECENTFILES_PATH", "RecentFiles.json");
+        redirect(typeof(ScriptEngine), "WrapperDllPath", "TOMWrapper14.dll");
+        redirect(typeof(ScriptEngine), "NewtonsoftJsonDllPath", "newtonsoft.json.dll");
+        redirect(typeof(ScriptEngine), "CustomActionsJsonPath", "CustomActions.json");
+        redirect(typeof(ScriptEngine), "MacrosJsonPath", "MacroActions.json");
+        redirect(typeof(ScriptEngine), "MacrosErrorLogPath", "MacroCompilationErrors.log");
+        redirect(typeof(TabularEditor.BestPracticeAnalyzer.BestPracticeRule), "LocalUserRulesFile", "BPARules.json");
+        Console.WriteLine("Upstream test profile: isolated preferences, recent files, scripting cache/macros and user BPA rules");
     }
 
     private static void CheckDialog(string name, object[] arguments)
