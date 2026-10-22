@@ -82,7 +82,10 @@ namespace TabularEditor.PbiBench.Dax
 
         private DaxStudioHandoffPlan SaveAndReport(string reason, DaxStudioHandoffPlan plan)
         {
-            var needsSave = _document.FilePath == null || _document.IsDirty;
+            // A clean buffer can still refer to a deleted, replaced or locked file. Do not report
+            // that the query is saved unless the disk copy still matches the document baseline.
+            var needsSave = _document.FilePath == null || _document.IsDirty ||
+                _document.CheckDisk() != DaxDiskState.Unchanged;
             if (needsSave && !SaveDocument(false))
             {
                 SetStatus("DAX Studio handoff: " + reason + " The query was not saved (cancelled or failed); it is still open here.");

@@ -447,6 +447,20 @@ internal static class DaxStudioLauncherSmoke
                 "connection string refused without echo");
             S3.Check(Directory.GetFiles(folder, "*.dax").Length == saves && dialogs.Errors == 0, "clean saved document is not saved again");
 
+            // A clean editor is not proof that the saved query still exists or has the same bytes.
+            var original = File.ReadAllText(dialogs.Save);
+            var reports = workspace.Reports;
+            File.WriteAllText(dialogs.Save, "// changed externally");
+            result = form.HandOffToDaxStudio();
+            S3.Check(form.StatusText.Contains("not saved") && workspace.Reports == reports &&
+                File.ReadAllText(dialogs.Save) == "// changed externally", "external query change is preserved and never reported as saved");
+            File.Delete(dialogs.Save);
+            result = form.HandOffToDaxStudio();
+            S3.Check(form.StatusText.Contains("not saved") && workspace.Reports == reports &&
+                !File.Exists(dialogs.Save), "deleted query is never reported as saved or silently recreated");
+            File.WriteAllText(dialogs.Save, original, new System.Text.UTF8Encoding(false));
+            dialogs.Errors = 0;
+
             // Live labels: launch, clipboard gets only the query (selection wins).
             form.DaxStudioTargetProvider = () => new DaxStudioTarget("localhost:51234", "Sales Model");
             var editor = form.ActiveTab.Editor;

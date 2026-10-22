@@ -18,6 +18,9 @@ function Get-Sha256([string]$Path) {
     } finally { $stream.Dispose() }
 }
 $root = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
+. (Join-Path $PSScriptRoot 'Package-Integrity.ps1')
+$buildReceiptPath = Join-Path $root '.tools/verified-build.json'
+$buildReceipt = Assert-VerifiedPackageBuild $root $buildReceiptPath
 $release = Join-Path $root 'TabularEditor/bin/Release'
 $exe = Join-Path $release 'TabularEditor.exe'
 if (!(Test-Path $exe)) { throw "Build the Release host first: $exe is missing." }
@@ -25,19 +28,23 @@ if (!(Test-Path $exe)) { throw "Build the Release host first: $exe is missing." 
 $sha = (git -C $root rev-parse HEAD).Trim()
 $short = $sha.Substring(0, 8)
 $dirty = [bool](git -C $root status --porcelain --untracked-files=no)
-New-Item -ItemType Directory -Force $OutDirectory | Out-Null
+$OutDirectory = [IO.Path]::GetFullPath($OutDirectory)
+if (Test-Path -LiteralPath $OutDirectory) { throw 'Package output must be a new directory; existing packages are never overwritten.' }
+New-Item -ItemType Directory $OutDirectory | Out-Null
 $stage = Join-Path $OutDirectory "stage-$short"
-if (Test-Path $stage) { Remove-Item -Recurse -Force $stage }
 New-Item -ItemType Directory -Force $stage | Out-Null
 
-# Host: everything the Release build produced except XML docs and debug symbols.
-Get-ChildItem $release -Recurse -File |
-    Where-Object { $_.Extension -notin '.xml', '.pdb' -and $_.Name -notlike '*.vshost.*' } |
+# Host: verified runtime files only. Never ship scratch DAX, models, logs or settings JSON.
+$buildReceipt.files |
     ForEach-Object {
-        $relative = $_.FullName.Substring($release.Length).TrimStart('\', '/')
+        $relative = $_.path
+        $sourceFile = Join-Path $release $relative
         $target = Join-Path $stage $relative
         New-Item -ItemType Directory -Force (Split-Path $target -Parent) | Out-Null
-        Copy-Item $_.FullName $target
+        Copy-Item -LiteralPath $sourceFile -Destination $target
+        if ((Get-Sha256 $target) -ne $_.sha256 -or (Get-Sha256 $sourceFile) -ne $_.sha256) {
+            throw "Runtime changed during packaging: $relative"
+        }
     }
 
 if (!$SkipMcp) {
@@ -48,6 +55,11 @@ if (!$SkipMcp) {
 }
 
 Copy-Item (Join-Path $root 'LICENSE') (Join-Path $stage 'LICENSE.txt')
+New-Item -ItemType Directory -Path (Join-Path $stage 'licenses') | Out-Null
+foreach ($license in @('license-FastColoredTextbox.txt', 'license-FastWildcardMatching.txt', 'license-TreeViewAdv.txt', 'TabularEditor-license.rtf')) {
+    Copy-Item -LiteralPath (Join-Path $root $license) -Destination (Join-Path $stage "licenses/$license")
+}
+Copy-Item -LiteralPath $buildReceiptPath -Destination (Join-Path $stage 'verified-build.json')
 Copy-Item (Join-Path $root 'docs/pbibench/GETTING_STARTED.md') (Join-Path $stage 'GETTING-STARTED.md')
 New-Item -ItemType Directory -Force (Join-Path $stage 'docs') | Out-Null
 Copy-Item (Join-Path $root 'docs/pbibench/MCP_COMPANION_V1.md') (Join-Path $stage 'docs/MCP_COMPANION_V1.md')
@@ -71,7 +83,7 @@ Get-ChildItem $stage -Recurse -File -Include *.dll, *.exe |
 $notices | Set-Content (Join-Path $stage 'THIRD-PARTY-NOTICES.txt') -Encoding UTF8
 @"
 TE2 Enhanced (Tabular Editor 2 fork) - portable build $short
-Source: https://github.com/julian-passebecq/TabularEditor_J commit $sha
+Source commit: $sha (see the accompanying qualification report for its private source archive).
 Run TabularEditor.exe (requires .NET Framework 4.8). PbiBench features are under Tools > PbiBench.
 mcp\TE2Enhanced.Mcp.exe is an optional read-only MCP companion (requires any .NET 8+ runtime);
 see docs/MCP_COMPANION_V1.md. Start with GETTING-STARTED.md. Not signed; qualification build, not a release.
@@ -85,7 +97,7 @@ $manifest | Set-Content (Join-Path $OutDirectory 'MANIFEST.txt') -Encoding ASCII
 $manifest | Set-Content (Join-Path $stage 'MANIFEST.txt') -Encoding ASCII
 
 $zip = Join-Path $OutDirectory "TE2Enhanced-$short-portable.zip"
-if (Test-Path $zip) { Remove-Item -Force $zip }
+$null = Assert-VerifiedPackageBuild $root $buildReceiptPath
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 [System.IO.Compression.ZipFile]::CreateFromDirectory($stage, $zip, [System.IO.Compression.CompressionLevel]::Optimal, $false)
 
@@ -100,5 +112,5 @@ $hashes | Set-Content (Join-Path $OutDirectory 'SHA256SUMS.txt') -Encoding ASCII
     zipBytes = (Get-Item $zip).Length; mcpIncluded = -not $SkipMcp
     note = 'Build timestamps make binaries non-reproducible; hashes identify this build only.'
 } | ConvertTo-Json | Set-Content (Join-Path $OutDirectory 'source-identity.json') -Encoding UTF8
-Remove-Item -Recurse -Force $stage
+# Preserve staging for inspection; output is immutable and each invocation requires a new directory.
 $hashes | ForEach-Object { Write-Host $_ }

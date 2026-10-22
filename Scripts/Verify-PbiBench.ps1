@@ -12,6 +12,12 @@ $oldResolver = $env:MSBuildEnableWorkloadResolver
 $oldPath = $env:PATH
 $stages = [System.Collections.Generic.List[object]]::new()
 $exitCode = 1
+. (Join-Path $PSScriptRoot 'ci/Package-Integrity.ps1')
+$receiptPath = Join-Path $root '.tools/verified-build.json'
+$startCommit = (git -C $root rev-parse HEAD).Trim()
+$startedClean = @(git -C $root status --porcelain --untracked-files=normal).Count -eq 0
+# A failed verification must never leave an older successful receipt usable.
+if (Test-Path -LiteralPath $receiptPath) { Remove-Item -LiteralPath $receiptPath -Force }
 function Stage($name, $exe, $arguments) {
     $log = Join-Path $EvidenceDirectory ($name + '.log')
     $priorErrorAction = $ErrorActionPreference
@@ -65,6 +71,16 @@ try {
     Stage 'host-smoke-build' $dotnet @('build','PbiBench.Host.Smoke/PbiBench.Host.Smoke.csproj','-c','Release','--nologo')
     Stage 'host-smoke-run' (Join-Path $root 'PbiBench.Host.Smoke/bin/Release/net48/PbiBench.Host.Smoke.exe') @()
     $exitCode = if ($hasNet10 -or $HostOnlyDiagnostic) { 0 } else { 2 }
+    if ($exitCode -eq 0 -and !$HostOnlyDiagnostic -and $startedClean -and
+        (git -C $root rev-parse HEAD).Trim() -eq $startCommit -and
+        @(git -C $root status --porcelain --untracked-files=normal).Count -eq 0) {
+        New-Item -ItemType Directory -Force (Split-Path $receiptPath) | Out-Null
+        [pscustomobject]@{
+            schema = 'pbibench.verified-build/1'; sourceCommit = $startCommit; cleanSource = $true
+            verifiedUtc = [DateTime]::UtcNow.ToString('o')
+            files = @(Get-HostRuntimeInventory (Join-Path $root 'TabularEditor/bin/Release'))
+        } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $receiptPath -Encoding UTF8
+    }
 } catch {
     Write-Warning $_.Exception.Message
     $stages.Add([pscustomobject]@{stage='verification'; result='INCOMPLETE'; exitCode=1; log=$_.Exception.Message})
