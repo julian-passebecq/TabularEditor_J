@@ -81,7 +81,7 @@ internal static class Program
         redirect(typeof(ScriptEngine), "CustomActionsJsonPath", "CustomActions.json");
         redirect(typeof(ScriptEngine), "MacrosJsonPath", "MacroActions.json");
         redirect(typeof(ScriptEngine), "MacrosErrorLogPath", "MacroCompilationErrors.log");
-        redirect(typeof(TabularEditor.BestPracticeAnalyzer.BestPracticeRule), "LocalUserRulesFile", "BPARules.json");
+        redirect(typeof(TabularEditor.BestPracticeAnalyzer.BestPracticeCollection), "LocalUserRulesFile", "BPARules.json");
         Console.WriteLine("Upstream test profile: isolated preferences, recent files, scripting cache/macros and user BPA rules");
     }
 
