@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,7 +11,7 @@ namespace TabularEditor.UIServices
         public List<string> RecentHistory = new List<string>();
 
         [JsonIgnore]
-        static readonly string RECENTFILES_PATH = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\TabularEditor\RecentFiles.json";
+        static readonly string RECENTFILES_PATH = TabularEditor.UIServices.UserProfilePaths.FilePath("RecentFiles.json");
         private static RecentFiles _current = null;
         public static RecentFiles Current
         {

@@ -68,6 +68,7 @@ internal static class Program
     {
         var folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "pbibench-host-smoke", Guid.NewGuid().ToString("N"));
         System.IO.Directory.CreateDirectory(folder);
+        Environment.SetEnvironmentVariable("PBIBENCH_PROFILE_DIRECTORY", folder);
         const BindingFlags flags = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
         Action<Type, string, string> redirect = (type, field, name) =>
         {

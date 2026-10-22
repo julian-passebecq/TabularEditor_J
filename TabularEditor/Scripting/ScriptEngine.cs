@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,12 +41,12 @@ namespace TabularEditor
 
     public static class ScriptEngine
     {
-        static readonly string WrapperDllPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\TabularEditor\TOMWrapper14.dll";
-        static readonly string NewtonsoftJsonDllPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\TabularEditor\newtonsoft.json.dll";
+        static readonly string WrapperDllPath = TabularEditor.UIServices.UserProfilePaths.FilePath("TOMWrapper14.dll");
+        static readonly string NewtonsoftJsonDllPath = TabularEditor.UIServices.UserProfilePaths.FilePath("newtonsoft.json.dll");
         static readonly string TomDllPath = Assembly.GetAssembly(typeof(Microsoft.AnalysisServices.Tabular.Database)).Location;
-        public static readonly string CustomActionsJsonPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\TabularEditor\CustomActions.json";
-        public static readonly string MacrosJsonPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\TabularEditor\MacroActions.json";
-        public static readonly string MacrosErrorLogPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\TabularEditor\MacroCompilationErrors.log";
+        public static readonly string CustomActionsJsonPath = TabularEditor.UIServices.UserProfilePaths.FilePath("CustomActions.json");
+        public static readonly string MacrosJsonPath = TabularEditor.UIServices.UserProfilePaths.FilePath("MacroActions.json");
+        public static readonly string MacrosErrorLogPath = TabularEditor.UIServices.UserProfilePaths.FilePath("MacroCompilationErrors.log");
 
         internal static string ExtractTypeDefs(string script, out List<string> typeDefs)
         {

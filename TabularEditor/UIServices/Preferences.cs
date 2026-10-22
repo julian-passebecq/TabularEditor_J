@@ -9,6 +9,20 @@ using System.Windows.Forms;
 
 namespace TabularEditor.UIServices
 {
+    /// <summary>Process-scoped profile override for isolated hosts and qualification children.</summary>
+    internal static class UserProfilePaths
+    {
+        internal static string FilePath(string name)
+        {
+            var directory = Environment.GetEnvironmentVariable("PBIBENCH_PROFILE_DIRECTORY");
+            if (string.IsNullOrEmpty(directory))
+                directory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "TabularEditor");
+            else if (!Path.IsPathRooted(directory) || !string.Equals(Path.GetPathRoot(directory), Path.GetPathRoot(Path.GetFullPath(directory)), StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException("PBIBENCH_PROFILE_DIRECTORY must be an absolute directory.");
+            return Path.Combine(Path.GetFullPath(directory), name);
+        }
+    }
+
     public enum SearchResultOption
     {
         ByParent = 1,
@@ -141,7 +155,7 @@ namespace TabularEditor.UIServices
         [JsonIgnore]
         public bool BackupOnSave { get { return !string.IsNullOrWhiteSpace(BackupLocation); } }
 
-        public static readonly string PREFERENCES_PATH = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\TabularEditor\Preferences.json";
+        public static readonly string PREFERENCES_PATH = UserProfilePaths.FilePath("Preferences.json");
         private static Preferences _current = null;
         public static Preferences Current
         {

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -200,7 +200,7 @@ namespace TabularEditor.UI.Dialogs
             var bpc = new BestPracticeCollection();
             bpc.Add(rule);
 
-            var globalRulesFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\TabularEditor\BPARules.json";
+            var globalRulesFile = TabularEditor.UIServices.UserProfilePaths.FilePath("BPARules.json");
 
             bpc.AddFromJsonFile(globalRulesFile);
             bpc.SaveToFile(globalRulesFile);
@@ -219,7 +219,7 @@ namespace TabularEditor.UI.Dialogs
 
             // Save global rules (less the newly demoted rule):
             var bpc = new BestPracticeCollection();
-            var globalRulesFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\TabularEditor\BPARules.json";
+            var globalRulesFile = TabularEditor.UIServices.UserProfilePaths.FilePath("BPARules.json");
             bpc.AddFromJsonFile(globalRulesFile);
             var deleteRule = bpc.FirstOrDefault(r => r.ID.Equals(rule.ID, StringComparison.InvariantCultureIgnoreCase));
             if (deleteRule != null)

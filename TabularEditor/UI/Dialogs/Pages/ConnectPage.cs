@@ -31,7 +31,7 @@ namespace TabularEditor.UI.Dialogs.Pages
 
         public event ValidationEventHandler Validation;
 
-        readonly string RecentServersFilePath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\TabularEditor\RecentServers.json";
+        readonly string RecentServersFilePath = TabularEditor.UIServices.UserProfilePaths.FilePath("RecentServers.json");
         RecentServersObject recentServers = new RecentServersObject();
 
         public ConnectPage()

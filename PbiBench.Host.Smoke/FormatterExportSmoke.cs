@@ -215,6 +215,9 @@ internal static class FormatterExportSmoke
                 var start = new System.Diagnostics.ProcessStartInfo(typeof(FormMain).Assembly.Location,
                     "\"" + model + "\" -S \"" + script + "\"")
                 { UseShellExecute = false, CreateNoWindow = true, RedirectStandardOutput = true, RedirectStandardError = true };
+                var childProfile = Path.Combine(folder, "profile");
+                Directory.CreateDirectory(childProfile);
+                start.EnvironmentVariables["PBIBENCH_PROFILE_DIRECTORY"] = childProfile;
                 using (var process = System.Diagnostics.Process.Start(start))
                 {
                     var stdout = process.StandardOutput.ReadToEndAsync();
@@ -224,6 +227,9 @@ internal static class FormatterExportSmoke
                     var output = stdout.Result + stderr.Result;
                     Assert(process.ExitCode != 0 && output.Contains("Remote DAX formatting is disabled"),
                         "Fresh CLI process did not clearly deny formatter: " + output);
+                    Assert(File.Exists(Path.Combine(childProfile, "TOMWrapper14.dll")) &&
+                        File.Exists(Path.Combine(childProfile, "newtonsoft.json.dll")),
+                        "Fresh CLI process did not write scripting dependencies to its isolated profile.");
                 }
             }
         }

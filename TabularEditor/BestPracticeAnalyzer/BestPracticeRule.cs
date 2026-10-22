@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
@@ -367,7 +367,7 @@ namespace TabularEditor.BestPracticeAnalyzer
 
     public class BestPracticeCollection: IRuleDefinition, IReadOnlyList<BestPracticeRule>
     {
-        internal static readonly string LocalUserRulesFile = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData) + @"\TabularEditor\BPARules.json";
+        internal static readonly string LocalUserRulesFile = TabularEditor.UIServices.UserProfilePaths.FilePath("BPARules.json");
         internal static readonly string LocalMachineRulesFile = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData) + @"\TabularEditor\BPARules.json";
         internal static readonly string BPAAnnotation = "BestPracticeAnalyzer";
         public string FilePath { get; private set; }
