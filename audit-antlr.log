@@ -1,0 +1,4 @@
+
+D:\PROJ\TabularEditor_J-audit-v02\AntlrGrammars\obj\Debug\DAXLexer.cs(30,22): warning CS3021: 'DAXLexer' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [D:\PROJ\TabularEditor_J-audit-v02\AntlrGrammars\AntlrGrammars.csproj]
+D:\PROJ\TabularEditor_J-audit-v02\AntlrGrammars\obj\Debug\CSharpLexer.cs(31,22): warning CS3021: 'CSharpLexer' does not need a CLSCompliant attribute because the assembly does not have a CLSCompliant attribute [D:\PROJ\TabularEditor_J-audit-v02\AntlrGrammars\AntlrGrammars.csproj]
+  AntlrGrammars -> D:\PROJ\TabularEditor_J-audit-v02\AntlrGrammars\bin\Debug\CSharpGrammar.dll

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><OutputType>Exe</OutputType><TargetFramework>net48</TargetFramework><UseWindowsForms>true</UseWindowsForms><LangVersion>10.0</LangVersion></PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../TabularEditor/PbiBench/Dax/PbiBenchDaxWorkbenchForm.cs" />
+    <Compile Include="../../TabularEditor/PbiBench/Semantic/*.cs" />
+    <Compile Include="../../TabularEditor/PbiBench/Navigation/PbiBenchQuickOpenIndex.cs" />
+    <Compile Include="../../TabularEditor/PbiBench/Navigation/PbiBenchQuickOpenForm.cs" />
+    <Reference Include="TOMWrapper"><HintPath>../../TOMWrapper/bin/Release/TOMWrapper.dll</HintPath></Reference>
+    <Reference Include="Microsoft.AnalysisServices.Core"><HintPath>../../packages/Microsoft.AnalysisServices.19.112.0/lib/net472/Microsoft.AnalysisServices.Core.dll</HintPath></Reference>
+    <Reference Include="Microsoft.AnalysisServices.Tabular"><HintPath>../../packages/Microsoft.AnalysisServices.19.112.0/lib/net472/Microsoft.AnalysisServices.Tabular.dll</HintPath></Reference>
+    <Reference Include="PbiBench.Core"><HintPath>../../PbiBench.Core/bin/Release/netstandard2.0/PbiBench.Core.dll</HintPath></Reference>
+  </ItemGroup>
+</Project>
